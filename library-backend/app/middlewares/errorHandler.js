@@ -21,7 +21,7 @@ const ok = (res, data = null, meta = null, statusCode = 200) => {
  * @param {Function} fn
  */
 const asyncHandler = (fn) => (req, res, next) => {
-  Promise.resolve(fn(req, res, next)).catch(next);
+  return Promise.resolve(fn(req, res, next)).catch(next);
 };
 
 /**

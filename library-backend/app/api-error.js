@@ -18,6 +18,10 @@ class ApiError extends Error {
     return new ApiError(403, message);
   }
 
+  static unprocessableEntity(message = 'Dữ liệu không hợp lệ', errors = null) {
+    return new ApiError(422, message, errors);
+  }
+
   static notFound(message = 'Tài nguyên không tìm thấy') {
     return new ApiError(404, message);
   }

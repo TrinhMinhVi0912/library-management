@@ -14,7 +14,7 @@ Mỗi task = 1 cuộc trò chuyện (~45–90 phút). Chi tiết: `tasks/backend
 | [BE-04](backend/BE-04.md) | Models nhóm 1: users, danh mục, books | B1 Dữ liệu | BE-03 | ✅ | |
 | [BE-05](backend/BE-05.md) | Models nhóm 2: giỏ, phiếu mượn, gia hạn, phạt, đặt trước, đánh giá, kệ | B1 Dữ liệu | BE-04 | ✅ | |
 | [BE-06](backend/BE-06.md) | Models nhóm 3: thông báo, diễn đàn, settings, audit, refresh token | B1 Dữ liệu | BE-05 | ✅ | |
-| [BE-07](backend/BE-07.md) | Middleware nền: auth, requireRole, validate, rateLimit | B2 Auth | BE-06 | ⬜ | |
+| [BE-07](backend/BE-07.md) | Middleware nền: auth, requireRole, validate, rateLimit | B2 Auth | BE-06 | ✅ | |
 | [BE-08](backend/BE-08.md) | Auth: đăng ký, đăng nhập, refresh, đăng xuất | B2 Auth | BE-07 | ⬜ | |
 | [BE-09](backend/BE-09.md) | Hồ sơ /me, đổi mật khẩu, quên/đặt lại mật khẩu | B2 Auth | BE-08 | ⬜ | |
 | [BE-10](backend/BE-10.md) | Cloudinary & upload ảnh | B2 Auth | BE-09 | ⬜ | |

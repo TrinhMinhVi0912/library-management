@@ -4,15 +4,14 @@ const helmet = require('helmet');
 const cookieParser = require('cookie-parser');
 const mongoSanitize = require('express-mongo-sanitize');
 const morgan = require('morgan');
-const rateLimit = require('express-rate-limit');
-
 const config = require('./app/config');
 const apiV1Router = require('./app/routes');
 const {
   ok,
   notFoundHandler,
   errorHandler,
-} = require('./app/middlewares/errorHandler');
+  generalLimiter,
+} = require('./app/middlewares');
 
 const app = express();
 
@@ -60,16 +59,6 @@ app.use((req, _res, next) => {
 app.use(morgan(config.env === 'development' ? 'dev' : 'combined'));
 
 // 7. Giới hạn tần suất yêu cầu (Rate limiting chung)
-const generalLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 1000,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: {
-    success: false,
-    message: 'Quá nhiều yêu cầu từ địa chỉ IP này, vui lòng thử lại sau ít phút.',
-  },
-});
 app.use(generalLimiter);
 
 // 8. Endpoint kiểm tra sức khỏe hệ thống (Health Check)
