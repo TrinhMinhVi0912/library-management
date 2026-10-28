@@ -21,5 +21,6 @@
 | D-015 | `context/digest.md` thay thế việc đọc toàn bộ docs trong phiên làm việc; phải luôn khớp docs | Giảm ~90% token nạp ngữ cảnh |
 | D-016 | Hỗ trợ song song `.eslintrc.js` và `eslint.config.js` cùng devDependencies `@eslint/js`, `globals` | Node 24 / ESLint 10 mặc định dùng flat config format, cần thiết để `npm run lint` chạy trơn tru |
 | D-017 | Đặt `language_override: 'none'` trong text index của `bookSchema` | Tránh MongoDB tự động đọc trường dữ liệu `language` (có giá trị 'Tiếng Việt') làm text analyzer gây lỗi `language override unsupported: Tiếng Việt` |
+| D-018 | Sinh slug sách duy nhất tự tăng hậu tố `-1`, `-2`; chặn giảm `totalCopies` dưới số sách đang mượn (400); chặn xóa sách đã có lịch sử trong `loans` (409) | Đảm bảo tính toàn vẹn tồn kho, tránh trùng lặp URL và bảo toàn lịch sử giao dịch mượn trả |
 
 

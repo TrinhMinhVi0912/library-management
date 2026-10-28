@@ -3,33 +3,34 @@
 > File này **ghi đè** mỗi lần `/done` (không tích lũy lịch sử). ≤ 40 dòng. `/resume` đọc file này đầu tiên.
 
 ## Task vừa làm
-- ID: BE-12 – Danh mục: tác giả, thể loại, NXB (CRUD + công khai)
+- ID: BE-13 – Sách: CRUD quản trị
 - Trạng thái: ✅ xong
 
 ## Đã làm
-- Xây dựng [catalog.validator.js](file:///e:/githudRepo/library-management/library-backend/app/validators/catalog.validator.js): validation Joi cho tác giả, thể loại, nhà xuất bản (idParam, create, update, query).
-- Xây dựng [catalog.service.js](file:///e:/githudRepo/library-management/library-backend/app/services/catalog.service.js): CRUD danh mục; tự sinh slug tiếng Việt cho thể loại (chống trùng); sinh mã NXB (`NXB...`) qua `nextCode`; chặn xóa (409) khi còn sách tham chiếu; ghi audit log.
-- Xây dựng [catalog.controller.js](file:///e:/githudRepo/library-management/library-backend/app/controllers/catalog.controller.js) và [catalog.route.js](file:///e:/githudRepo/library-management/library-backend/app/routes/catalog.route.js): public GET (`/categories`, `/authors`, `/authors/:id`, `/publishers`) & admin CRUD (`/admin/authors|categories|publishers`).
-- Sửa [book.model.js](file:///e:/githudRepo/library-management/library-backend/app/models/book.model.js): thêm `language_override: 'none'` cho text index để tránh lỗi khi sách có thuộc tính `language: 'Tiếng Việt'`.
+- Xây dựng [book.validator.js](file:///e:/githudRepo/library-management/library-backend/app/validators/book.validator.js): validation Joi cho quản trị sách (idParam, create, update, updateStatus, queryAdmin).
+- Xây dựng [book.service.js](file:///e:/githudRepo/library-management/library-backend/app/services/book.service.js): CRUD sách quản trị; tự sinh mã `S000001` qua `nextCode('book')`; tự sinh slug duy nhất (tự thêm hậu tố `-1`, `-2` nếu trùng); khởi tạo `availableCopies = totalCopies`; chặn giảm `totalCopies` dưới số sách đang mượn (400); đổi ảnh bìa gọi `cloudinary.destroy`; chặn xóa sách đã có lịch sử mượn trong Loan (409); ghi nhận audit log.
+- Xây dựng [book.controller.js](file:///e:/githudRepo/library-management/library-backend/app/controllers/book.controller.js) và [admin.route.js](file:///e:/githudRepo/library-management/library-backend/app/routes/admin.route.js): mount tại `/api/v1/admin/books` (yêu cầu role `staff` hoặc `admin`).
+- Viết bộ kiểm thử [book.admin.test.js](file:///e:/githudRepo/library-management/library-backend/tests/book.admin.test.js): 21/21 test passed.
 
 ## File chính đã tạo/sửa
-- `app/validators/catalog.validator.js`
-- `app/services/catalog.service.js`
-- `app/controllers/catalog.controller.js`
-- `app/routes/catalog.route.js`
+- `app/validators/book.validator.js`
+- `app/services/book.service.js`
+- `app/controllers/book.controller.js`
+- `app/routes/admin.route.js`
 - `app/routes/index.js`
-- `app/models/book.model.js`
-- `tasks/backend/BE-12.md`, `tasks/INDEX.md`, `context/decisions.md`
+- `tests/book.admin.test.js`
+- `tasks/backend/BE-13.md`, `tasks/INDEX.md`, `context/decisions.md`
 
 ## Lệnh kiểm tra đã chạy
-- `npm run lint`: pass 100%.
-- Kiểm thử tích hợp danh mục: tự sinh slug tiếng Việt, sinh mã NXB, ném lỗi 409 khi trùng slug hoặc khi xóa bản ghi đang có sách liên kết; ghi nhận audit log tương ứng.
+- `npm run lint`: pass 100% (0 errors, 0 warnings).
+- `npx jest tests/book.admin.test.js`: 21/21 passed.
+- `npx jest tests/code.util.test.js`: 10/10 passed.
 
 ## Đang dở / bước tiếp theo
-1. Tiến hành task BE-13 theo `tasks/backend/BE-13.md`: Sách: CRUD quản trị.
+1. Tiến hành task BE-14 theo `tasks/backend/BE-14.md`: Sách công khai: tìm kiếm, lọc, home, chi tiết.
 
 ## Quyết định mới / điểm cần nhớ
-- Đặt `language_override: 'none'` trong text index của `bookSchema` (xem quyết định D-017 trong `context/decisions.md`).
+- Quyết định D-018: Quản trị sách đảm bảo tự sinh mã `S...`, slug duy nhất, ràng buộc tồn kho mượn và xóa sách (xem `context/decisions.md`).
 
 ## Task kế tiếp đề xuất
-- BE-13 (Sách: CRUD quản trị)
+- BE-14 (Sách công khai: tìm kiếm, lọc, home, chi tiết)
