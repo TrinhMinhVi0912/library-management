@@ -3,35 +3,38 @@
 > File này **ghi đè** mỗi lần `/done` (không tích lũy lịch sử). ≤ 40 dòng. `/resume` đọc file này đầu tiên.
 
 ## Task vừa làm
-- ID: BE-07 – Middleware nền: auth, requireRole, validate, rateLimit
+- ID: BE-08 – Auth: đăng ký, đăng nhập, refresh, đăng xuất
 - Trạng thái: ✅ xong
 
 ## Đã làm
-- Xây dựng `auth.middleware.js`: Bearer token verify JWT, tra cứu User, chặn 401 (thiếu/sai/hết hạn/locked), gắn `req.user`. Kèm `optionalAuth`.
-- Xây dựng `requireRole.middleware.js`: chặn 401 nếu chưa đăng nhập, 403 nếu `req.user.role` không thuộc danh sách cho phép (nhận args hoặc mảng).
-- Xây dựng `validate.middleware.js`: validate Joi schema đơn hoặc multi-source (`body`, `query`, `params`), trả 422 với danh sách `errors: [{ field, message }]`.
-- Xây dựng `rateLimit.middleware.js`: `generalLimiter` (1000 req/15m), `authLimiter` (20 req/15m), `forumPostLimiter` (5 req/1m) với format JSON lỗi chuẩn 429.
-- Thêm `ApiError.unprocessableEntity` (422), barrel export `app/middlewares/index.js`, tích hợp `generalLimiter` vào `app.js`.
-- Viết bộ unit tests [tests/middlewares.test.js](file:///e:/githudRepo/library-management/library-backend/tests/middlewares.test.js) (21/21 tests passed).
+- Xây dựng `auth.validator.js`: Joi schema validate register (mật khẩu min 8 ký tự, có số và chữ), login, refresh.
+- Xây dựng `auth.service.js`: register (mã `DG...`, hash bcrypt cost 10, role reader), login (chặn `locked`, cập nhật `lastLoginAt`), tạo access (15m) + refresh (7 ngày) băm SHA-256 lưu DB, refresh xoay vòng (rotate `jti`), logout (thu hồi token).
+- Xây dựng `auth.controller.js`: quản lý cookie `refreshToken` httpOnly theo config, trả chuẩn `{ success, data }`.
+- Xây dựng `auth.route.js`: gắn `authLimiter`, validate và mount vào `/api/v1/auth`.
+- Export `optionalAuth` tại `middlewares/index.js`.
+- Viết 20 test cases trong [tests/auth.test.js](file:///e:/githudRepo/library-management/library-backend/tests/auth.test.js) (20/20 passed, tổng 129/129 tests toàn bộ hệ thống passed).
 
 ## File chính đã tạo/sửa
-- `app/middlewares/{auth,requireRole,validate,rateLimit}.middleware.js`
-- `app/middlewares/{errorHandler.js,index.js}`
-- `app/api-error.js`
-- `app.js`
-- `tests/middlewares.test.js`
-- `tasks/backend/BE-07.md`, `tasks/INDEX.md`
+- `app/validators/auth.validator.js`
+- `app/services/auth.service.js`
+- `app/controllers/auth.controller.js`
+- `app/routes/auth.route.js`
+- `app/routes/index.js`
+- `app/middlewares/index.js`
+- `tests/auth.test.js`
+- `tasks/backend/BE-08.md`, `tasks/INDEX.md`
 
 ## Lệnh kiểm tra đã chạy
 - `npm run lint`: pass 100% không cảnh báo/lỗi.
-- `npx jest tests/middlewares.test.js`: 21/21 tests passed.
+- `npx jest tests/auth.test.js`: 20/20 tests passed.
+- `npx jest [7 suites]`: 129/129 tests passed.
 
 ## Đang dở / bước tiếp theo
-1. Tiến hành task BE-08 theo `tasks/backend/BE-08.md`: Auth: đăng ký, đăng nhập, refresh, đăng xuất.
+1. Tiến hành task BE-09 theo `tasks/backend/BE-09.md`: Hồ sơ /me, đổi mật khẩu, quên/đặt lại mật khẩu.
 
 ## Quyết định mới / điểm cần nhớ
-- `validate` hỗ trợ cả schema đơn (`validate(schema, 'query')`) lẫn object multi-source (`validate({ body, query })`).
-- `auth.optionalAuth` cho phép các endpoint xem công khai nhưng có thể cá nhân hóa nếu người dùng đã đăng nhập.
+- Refresh token được băm SHA-256 trước khi lưu vào MongoDB; cơ chế xoay vòng sinh thêm `jti: crypto.randomUUID()` đảm bảo không trùng lặp chuỗi.
+- Endpoint `/auth/logout` dùng `optionalAuth` để cho phép người dùng đăng xuất sạch sẽ ngay cả khi access token vừa hết hạn.
 
 ## Task kế tiếp đề xuất
-- BE-08 (Auth: đăng ký, đăng nhập, refresh, đăng xuất)
+- BE-09 (Hồ sơ /me, đổi mật khẩu, quên/đặt lại mật khẩu)

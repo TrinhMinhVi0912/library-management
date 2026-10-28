@@ -10,6 +10,7 @@ module.exports = {
   notFoundHandler,
   errorHandler,
   auth,
+  optionalAuth: auth.optionalAuth,
   requireRole,
   validate,
   generalLimiter,

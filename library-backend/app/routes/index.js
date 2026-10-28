@@ -1,4 +1,5 @@
 const express = require('express');
+const authRouter = require('./auth.route');
 
 const router = express.Router();
 
@@ -9,5 +10,8 @@ router.get('/', (req, res) => {
     message: 'Library Management API v1',
   });
 });
+
+// Mount các module routes
+router.use('/auth', authRouter);
 
 module.exports = router;
