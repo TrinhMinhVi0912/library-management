@@ -4,6 +4,8 @@ const {
   registerSchema,
   loginSchema,
   refreshSchema,
+  forgotPasswordSchema,
+  resetPasswordSchema,
 } = require('../validators/auth.validator');
 const authController = require('../controllers/auth.controller');
 
@@ -39,6 +41,20 @@ router.post('/refresh', validate(refreshSchema), authController.refresh);
  * @access  Đăng nhập / Khách có refresh token
  */
 router.post('/logout', optionalAuth, authController.logout);
+
+/**
+ * @route   POST /api/v1/auth/forgot-password
+ * @desc    Yêu cầu đặt lại mật khẩu qua email
+ * @access  Khách
+ */
+router.post('/forgot-password', validate(forgotPasswordSchema), authController.forgotPassword);
+
+/**
+ * @route   POST /api/v1/auth/reset-password
+ * @desc    Đặt lại mật khẩu mới bằng token
+ * @access  Khách có token
+ */
+router.post('/reset-password', validate(resetPasswordSchema), authController.resetPassword);
 
 module.exports = router;
 

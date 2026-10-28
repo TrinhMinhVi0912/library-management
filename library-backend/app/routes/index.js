@@ -1,5 +1,6 @@
 const express = require('express');
 const authRouter = require('./auth.route');
+const meRouter = require('./me.route');
 
 const router = express.Router();
 
@@ -13,5 +14,6 @@ router.get('/', (req, res) => {
 
 // Mount các module routes
 router.use('/auth', authRouter);
+router.use('/me', meRouter);
 
 module.exports = router;

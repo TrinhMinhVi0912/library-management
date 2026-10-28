@@ -79,12 +79,22 @@ const userSchema = new mongoose.Schema(
     lastLoginAt: {
       type: Date,
     },
+    passwordResetToken: {
+      type: String,
+      select: false,
+    },
+    passwordResetExpires: {
+      type: Date,
+      select: false,
+    },
   },
   {
     timestamps: true,
     toJSON: {
       transform: function (_doc, ret) {
         delete ret.passwordHash;
+        delete ret.passwordResetToken;
+        delete ret.passwordResetExpires;
         delete ret.__v;
         return ret;
       },

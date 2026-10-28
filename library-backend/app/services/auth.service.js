@@ -5,6 +5,7 @@ const config = require('../config');
 const ApiError = require('../api-error');
 const { User, RefreshToken } = require('../models');
 const { nextCode } = require('../utils/code.util');
+const mailer = require('../utils/mailer.util');
 
 /**
  * Băm refresh token bằng thuật toán SHA-256 trước khi lưu hoặc tra cứu trong DB
@@ -208,6 +209,72 @@ const logout = async (rawRefreshToken) => {
   return true;
 };
 
+/**
+ * Xử lý quên mật khẩu: sinh token reset băm (hết hạn 30 phút), gửi email
+ * Luôn trả thông báo chung an toàn
+ * @param {string} email
+ */
+const forgotPassword = async (email) => {
+  const normalizedEmail = email.toLowerCase().trim();
+  const user = await User.findOne({ email: normalizedEmail });
+
+  // Nếu user tồn tại và đang hoạt động thì tạo token và gửi email
+  if (user && user.status === 'active') {
+    const rawResetToken = crypto.randomBytes(32).toString('hex');
+    const tokenHash = crypto.createHash('sha256').update(rawResetToken).digest('hex');
+
+    user.passwordResetToken = tokenHash;
+    user.passwordResetExpires = new Date(Date.now() + 30 * 60 * 1000); // 30 phút
+    await user.save();
+
+    try {
+      await mailer.sendPasswordResetEmail(user.email, rawResetToken, user.firstName);
+    } catch (err) {
+      console.error('Lỗi khi gửi email đặt lại mật khẩu:', err);
+    }
+  }
+
+  // Luôn trả về phản hồi chung chung để tránh dò quét danh sách email
+  return {
+    message: 'Nếu email tồn tại trong hệ thống, hướng dẫn đặt lại mật khẩu đã được gửi đến hộp thư của bạn.',
+  };
+};
+
+/**
+ * Đặt lại mật khẩu mới bằng token đã nhận qua email (dùng một lần)
+ * @param {string} token Token thô
+ * @param {string} newPassword Mật khẩu mới
+ */
+const resetPassword = async (token, newPassword) => {
+  const tokenHash = crypto.createHash('sha256').update(token.trim()).digest('hex');
+
+  const user = await User.findOne({
+    passwordResetToken: tokenHash,
+    passwordResetExpires: { $gt: new Date() },
+  }).select('+passwordHash +passwordResetToken +passwordResetExpires');
+
+  if (!user) {
+    throw ApiError.badRequest('Mã khôi phục mật khẩu không hợp lệ hoặc đã hết hạn');
+  }
+
+  if (user.status !== 'active') {
+    throw ApiError.unauthorized('Tài khoản đã bị khóa');
+  }
+
+  const salt = await bcrypt.genSalt(10);
+  user.passwordHash = await bcrypt.hash(newPassword, salt);
+  user.passwordResetToken = undefined;
+  user.passwordResetExpires = undefined;
+  await user.save();
+
+  // Thu hồi toàn bộ refresh token cũ của user này để bảo vệ phiên
+  await RefreshToken.deleteMany({ user: user._id });
+
+  return {
+    message: 'Đặt lại mật khẩu thành công. Vui lòng đăng nhập bằng mật khẩu mới.',
+  };
+};
+
 module.exports = {
   hashToken,
   createSession,
@@ -215,4 +282,6 @@ module.exports = {
   login,
   refresh,
   logout,
+  forgotPassword,
+  resetPassword,
 };

@@ -64,9 +64,38 @@ const refreshSchema = Joi.object({
   refreshToken: Joi.string().allow('', null).optional(),
 });
 
+const forgotPasswordSchema = Joi.object({
+  email: Joi.string().email().trim().lowercase().required().messages({
+    'string.email': 'Email không đúng định dạng',
+    'string.empty': 'Email không được để trống',
+    'any.required': 'Email là bắt buộc',
+  }),
+});
+
+const resetPasswordSchema = Joi.object({
+  token: Joi.string().trim().required().messages({
+    'string.empty': 'Mã khôi phục token không được để trống',
+    'any.required': 'Mã khôi phục token là bắt buộc',
+  }),
+  newPassword: Joi.string()
+    .min(8)
+    .max(100)
+    .pattern(/^(?=.*[A-Za-z])(?=.*\d)/)
+    .required()
+    .messages({
+      'string.min': 'Mật khẩu mới phải có ít nhất 8 ký tự',
+      'string.max': 'Mật khẩu mới không được vượt quá 100 ký tự',
+      'string.pattern.base': 'Mật khẩu mới phải chứa ít nhất một chữ cái và một chữ số',
+      'string.empty': 'Mật khẩu mới không được để trống',
+      'any.required': 'Mật khẩu mới là bắt buộc',
+    }),
+});
+
 module.exports = {
   registerSchema,
   loginSchema,
   refreshSchema,
+  forgotPasswordSchema,
+  resetPasswordSchema,
 };
 

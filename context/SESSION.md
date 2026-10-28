@@ -3,38 +3,37 @@
 > File này **ghi đè** mỗi lần `/done` (không tích lũy lịch sử). ≤ 40 dòng. `/resume` đọc file này đầu tiên.
 
 ## Task vừa làm
-- ID: BE-08 – Auth: đăng ký, đăng nhập, refresh, đăng xuất
+- ID: BE-09 – Hồ sơ /me, đổi mật khẩu, quên/đặt lại mật khẩu
 - Trạng thái: ✅ xong
 
 ## Đã làm
-- Xây dựng `auth.validator.js`: Joi schema validate register (mật khẩu min 8 ký tự, có số và chữ), login, refresh.
-- Xây dựng `auth.service.js`: register (mã `DG...`, hash bcrypt cost 10, role reader), login (chặn `locked`, cập nhật `lastLoginAt`), tạo access (15m) + refresh (7 ngày) băm SHA-256 lưu DB, refresh xoay vòng (rotate `jti`), logout (thu hồi token).
-- Xây dựng `auth.controller.js`: quản lý cookie `refreshToken` httpOnly theo config, trả chuẩn `{ success, data }`.
-- Xây dựng `auth.route.js`: gắn `authLimiter`, validate và mount vào `/api/v1/auth`.
-- Export `optionalAuth` tại `middlewares/index.js`.
-- Viết 20 test cases trong [tests/auth.test.js](file:///e:/githudRepo/library-management/library-backend/tests/auth.test.js) (20/20 passed, tổng 129/129 tests toàn bộ hệ thống passed).
+- Bổ sung `passwordResetToken`, `passwordResetExpires` vào [user.model.js](file:///e:/githudRepo/library-management/library-backend/app/models/user.model.js).
+- Xây dựng [mailer.util.js](file:///e:/githudRepo/library-management/library-backend/app/utils/mailer.util.js): gửi email qua SMTP Nodemailer, tự fallback in liên kết reset ra console khi dev hoặc chưa cấu hình SMTP thực tế.
+- Xây dựng [user.service.js](file:///e:/githudRepo/library-management/library-backend/app/services/user.service.js) & [user.validator.js](file:///e:/githudRepo/library-management/library-backend/app/validators/user.validator.js): xem hồ sơ, cập nhật hồ sơ (chặn sửa role, status, code, email), đổi mật khẩu (kiểm tra mật khẩu cũ).
+- Mở rộng [auth.service.js](file:///e:/githudRepo/library-management/library-backend/app/services/auth.service.js): quên mật khẩu (luôn trả 200 an toàn, token SHA-256 TTL 30m), đặt lại mật khẩu (dùng 1 lần, thu hồi mọi refresh token).
+- Xây dựng [user.controller.js](file:///e:/githudRepo/library-management/library-backend/app/controllers/user.controller.js), cập nhật [auth.controller.js](file:///e:/githudRepo/library-management/library-backend/app/controllers/auth.controller.js), [me.route.js](file:///e:/githudRepo/library-management/library-backend/app/routes/me.route.js) và mount `/me` vào router v1.
+- Viết 19 bài kiểm thử trong [tests/me-and-password.test.js](file:///e:/githudRepo/library-management/library-backend/tests/me-and-password.test.js) (toàn bộ 148/148 tests backend passed).
 
 ## File chính đã tạo/sửa
-- `app/validators/auth.validator.js`
-- `app/services/auth.service.js`
-- `app/controllers/auth.controller.js`
-- `app/routes/auth.route.js`
-- `app/routes/index.js`
-- `app/middlewares/index.js`
-- `tests/auth.test.js`
-- `tasks/backend/BE-08.md`, `tasks/INDEX.md`
+- `app/models/user.model.js`
+- `app/utils/mailer.util.js`
+- `app/services/{user.service.js,auth.service.js}`
+- `app/validators/{user.validator.js,auth.validator.js}`
+- `app/controllers/{user.controller.js,auth.controller.js}`
+- `app/routes/{me.route.js,auth.route.js,index.js}`
+- `tests/me-and-password.test.js`
+- `tasks/backend/BE-09.md`, `tasks/INDEX.md`
 
 ## Lệnh kiểm tra đã chạy
 - `npm run lint`: pass 100% không cảnh báo/lỗi.
-- `npx jest tests/auth.test.js`: 20/20 tests passed.
-- `npx jest [7 suites]`: 129/129 tests passed.
+- `npx jest [8 suites]`: 148/148 tests passed.
 
 ## Đang dở / bước tiếp theo
-1. Tiến hành task BE-09 theo `tasks/backend/BE-09.md`: Hồ sơ /me, đổi mật khẩu, quên/đặt lại mật khẩu.
+1. Tiến hành task BE-10 theo `tasks/backend/BE-10.md`: Cloudinary & upload ảnh (`POST /me/avatar`, `upload.middleware.js`).
 
 ## Quyết định mới / điểm cần nhớ
-- Refresh token được băm SHA-256 trước khi lưu vào MongoDB; cơ chế xoay vòng sinh thêm `jti: crypto.randomUUID()` đảm bảo không trùng lặp chuỗi.
-- Endpoint `/auth/logout` dùng `optionalAuth` để cho phép người dùng đăng xuất sạch sẽ ngay cả khi access token vừa hết hạn.
+- Token reset mật khẩu được băm SHA-256 lưu trong DB và chỉ có hiệu lực 30 phút. Sau khi reset thành công, mọi refresh token đang lưu hành của tài khoản đều bị thu hồi lập tức.
+- `mailer.util` tự động phát hiện placeholder cấu hình email mẫu để giả lập in console, không gây treo socket khi dev/test.
 
 ## Task kế tiếp đề xuất
-- BE-09 (Hồ sơ /me, đổi mật khẩu, quên/đặt lại mật khẩu)
+- BE-10 (Cloudinary & upload ảnh)
