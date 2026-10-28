@@ -1,6 +1,7 @@
 const express = require('express');
 const authRouter = require('./auth.route');
 const meRouter = require('./me.route');
+const uploadRouter = require('./upload.route');
 
 const router = express.Router();
 
@@ -15,5 +16,6 @@ router.get('/', (req, res) => {
 // Mount các module routes
 router.use('/auth', authRouter);
 router.use('/me', meRouter);
+router.use('/admin/uploads', uploadRouter);
 
 module.exports = router;

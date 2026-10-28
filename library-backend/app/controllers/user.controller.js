@@ -1,3 +1,4 @@
+const ApiError = require('../api-error');
 const { ok, asyncHandler } = require('../middlewares');
 const userService = require('../services/user.service');
 
@@ -31,9 +32,23 @@ const changePassword = asyncHandler(async (req, res) => {
   });
 });
 
+/**
+ * Cập nhật ảnh đại diện người dùng
+ * POST /api/v1/me/avatar
+ */
+const uploadAvatar = asyncHandler(async (req, res) => {
+  if (!req.file) {
+    throw ApiError.badRequest('Vui lòng chọn tệp hình ảnh để tải lên');
+  }
+
+  const result = await userService.updateAvatar(req.user._id, req.file);
+  return ok(res, result);
+});
+
 module.exports = {
   getProfile,
   updateProfile,
   changePassword,
+  uploadAvatar,
 };
 

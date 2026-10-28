@@ -39,6 +39,16 @@ const errorHandler = (err, req, res, _next) => {
   let message = err.message || 'Lỗi máy chủ nội bộ';
   let errors = err.errors || null;
 
+  // Xử lý lỗi từ Multer (nếu chưa được wrap chuyển đổi)
+  if (err.name === 'MulterError') {
+    statusCode = 400;
+    if (err.code === 'LIMIT_FILE_SIZE') {
+      message = 'Kích thước tệp không được vượt quá 2MB';
+    } else {
+      message = `Lỗi tải lên tệp: ${err.message}`;
+    }
+  }
+
   // Xử lý lỗi CastError từ Mongoose (ID không hợp lệ)
   if (err.name === 'CastError') {
     statusCode = 400;

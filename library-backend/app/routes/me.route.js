@@ -1,5 +1,5 @@
 const express = require('express');
-const { auth, validate } = require('../middlewares');
+const { auth, validate, uploadAvatar } = require('../middlewares');
 const {
   updateProfileSchema,
   changePasswordSchema,
@@ -31,6 +31,13 @@ router.patch('/', validate(updateProfileSchema), userController.updateProfile);
  * @access  Đăng nhập
  */
 router.patch('/password', validate(changePasswordSchema), userController.changePassword);
+
+/**
+ * @route   POST /api/v1/me/avatar
+ * @desc    Tải lên và cập nhật ảnh đại diện người dùng
+ * @access  Đăng nhập
+ */
+router.post('/avatar', uploadAvatar, userController.uploadAvatar);
 
 module.exports = router;
 
