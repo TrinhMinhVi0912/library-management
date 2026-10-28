@@ -19,7 +19,7 @@ Mỗi task = 1 cuộc trò chuyện (~45–90 phút). Chi tiết: `tasks/backend
 | [BE-09](backend/BE-09.md) | Hồ sơ /me, đổi mật khẩu, quên/đặt lại mật khẩu | B2 Auth | BE-08 | ✅ | |
 | [BE-10](backend/BE-10.md) | Cloudinary & upload ảnh | B2 Auth | BE-09 | ✅ | |
 | [BE-11](backend/BE-11.md) | Scripts: create-admin và khung seed | B2 Auth | BE-10 | ✅ | |
-| [BE-12](backend/BE-12.md) | Danh mục: tác giả, thể loại, NXB (CRUD + công khai) | B3 Sách | BE-11 | ⬜ | |
+| [BE-12](backend/BE-12.md) | Danh mục: tác giả, thể loại, NXB (CRUD + công khai) | B3 Sách | BE-11 | ✅ | |
 | [BE-13](backend/BE-13.md) | Sách: CRUD quản trị | B3 Sách | BE-12 | ⬜ | |
 | [BE-14](backend/BE-14.md) | Sách công khai: tìm kiếm, lọc, home, chi tiết | B3 Sách | BE-13 | ⬜ | |
 | [BE-15](backend/BE-15.md) | Seed dữ liệu danh mục & sách | B3 Sách | BE-14 | ⬜ | |

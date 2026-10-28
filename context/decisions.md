@@ -20,4 +20,6 @@
 | D-014 | Bàn giao bằng `context/SESSION.md` (ghi đè) + `tasks/INDEX.md`; `/resume` chỉ nạp ngữ cảnh tối thiểu | Tiết kiệm token khi mở cuộc trò chuyện mới |
 | D-015 | `context/digest.md` thay thế việc đọc toàn bộ docs trong phiên làm việc; phải luôn khớp docs | Giảm ~90% token nạp ngữ cảnh |
 | D-016 | Hỗ trợ song song `.eslintrc.js` và `eslint.config.js` cùng devDependencies `@eslint/js`, `globals` | Node 24 / ESLint 10 mặc định dùng flat config format, cần thiết để `npm run lint` chạy trơn tru |
+| D-017 | Đặt `language_override: 'none'` trong text index của `bookSchema` | Tránh MongoDB tự động đọc trường dữ liệu `language` (có giá trị 'Tiếng Việt') làm text analyzer gây lỗi `language override unsupported: Tiếng Việt` |
+
 

@@ -145,6 +145,7 @@ bookSchema.index(
   },
   {
     default_language: 'none',
+    language_override: 'none',
   }
 );
 
