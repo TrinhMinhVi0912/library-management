@@ -3,40 +3,32 @@
 > File này **ghi đè** mỗi lần `/done` (không tích lũy lịch sử). ≤ 40 dòng. `/resume` đọc file này đầu tiên.
 
 ## Task vừa làm
-- ID: BE-10 – Cloudinary & upload ảnh
+- ID: BE-11 – Scripts: create-admin và khung seed
 - Trạng thái: ✅ xong
 
 ## Đã làm
-- Xây dựng [cloudinary.util.js](file:///e:/githudRepo/library-management/library-backend/app/utils/cloudinary.util.js): cấu hình Cloudinary SDK, tải buffer qua `upload_stream` trả `{ url, publicId }`, xóa ảnh qua `destroy(publicId)` kèm cơ chế fallback an toàn khi dev/test dùng placeholder.
-- Xây dựng [upload.middleware.js](file:///e:/githudRepo/library-management/library-backend/app/middlewares/upload.middleware.js): multer `memoryStorage`, kích thước tối đa 2MB, lọc ảnh JPG/PNG/WEBP, xử lý lỗi MulterError thân thiện; cung cấp `uploadSingle` và `uploadAvatar` (nhận linh hoạt trường `avatar` hoặc `file`).
-- Xây dựng [upload.controller.js](file:///e:/githudRepo/library-management/library-backend/app/controllers/upload.controller.js) & [upload.route.js](file:///e:/githudRepo/library-management/library-backend/app/routes/upload.route.js): endpoint `POST /api/v1/admin/uploads` (staff|admin, field `file`, query `folder`).
-- Mở rộng [user.service.js](file:///e:/githudRepo/library-management/library-backend/app/services/user.service.js) & [user.controller.js](file:///e:/githudRepo/library-management/library-backend/app/controllers/user.controller.js): endpoint `POST /api/v1/me/avatar`, tự động xóa ảnh cũ trên Cloudinary trước khi lưu avatar mới.
-- Viết 16 bài kiểm thử trong [tests/upload.test.js](file:///e:/githudRepo/library-management/library-backend/tests/upload.test.js) (toàn bộ 16/16 tests pass).
+- Xây dựng [create-admin.js](file:///e:/githudRepo/library-management/library-backend/scripts/create-admin.js): đọc email/password từ env (`ADMIN_EMAIL`, `ADMIN_PASSWORD`) hoặc args (`--email`, `--password`); tạo admin nếu chưa có; không in mật khẩu; chạy lại idempotent.
+- Xây dựng [seed.js](file:///e:/githudRepo/library-management/library-backend/scripts/seed.js): từ chối production; đánh dấu seed bằng email domain `@seed.library.local`; xóa seed cũ trước khi tạo mới; seed 1 admin + 2 staff + 20 reader; mật khẩu chung `Seed@123`; khung mở rộng sẵn cho publishers/authors/categories/books/loans/forum.
+- Sửa [code.util.js](file:///e:/githudRepo/library-management/library-backend/app/utils/code.util.js): `new: true` → `returnDocument: 'after'` (Mongoose 8 deprecation).
 
 ## File chính đã tạo/sửa
-- `app/utils/cloudinary.util.js`
-- `app/middlewares/upload.middleware.js`
-- `app/middlewares/errorHandler.js`
-- `app/middlewares/index.js`
-- `app/controllers/upload.controller.js`
-- `app/controllers/user.controller.js`
-- `app/services/user.service.js`
-- `app/routes/upload.route.js`
-- `app/routes/me.route.js`
-- `app/routes/index.js`
-- `tests/upload.test.js`
-- `tasks/backend/BE-10.md`, `tasks/INDEX.md`
+- `scripts/create-admin.js`
+- `scripts/seed.js`
+- `app/utils/code.util.js`
+- `tasks/backend/BE-11.md`, `tasks/INDEX.md`
 
 ## Lệnh kiểm tra đã chạy
-- `npm run lint`: pass 100% không cảnh báo/lỗi.
-- `npx jest tests/upload.test.js`: 16/16 tests passed.
+- `npm run lint`: pass 100%.
+- `node scripts/create-admin.js --email admin@library.test --password Admin@123`: tạo thành công, chạy lại bỏ qua.
+- `node scripts/seed.js`: chạy 2 lần liên tiếp không lỗi, xóa 23 seed cũ → tạo 23 mới.
+- `NODE_ENV=production node scripts/seed.js`: từ chối đúng.
 
 ## Đang dở / bước tiếp theo
-1. Tiến hành task BE-11 theo `tasks/backend/BE-11.md`: Scripts `create-admin` và khung `seed.js`.
+1. Tiến hành task BE-12 theo `tasks/backend/BE-12.md`: Danh mục: tác giả, thể loại, NXB (CRUD + công khai).
 
 ## Quyết định mới / điểm cần nhớ
-- `cloudinary.util` tự động nhận biết placeholder `your_cloudinary_*` để fallback giả lập an toàn, không cố gọi ra internet gây lỗi DNS khi chạy dev/test local.
-- `POST /me/avatar` chấp nhận linh hoạt multipart/form-data gửi với trường `avatar` hoặc `file`.
+- Dữ liệu seed đánh dấu bằng email domain `@seed.library.local` → `cleanSeedData()` dùng regex xóa.
+- `code.util.js` dùng `returnDocument: 'after'` thay vì `new: true` (Mongoose 8+).
 
 ## Task kế tiếp đề xuất
-- BE-11 (Scripts: create-admin và khung seed)
+- BE-12 (Danh mục: tác giả, thể loại, NXB – CRUD + công khai)
