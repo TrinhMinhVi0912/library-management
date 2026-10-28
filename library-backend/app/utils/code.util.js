@@ -47,7 +47,6 @@ const nextCode = async (name, options = null) => {
   }
 
   const queryOptions = {
-    new: true,
     returnDocument: 'after',
     upsert: true,
     setDefaultsOnInsert: true,

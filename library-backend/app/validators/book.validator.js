@@ -186,11 +186,42 @@ const queryAdminBookSchema = Joi.object({
   sort: Joi.string().trim().allow(''),
 });
 
+const queryPublicBookSchema = Joi.object({
+  q: Joi.string().trim().allow(''),
+  category: Joi.string().pattern(objectIdRegex).allow(''),
+  author: Joi.string().pattern(objectIdRegex).allow(''),
+  publisher: Joi.string().pattern(objectIdRegex).allow(''),
+  year: Joi.number().integer().min(1000).max(currentYear + 1).allow(null, ''),
+  available: Joi.boolean().truthy('true', '1').falsy('false', '0'),
+  sort: Joi.string().valid('relevance', 'new', 'popular', 'az').allow(''),
+  page: Joi.number().integer().min(1).default(1),
+  limit: Joi.number().integer().min(1).max(100).default(12),
+});
+
+const suggestQuerySchema = Joi.object({
+  q: Joi.string().trim().allow('').default(''),
+});
+
+const idOrSlugParamSchema = Joi.object({
+  idOrSlug: Joi.string().trim().min(1).max(255).required().messages({
+    'string.empty': 'Mã định danh hoặc slug sách không được để trống',
+    'any.required': 'Mã định danh hoặc slug sách là bắt buộc',
+  }),
+});
+
+const relatedQuerySchema = Joi.object({
+  limit: Joi.number().integer().min(1).max(20).default(6),
+});
+
 module.exports = {
   idParamSchema,
   createBookSchema,
   updateBookSchema,
   updateStatusSchema,
   queryAdminBookSchema,
+  queryPublicBookSchema,
+  suggestQuerySchema,
+  idOrSlugParamSchema,
+  relatedQuerySchema,
 };
 

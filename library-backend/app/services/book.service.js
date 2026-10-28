@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const slugify = require('slugify');
 const ApiError = require('../api-error');
 const {
@@ -423,6 +424,232 @@ async function deleteBook(id, context = {}) {
   };
 }
 
+/**
+ * Lấy danh sách sách công khai (tìm kiếm, lọc, phân trang, sắp xếp)
+ * @param {object} query
+ * @returns {Promise<{ books: Array, meta: object }>}
+ */
+async function getPublicBooks(query = {}) {
+  const { page, limit, skip } = parsePagination(query, { defaultLimit: 12, maxLimit: 100 });
+  const filter = { status: 'active' };
+
+  if (query.category) {
+    filter.categories = query.category;
+  }
+  if (query.author) {
+    filter.authors = query.author;
+  }
+  if (query.publisher) {
+    filter.publisher = query.publisher;
+  }
+  if (query.year) {
+    filter.publishYear = Number(query.year);
+  }
+  if (query.available === true || query.available === 'true' || query.available === '1' || query.available === 1) {
+    filter.availableCopies = { $gt: 0 };
+  }
+
+  let projection = null;
+  let sortOption;
+
+  const hasSearch = Boolean(query.q && query.q.trim());
+  if (hasSearch) {
+    filter.$text = { $search: query.q.trim() };
+  }
+
+  switch (query.sort) {
+  case 'relevance':
+    if (hasSearch) {
+      projection = { score: { $meta: 'textScore' } };
+      sortOption = { score: { $meta: 'textScore' }, createdAt: -1 };
+    } else {
+      sortOption = { createdAt: -1 };
+    }
+    break;
+  case 'new':
+    sortOption = { createdAt: -1 };
+    break;
+  case 'popular':
+    sortOption = { borrowCount: -1, createdAt: -1 };
+    break;
+  case 'az':
+    sortOption = { title: 1 };
+    break;
+  default:
+    if (hasSearch) {
+      projection = { score: { $meta: 'textScore' } };
+      sortOption = { score: { $meta: 'textScore' }, createdAt: -1 };
+    } else {
+      sortOption = { createdAt: -1 };
+    }
+    break;
+  }
+
+  const [totalItems, books] = await Promise.all([
+    Book.countDocuments(filter),
+    Book.find(filter, projection)
+      .sort(sortOption)
+      .skip(skip)
+      .limit(limit)
+      .populate('authors', 'name')
+      .populate('publisher', 'name')
+      .populate('categories', 'name slug')
+      .lean(),
+  ]);
+
+  return {
+    books,
+    meta: buildPaginationMeta(totalItems, page, limit),
+  };
+}
+
+/**
+ * Gợi ý tìm kiếm sách công khai (tối đa 8 quyển)
+ * @param {string} q
+ * @returns {Promise<Array>}
+ */
+async function suggestBooks(q) {
+  if (!q || typeof q !== 'string' || !q.trim()) {
+    return [];
+  }
+
+  const keyword = q.trim();
+  let books;
+
+  try {
+    books = await Book.find(
+      { status: 'active', $text: { $search: keyword } },
+      { score: { $meta: 'textScore' } }
+    )
+      .sort({ score: { $meta: 'textScore' } })
+      .limit(8)
+      .select('_id title slug cover authorText price availableCopies ratingAvg')
+      .lean();
+  } catch {
+    books = [];
+  }
+
+  // Fallback regex nếu text search không trả về kết quả
+  if (!books || books.length === 0) {
+    const escaped = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(escaped, 'i');
+    books = await Book.find({
+      status: 'active',
+      $or: [{ title: regex }, { authorText: regex }],
+    })
+      .limit(8)
+      .select('_id title slug cover authorText price availableCopies ratingAvg')
+      .lean();
+  }
+
+  return books;
+}
+
+/**
+ * Lấy dữ liệu cho trang chủ (mới nhất, mượn nhiều nhất, đánh giá cao)
+ * @returns {Promise<{ newest: Array, popular: Array, topRated: Array }>}
+ */
+async function getHomeBooks() {
+  const [newest, popular, topRated] = await Promise.all([
+    Book.find({ status: 'active' })
+      .sort({ createdAt: -1 })
+      .limit(8)
+      .populate('authors', 'name')
+      .populate('publisher', 'name')
+      .populate('categories', 'name slug')
+      .lean(),
+    Book.find({ status: 'active' })
+      .sort({ borrowCount: -1, createdAt: -1 })
+      .limit(8)
+      .populate('authors', 'name')
+      .populate('publisher', 'name')
+      .populate('categories', 'name slug')
+      .lean(),
+    Book.find({ status: 'active' })
+      .sort({ ratingAvg: -1, ratingCount: -1, createdAt: -1 })
+      .limit(8)
+      .populate('authors', 'name')
+      .populate('publisher', 'name')
+      .populate('categories', 'name slug')
+      .lean(),
+  ]);
+
+  return {
+    newest,
+    popular,
+    topRated,
+  };
+}
+
+/**
+ * Lấy chi tiết sách công khai theo id hoặc slug (chỉ lấy sách active)
+ * @param {string} idOrSlug
+ * @returns {Promise<object>}
+ */
+async function getBookByIdOrSlug(idOrSlug) {
+  const isObjectId = mongoose.Types.ObjectId.isValid(idOrSlug) && /^[0-9a-fA-F]{24}$/.test(idOrSlug);
+  const query = {
+    status: 'active',
+    ...(isObjectId ? { $or: [{ _id: idOrSlug }, { slug: idOrSlug }] } : { slug: idOrSlug }),
+  };
+
+  const book = await Book.findOne(query)
+    .populate('authors', 'name bio photo')
+    .populate('publisher', 'code name address')
+    .populate('categories', 'name slug description');
+
+  if (!book) {
+    throw ApiError.notFound('Không tìm thấy thông tin sách hoặc sách đã ngừng phát hành');
+  }
+
+  return book;
+}
+
+/**
+ * Lấy danh sách sách liên quan (cùng thể loại hoặc cùng tác giả)
+ * @param {string} bookId
+ * @param {number} [limit=6]
+ * @returns {Promise<Array>}
+ */
+async function getRelatedBooks(bookId, limit = 6) {
+  const isObjectId = mongoose.Types.ObjectId.isValid(bookId) && /^[0-9a-fA-F]{24}$/.test(bookId);
+  if (!isObjectId) {
+    throw ApiError.badRequest('ID sách không hợp lệ');
+  }
+
+  const currentBook = await Book.findOne({ _id: bookId, status: 'active' });
+  if (!currentBook) {
+    throw ApiError.notFound('Không tìm thấy thông tin sách hoặc sách đã ngừng phát hành');
+  }
+
+  const conditions = [];
+  if (currentBook.categories && currentBook.categories.length > 0) {
+    conditions.push({ categories: { $in: currentBook.categories } });
+  }
+  if (currentBook.authors && currentBook.authors.length > 0) {
+    conditions.push({ authors: { $in: currentBook.authors } });
+  }
+
+  const filter = {
+    _id: { $ne: currentBook._id },
+    status: 'active',
+  };
+
+  if (conditions.length > 0) {
+    filter.$or = conditions;
+  }
+
+  const related = await Book.find(filter)
+    .sort({ borrowCount: -1, createdAt: -1 })
+    .limit(Math.min(Math.max(Number(limit) || 6, 1), 20))
+    .populate('authors', 'name')
+    .populate('publisher', 'name')
+    .populate('categories', 'name slug')
+    .lean();
+
+  return related;
+}
+
 module.exports = {
   generateSlug,
   generateUniqueSlug,
@@ -432,5 +659,10 @@ module.exports = {
   updateBook,
   updateBookStatus,
   deleteBook,
+  getPublicBooks,
+  suggestBooks,
+  getHomeBooks,
+  getBookByIdOrSlug,
+  getRelatedBooks,
 };
 
