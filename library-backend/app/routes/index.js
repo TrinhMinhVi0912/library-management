@@ -5,6 +5,7 @@ const uploadRouter = require('./upload.route');
 const catalogRouter = require('./catalog.route');
 const adminRouter = require('./admin.route');
 const bookRouter = require('./book.route');
+const cartRouter = require('./cart.route');
 
 const router = express.Router();
 
@@ -22,6 +23,7 @@ router.use('/me', meRouter);
 router.use('/admin/uploads', uploadRouter);
 router.use('/admin', adminRouter);
 router.use('/books', bookRouter);
+router.use('/cart', cartRouter);
 router.use('/', catalogRouter);
 
 module.exports = router;
