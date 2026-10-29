@@ -418,6 +418,97 @@ async function rejectLoan(loanId, staffId, reason, options = {}) {
 }
 
 /**
+ * Nhân viên xác nhận giao sách cho độc giả (transaction)
+ * Điều kiện:
+ * 1. Phiếu mượn phải ở trạng thái approved
+ * 2. Cập nhật từng item: status = 'borrowing', borrowDate = now, dueDate = now + loanDays (từ settings, mặc định 14 ngày)
+ * 3. Tăng borrowCount của các sách tương ứng (+1)
+ * 4. Cập nhật phiếu mượn: status = 'borrowing', handedOverBy = staffId, handedOverAt = now
+ * 5. Sau commit: thông báo cho độc giả, emit socket loan:updated, emit staff:counters, ghi audit log
+ *
+ * @param {string} loanId - ID phiếu mượn
+ * @param {string} staffId - ID nhân viên giao sách
+ * @param {object} [options] - Tuỳ chọn bổ sung (ip, ...)
+ * @returns {Promise<object>} Phiếu mượn sau khi giao sách
+ */
+async function handoverLoan(loanId, staffId, options = {}) {
+  const session = await mongoose.startSession();
+  let handedOverLoan;
+
+  try {
+    await session.withTransaction(async () => {
+      const loan = await Loan.findById(loanId).session(session);
+      if (!loan) {
+        throw ApiError.notFound('Phiếu mượn không tồn tại');
+      }
+      if (loan.status !== 'approved') {
+        throw ApiError.badRequest('Chỉ có thể giao sách cho phiếu mượn đã được duyệt');
+      }
+
+      const settings = await settingsService.getSettings();
+      const loanDays = settings.loanDays || 14;
+      const now = new Date();
+      const dueDate = new Date(now.getTime() + loanDays * 24 * 60 * 60 * 1000);
+
+      for (const item of loan.items) {
+        item.status = 'borrowing';
+        item.borrowDate = now;
+        item.dueDate = dueDate;
+
+        const bookId = item.book && item.book._id ? item.book._id : item.book;
+        await Book.findByIdAndUpdate(
+          bookId,
+          { $inc: { borrowCount: 1 } },
+          { session }
+        );
+      }
+
+      loan.status = 'borrowing';
+      loan.handedOverBy = staffId;
+      loan.handedOverAt = now;
+
+      await loan.save({ session });
+      handedOverLoan = loan;
+    });
+  } finally {
+    await session.endSession();
+  }
+
+  // Sau commit: thông báo cho độc giả, emit socket loan:updated, emit staff:counters, ghi audit log
+  const readerId = handedOverLoan.reader.toString();
+  const firstItemDueDate = handedOverLoan.items[0]?.dueDate;
+  const dueDateStr = firstItemDueDate
+    ? new Date(firstItemDueDate).toISOString().split('T')[0]
+    : '';
+
+  await notifyService.notifyUser(readerId, {
+    type: 'loan',
+    title: 'Sách đã được giao thành công',
+    content: `Phiếu mượn ${handedOverLoan.code} đã được giao. Hạn trả sách là ngày ${dueDateStr}. Chúc bạn đọc sách vui vẻ!`,
+    link: `/my/loans/${handedOverLoan._id}`,
+    createdBy: staffId,
+  });
+
+  notifyService.emitLoanUpdated(readerId, handedOverLoan._id.toString(), 'borrowing');
+  await countersService.emitStaffCounters();
+
+  await auditService.log({
+    actor: staffId,
+    action: 'loan.handover',
+    targetType: 'Loan',
+    targetId: handedOverLoan._id,
+    detail: {
+      code: handedOverLoan.code,
+      handedOverAt: handedOverLoan.handedOverAt,
+      itemsCount: handedOverLoan.items.length,
+    },
+    ip: options.ip || null,
+  });
+
+  return handedOverLoan;
+}
+
+/**
  * Nhân viên/Admin lấy danh sách phiếu mượn
  * Hỗ trợ lọc theo trạng thái, độc giả, từ khóa (mã phiếu, tên sách), khoảng thời gian, phân trang.
  *
@@ -434,10 +525,28 @@ async function getAdminLoans(query = {}) {
   }
   if (query.q) {
     const q = query.q.trim();
-    filter.$or = [
+    const matchingUsers = await User.find(
+      {
+        $or: [
+          { code: { $regex: q, $options: 'i' } },
+          { firstName: { $regex: q, $options: 'i' } },
+          { lastName: { $regex: q, $options: 'i' } },
+          { phone: { $regex: q, $options: 'i' } },
+          { email: { $regex: q, $options: 'i' } },
+        ],
+      },
+      '_id'
+    ).lean();
+    const userIds = matchingUsers.map((u) => u._id);
+
+    const orConditions = [
       { code: { $regex: q, $options: 'i' } },
       { 'items.titleSnapshot': { $regex: q, $options: 'i' } },
     ];
+    if (userIds.length > 0) {
+      orConditions.push({ reader: { $in: userIds } });
+    }
+    filter.$or = orConditions;
   }
   if (query.from || query.to) {
     filter.createdAt = {};
@@ -503,6 +612,7 @@ module.exports = {
   cancelLoan,
   approveLoan,
   rejectLoan,
+  handoverLoan,
   getAdminLoans,
   getAdminLoanById,
 };

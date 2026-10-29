@@ -80,6 +80,17 @@ const rejectLoan = asyncHandler(async (req, res) => {
   return ok(res, loan);
 });
 
+/**
+ * Nhân viên xác nhận giao sách cho độc giả
+ * POST /api/v1/admin/loans/:id/handover
+ */
+const handoverLoan = asyncHandler(async (req, res) => {
+  const loan = await loanService.handoverLoan(req.params.id, req.user._id, {
+    ip: req.ip,
+  });
+  return ok(res, loan);
+});
+
 module.exports = {
   submitLoan,
   getMyLoans,
@@ -89,5 +100,6 @@ module.exports = {
   getAdminLoanById,
   approveLoan,
   rejectLoan,
+  handoverLoan,
 };
 

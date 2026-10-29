@@ -79,5 +79,11 @@ router.post(
   loanController.rejectLoan
 );
 
+router.post(
+  '/loans/:id/handover',
+  validate(loanIdParamSchema, 'params'),
+  loanController.handoverLoan
+);
+
 module.exports = router;
 

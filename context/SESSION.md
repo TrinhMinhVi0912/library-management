@@ -3,37 +3,34 @@
 > File này **ghi đè** mỗi lần `/done` (không tích lũy lịch sử). ≤ 40 dòng. `/resume` đọc file này đầu tiên.
 
 ## Task vừa làm
-- ID: BE-20 – Duyệt / từ chối yêu cầu mượn (transaction)
+- ID: BE-21 – Xác nhận giao sách
 - Trạng thái: ✅ xong
 
 ## Đã làm
-- Cập nhật [loan.validator.js](file:///e:/githudRepo/library-management/library-backend/app/validators/loan.validator.js): bổ sung `rejectLoanSchema` (bắt buộc lý do) và `queryAdminLoansSchema`.
-- Cập nhật [loan.service.js](file:///e:/githudRepo/library-management/library-backend/app/services/loan.service.js):
-  - `approveLoan`: chạy trong `session.withTransaction`, trừ `availableCopies` nguyên tử (`$gte: 1`), rollback nếu hết sách và báo 422, set `pickupDeadline = now + pickupHoldDays`, emit socket + staff counters + audit log.
-  - `rejectLoan`: kiểm tra lý do bắt buộc, cập nhật rejected, notify reader + emit socket + audit log.
-  - `getAdminLoans`, `getAdminLoanById`: query và populate đầy đủ cho admin/staff.
-- Cập nhật [loan.controller.js](file:///e:/githudRepo/library-management/library-backend/app/controllers/loan.controller.js) và [admin.route.js](file:///e:/githudRepo/library-management/library-backend/app/routes/admin.route.js): mount `GET /admin/loans`, `GET /admin/loans/:id`, `POST /admin/loans/:id/approve`, `POST /admin/loans/:id/reject`.
-- Viết bộ kiểm thử [tests/loan.test.js](file:///e:/githudRepo/library-management/library-backend/tests/loan.test.js): 61/61 tests pass.
+- Thêm hàm `handoverLoan(loanId, staffId, options)` trong [loan.service.js](file:///e:/githudRepo/library-management/library-backend/app/services/loan.service.js): chạy trong `session.withTransaction`, chỉ cho phép `approved`→`borrowing`; từng item set `status=borrowing`, `borrowDate=now`, `dueDate=now+loanDays`; tăng `books.borrowCount` (+1); set `handedOverBy/At`; sau commit thông báo độc giả + emit socket + staff:counters + audit log `loan.handover`.
+- Thêm controller `handoverLoan` trong [loan.controller.js](file:///e:/githudRepo/library-management/library-backend/app/controllers/loan.controller.js).
+- Mount route `POST /admin/loans/:id/handover` trong [admin.route.js](file:///e:/githudRepo/library-management/library-backend/app/routes/admin.route.js) (validate loanIdParamSchema).
+- Cải tiến `getAdminLoans`: tìm theo `q` giờ khớp cả mã phiếu, tên sách, và mã/tên/email/sđt độc giả (query User trước, dùng `$in`).
+- Bổ sung 8 test cases mới trong [loan.test.js](file:///e:/githudRepo/library-management/library-backend/tests/loan.test.js): handoverLoan service (3), controller (1), route integration (3), getAdminLoans search user (1). Tổng: 69 tests.
 
 ## File chính đã tạo/sửa
-- `app/validators/loan.validator.js`
 - `app/services/loan.service.js`
 - `app/controllers/loan.controller.js`
 - `app/routes/admin.route.js`
 - `tests/loan.test.js`
-- `tasks/backend/BE-20.md`, `tasks/INDEX.md`
+- `tasks/backend/BE-21.md`, `tasks/INDEX.md`
 
 ## Lệnh kiểm tra đã chạy
 - `npm run lint`: pass 100% (0 errors, 0 warnings).
-- `npx jest`: 14 test suites / 287 tests pass 100%.
+- `npx jest`: 14 test suites / 295 tests pass 100%.
 
 ## Đang dở / bước tiếp theo
-1. Tiến hành task BE-21 theo `tasks/backend/BE-21.md`: Xác nhận giao sách (`handoverLoan`).
+- Không có gì dang dở. Sẵn sàng cho task tiếp theo.
 
 ## Quyết định mới / điểm cần nhớ
-- `approveLoan` giảm tồn kho có điều kiện `{ availableCopies: { $gte: 1 } }` trong transaction đảm bảo không bao giờ âm kho dù gọi đồng thời.
-- Hết sách giữa chừng lập tức abort transaction và trả 422 kèm tên sách.
-- Từ chối bắt buộc có lý do (Joi validate và service check đều ném 422).
+- `handoverLoan` chạy trong transaction, lấy `loanDays` từ settings (mặc định 14), tăng `borrowCount` trong session.
+- `getAdminLoans` tìm theo `q` đã mở rộng: query User theo code/firstName/lastName/phone/email, ghép `reader: {$in: userIds}` vào `$or`.
+- Thông báo/emit socket sau commit (đúng quy tắc TX).
 
 ## Task kế tiếp đề xuất
-- BE-21 (Xác nhận giao sách - `POST /admin/loans/:id/handover`)
+- BE-22 (Trả sách & phạt tự động - transaction)

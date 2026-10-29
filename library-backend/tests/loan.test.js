@@ -1043,7 +1043,138 @@ describe('BE-20: Duyệt / từ chối yêu cầu mượn (transaction)', () => 
     });
   });
 
+  describe('3.1. Service: handoverLoan với transaction & borrowCount', () => {
+    let mockSession;
+
+    beforeEach(() => {
+      mockSession = {
+        withTransaction: jest.fn(async (callback) => {
+          await callback();
+        }),
+        endSession: jest.fn(),
+      };
+      jest.spyOn(mongoose, 'startSession').mockResolvedValue(mockSession);
+      jest.spyOn(notifyService, 'notifyUser').mockResolvedValue({});
+      jest.spyOn(notifyService, 'emitLoanUpdated').mockReturnValue();
+      jest.spyOn(countersService, 'emitStaffCounters').mockResolvedValue();
+      jest.spyOn(auditService, 'log').mockResolvedValue({});
+    });
+
+    it('ném lỗi 404 nếu phiếu mượn không tồn tại', async () => {
+      jest.spyOn(Loan, 'findById').mockReturnValue({
+        session: jest.fn().mockResolvedValue(null),
+      });
+
+      await expect(loanService.handoverLoan(loanId, staffId)).rejects.toMatchObject({
+        statusCode: 404,
+        message: expect.stringContaining('Phiếu mượn không tồn tại'),
+      });
+      expect(mockSession.endSession).toHaveBeenCalled();
+    });
+
+    it('ném lỗi 400 nếu phiếu mượn chưa được duyệt (status !== approved)', async () => {
+      const mockLoan = {
+        _id: loanId,
+        status: 'pending',
+      };
+      jest.spyOn(Loan, 'findById').mockReturnValue({
+        session: jest.fn().mockResolvedValue(mockLoan),
+      });
+
+      await expect(loanService.handoverLoan(loanId, staffId)).rejects.toMatchObject({
+        statusCode: 400,
+        message: expect.stringContaining('Chỉ có thể giao sách cho phiếu mượn đã được duyệt'),
+      });
+      expect(mockSession.endSession).toHaveBeenCalled();
+    });
+
+    it('giao sách thành công: cập nhật status borrowing, tính dueDate = now + loanDays, tăng borrowCount và gửi thông báo', async () => {
+      const mockLoan = {
+        _id: loanId,
+        code: 'PM000001',
+        reader: readerId,
+        status: 'approved',
+        items: [
+          { book: bookId1, status: 'pending' },
+          { book: bookId2, status: 'pending' },
+        ],
+        save: jest.fn().mockResolvedValue(true),
+      };
+
+      jest.spyOn(Loan, 'findById').mockReturnValue({
+        session: jest.fn().mockResolvedValue(mockLoan),
+      });
+      jest.spyOn(settingsService, 'getSettings').mockResolvedValue({ loanDays: 14 });
+      jest.spyOn(Book, 'findByIdAndUpdate').mockResolvedValue({});
+
+      const result = await loanService.handoverLoan(loanId, staffId, { ip: '127.0.0.1' });
+
+      expect(mockSession.withTransaction).toHaveBeenCalled();
+      expect(result.status).toBe('borrowing');
+      expect(result.handedOverBy).toBe(staffId);
+      expect(result.handedOverAt).toBeInstanceOf(Date);
+
+      // Kiểm tra từng item
+      expect(result.items[0].status).toBe('borrowing');
+      expect(result.items[0].borrowDate).toBeInstanceOf(Date);
+      expect(result.items[0].dueDate).toBeInstanceOf(Date);
+      expect(result.items[1].status).toBe('borrowing');
+      expect(result.items[1].borrowDate).toBeInstanceOf(Date);
+      expect(result.items[1].dueDate).toBeInstanceOf(Date);
+
+      // Chênh lệch giữa dueDate và borrowDate xấp xỉ 14 ngày (trong khoảng sai số 1000ms)
+      const diffDays = Math.round(
+        (result.items[0].dueDate.getTime() - result.items[0].borrowDate.getTime()) / (24 * 60 * 60 * 1000)
+      );
+      expect(diffDays).toBe(14);
+
+      // Tăng borrowCount của 2 cuốn sách
+      expect(Book.findByIdAndUpdate).toHaveBeenCalledTimes(2);
+      expect(Book.findByIdAndUpdate).toHaveBeenCalledWith(
+        bookId1,
+        { $inc: { borrowCount: 1 } },
+        { session: mockSession }
+      );
+      expect(Book.findByIdAndUpdate).toHaveBeenCalledWith(
+        bookId2,
+        { $inc: { borrowCount: 1 } },
+        { session: mockSession }
+      );
+
+      // Lưu phiếu mượn
+      expect(mockLoan.save).toHaveBeenCalledWith({ session: mockSession });
+
+      // Thông báo độc giả & socket & audit log
+      expect(notifyService.notifyUser).toHaveBeenCalledWith(
+        readerId,
+        expect.objectContaining({
+          type: 'loan',
+          title: expect.stringContaining('giao thành công'),
+          createdBy: staffId,
+        })
+      );
+      expect(notifyService.emitLoanUpdated).toHaveBeenCalledWith(readerId, loanId, 'borrowing');
+      expect(countersService.emitStaffCounters).toHaveBeenCalled();
+      expect(auditService.log).toHaveBeenCalledWith(
+        expect.objectContaining({
+          actor: staffId,
+          action: 'loan.handover',
+          targetType: 'Loan',
+          targetId: loanId,
+          ip: '127.0.0.1',
+        })
+      );
+      expect(mockSession.endSession).toHaveBeenCalled();
+    });
+  });
+
   describe('4. Service: getAdminLoans & getAdminLoanById', () => {
+    beforeEach(() => {
+      jest.spyOn(User, 'find').mockReturnValue({
+        lean: jest.fn().mockResolvedValue([]),
+      });
+    });
+
     it('getAdminLoans lọc theo status, q và trả về phân trang', async () => {
       const mockQueryChain = {
         sort: jest.fn().mockReturnThis(),
@@ -1069,6 +1200,36 @@ describe('BE-20: Duyệt / từ chối yêu cầu mượn (transaction)', () => 
         expect.objectContaining({
           status: 'pending',
           $or: expect.any(Array),
+        })
+      );
+    });
+
+    it('getAdminLoans tìm theo mã độc giả khi có query q khớp User', async () => {
+      const mockQueryChain = {
+        sort: jest.fn().mockReturnThis(),
+        skip: jest.fn().mockReturnThis(),
+        limit: jest.fn().mockReturnThis(),
+        populate: jest.fn().mockReturnThis(),
+        then: (resolve) => resolve([{ _id: loanId, code: 'PM000001' }]),
+      };
+
+      jest.spyOn(User, 'find').mockReturnValue({
+        lean: jest.fn().mockResolvedValue([{ _id: readerId }]),
+      });
+      jest.spyOn(Loan, 'find').mockReturnValue(mockQueryChain);
+      jest.spyOn(Loan, 'countDocuments').mockResolvedValue(1);
+
+      const result = await loanService.getAdminLoans({
+        status: 'approved',
+        q: 'DG000001',
+      });
+
+      expect(result.items).toHaveLength(1);
+      expect(User.find).toHaveBeenCalled();
+      expect(Loan.find).toHaveBeenCalledWith(
+        expect.objectContaining({
+          status: 'approved',
+          $or: expect.arrayContaining([{ reader: { $in: [readerId] } }]),
         })
       );
     });
@@ -1164,6 +1325,25 @@ describe('BE-20: Duyệt / từ chối yêu cầu mượn (transaction)', () => 
       expect(res.jsonData).toEqual({
         success: true,
         data: mockRejected,
+      });
+    });
+
+    it('handoverLoan gọi service và trả về 200', async () => {
+      const mockHandedOver = { _id: loanId, status: 'borrowing' };
+      jest.spyOn(loanService, 'handoverLoan').mockResolvedValue(mockHandedOver);
+
+      const { req, res, next } = createMockReqRes({
+        params: { id: loanId },
+      });
+      await loanController.handoverLoan(req, res, next);
+
+      expect(loanService.handoverLoan).toHaveBeenCalledWith(loanId, staffId, {
+        ip: '127.0.0.1',
+      });
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.jsonData).toEqual({
+        success: true,
+        data: mockHandedOver,
       });
     });
   });
@@ -1281,6 +1461,40 @@ describe('BE-20: Duyệt / từ chối yêu cầu mượn (transaction)', () => 
       expect(res.statusCode).toBe(200);
       expect(res.body.success).toBe(true);
       expect(res.body.data.status).toBe('rejected');
+    });
+
+    it('POST /api/v1/admin/loans/:id/handover yêu cầu quyền staff/admin (401 khi không token, 403 khi là reader)', async () => {
+      const resNoAuth = await request(app).post(`/api/v1/admin/loans/${loanId}/handover`);
+      expect(resNoAuth.statusCode).toBe(401);
+
+      const resForbidden = await request(app)
+        .post(`/api/v1/admin/loans/${loanId}/handover`)
+        .set('Authorization', `Bearer ${readerToken}`);
+      expect(resForbidden.statusCode).toBe(403);
+    });
+
+    it('POST /api/v1/admin/loans/:id/handover trả về 422 khi id sai định dạng', async () => {
+      const res = await request(app)
+        .post('/api/v1/admin/loans/invalid-id/handover')
+        .set('Authorization', `Bearer ${staffToken}`);
+
+      expect(res.statusCode).toBe(422);
+      expect(res.body.success).toBe(false);
+    });
+
+    it('POST /api/v1/admin/loans/:id/handover trả về 200 khi giao sách thành công', async () => {
+      jest.spyOn(loanService, 'handoverLoan').mockResolvedValue({
+        _id: loanId,
+        status: 'borrowing',
+      });
+
+      const res = await request(app)
+        .post(`/api/v1/admin/loans/${loanId}/handover`)
+        .set('Authorization', `Bearer ${staffToken}`);
+
+      expect(res.statusCode).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.status).toBe('borrowing');
     });
   });
 });
