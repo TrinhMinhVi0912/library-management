@@ -1,6 +1,7 @@
 const express = require('express');
 const { auth, requireRole, validate } = require('../middlewares');
 const bookController = require('../controllers/book.controller');
+const counterController = require('../controllers/counter.controller');
 const {
   idParamSchema,
   createBookSchema,
@@ -14,6 +15,11 @@ const router = express.Router();
 // Tất cả các route quản trị đều yêu cầu xác thực và phân quyền nhân viên (staff) hoặc quản trị viên (admin)
 router.use(auth);
 router.use(requireRole('staff', 'admin'));
+
+// =============================================================================
+// SỐ ĐẾM / BADGE (/admin/counters)
+// =============================================================================
+router.get('/counters', counterController.getCounters);
 
 // =============================================================================
 // QUẢN LÝ SÁCH (/admin/books)

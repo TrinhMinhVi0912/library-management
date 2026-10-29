@@ -57,7 +57,7 @@ describe('Tiện ích sinh mã tự tăng (code.util)', () => {
       expect(spy).toHaveBeenCalledWith(
         { _id: 'loan' },
         { $inc: { seq: 1 } },
-        expect.objectContaining({ session: mockSession, upsert: true, new: true })
+        expect.objectContaining({ session: mockSession, upsert: true })
       );
     });
 

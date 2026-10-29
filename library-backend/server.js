@@ -5,9 +5,9 @@ const MongoDB = require('./app/utils/mongodb.util');
 
 const server = http.createServer(app);
 
-// TODO: Khởi tạo Socket.IO (gắn vào server ở task BE-04/BE-32)
-// const { initSocket } = require('./app/sockets');
-// initSocket(server);
+// Khởi tạo Socket.IO (gắn vào HTTP server)
+const { initSocket } = require('./app/sockets');
+initSocket(server);
 
 // TODO: Khởi chạy Scheduled Jobs (task sau)
 // if (!config.jobs.disableInternalCron) {

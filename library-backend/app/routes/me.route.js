@@ -5,6 +5,7 @@ const {
   changePasswordSchema,
 } = require('../validators/user.validator');
 const userController = require('../controllers/user.controller');
+const notificationRouter = require('./notification.route');
 
 const router = express.Router();
 
@@ -38,6 +39,9 @@ router.patch('/password', validate(changePasswordSchema), userController.changeP
  * @access  Đăng nhập
  */
 router.post('/avatar', uploadAvatar, userController.uploadAvatar);
+
+// Mount thông báo: /api/v1/me/notifications
+router.use('/notifications', notificationRouter);
 
 module.exports = router;
 
