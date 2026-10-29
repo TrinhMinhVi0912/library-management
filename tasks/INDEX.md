@@ -27,7 +27,7 @@ Mỗi task = 1 cuộc trò chuyện (~45–90 phút). Chi tiết: `tasks/backend
 | [BE-17](backend/BE-17.md) | notify.service (DB) và API thông báo của tôi | B4 Mượn trả | BE-06, BE-08 | ✅ | |
 | [BE-18](backend/BE-18.md) | Socket.IO: xác thực, rooms, đẩy thông báo & số đếm | B4 Mượn trả | BE-17 | ✅ | |
 | [BE-19](backend/BE-19.md) | Gửi yêu cầu mượn & phiếu của tôi | B4 Mượn trả | BE-16, BE-18 | ✅ | |
-| [BE-20](backend/BE-20.md) | Duyệt / từ chối yêu cầu mượn (transaction) | B4 Mượn trả | BE-19 | ⬜ | |
+| [BE-20](backend/BE-20.md) | Duyệt / từ chối yêu cầu mượn (transaction) | B4 Mượn trả | BE-19 | ✅ | |
 | [BE-21](backend/BE-21.md) | Xác nhận giao sách | B4 Mượn trả | BE-20 | ⬜ | |
 | [BE-22](backend/BE-22.md) | Trả sách & phạt tự động (transaction) | B4 Mượn trả | BE-21 | ⬜ | |
 | [BE-23](backend/BE-23.md) | Quản lý phạt: xem, ghi nhận, thu, miễn | B4 Mượn trả | BE-22 | ⬜ | |

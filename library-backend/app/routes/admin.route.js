@@ -2,6 +2,7 @@ const express = require('express');
 const { auth, requireRole, validate } = require('../middlewares');
 const bookController = require('../controllers/book.controller');
 const counterController = require('../controllers/counter.controller');
+const loanController = require('../controllers/loan.controller');
 const {
   idParamSchema,
   createBookSchema,
@@ -9,6 +10,11 @@ const {
   updateStatusSchema,
   queryAdminBookSchema,
 } = require('../validators/book.validator');
+const {
+  loanIdParamSchema,
+  rejectLoanSchema,
+  queryAdminLoansSchema,
+} = require('../validators/loan.validator');
 
 const router = express.Router();
 
@@ -47,6 +53,30 @@ router.patch(
   '/books/:id/status',
   validate({ params: idParamSchema, body: updateStatusSchema }),
   bookController.updateBookStatus
+);
+
+// =============================================================================
+// QUẢN LÝ PHIẾU MƯỢN (/admin/loans)
+// =============================================================================
+
+router
+  .route('/loans')
+  .get(validate(queryAdminLoansSchema, 'query'), loanController.getAdminLoans);
+
+router
+  .route('/loans/:id')
+  .get(validate(loanIdParamSchema, 'params'), loanController.getAdminLoanById);
+
+router.post(
+  '/loans/:id/approve',
+  validate(loanIdParamSchema, 'params'),
+  loanController.approveLoan
+);
+
+router.post(
+  '/loans/:id/reject',
+  validate({ params: loanIdParamSchema, body: rejectLoanSchema }),
+  loanController.rejectLoan
 );
 
 module.exports = router;

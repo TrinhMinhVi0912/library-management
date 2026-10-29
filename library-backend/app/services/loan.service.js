@@ -4,6 +4,7 @@ const { Loan, Book, User, Cart } = require('../models');
 const settingsService = require('./settings.service');
 const notifyService = require('./notify.service');
 const countersService = require('./counters.service');
+const auditService = require('./audit.service');
 const codeUtil = require('../utils/code.util');
 const { parsePagination, buildPaginationMeta } = require('../utils/pagination.util');
 
@@ -266,9 +267,242 @@ async function cancelLoan(userId, loanId) {
   return cancelledLoan;
 }
 
+/**
+ * Nhân viên duyệt yêu cầu mượn sách (transaction)
+ * Điều kiện:
+ * 1. Phiếu mượn phải ở trạng thái pending
+ * 2. Từng cuốn sách phải cập nhật giảm availableCopies nguyên tử ($gte: 1, $inc: -1)
+ *    Nếu hết sách giữa chừng -> rollback và ném lỗi 422 nêu rõ tên cuốn sách hết
+ * 3. Cập nhật phiếu mượn sang approved, gán pickupDeadline = now + pickupHoldDays, approvedBy, approvedAt
+ * 4. Sau commit: gửi thông báo độc giả, emit socket loan:updated, emit staff:counters, ghi audit log
+ *
+ * @param {string} loanId - ID phiếu mượn
+ * @param {string} staffId - ID nhân viên duyệt
+ * @param {object} [options] - Tuỳ chọn bổ sung (ip, ...)
+ * @returns {Promise<object>} Phiếu mượn sau khi duyệt
+ */
+async function approveLoan(loanId, staffId, options = {}) {
+  const session = await mongoose.startSession();
+  let approvedLoan;
+
+  try {
+    await session.withTransaction(async () => {
+      const loan = await Loan.findById(loanId).session(session);
+      if (!loan) {
+        throw ApiError.notFound('Phiếu mượn không tồn tại');
+      }
+      if (loan.status !== 'pending') {
+        throw ApiError.badRequest('Chỉ có thể duyệt phiếu mượn ở trạng thái chờ duyệt');
+      }
+
+      for (const item of loan.items) {
+        const bookId = item.book && item.book._id ? item.book._id : item.book;
+        const updatedBook = await Book.findOneAndUpdate(
+          { _id: bookId, availableCopies: { $gte: 1 } },
+          { $inc: { availableCopies: -1 } },
+          { session, new: true }
+        );
+
+        if (!updatedBook) {
+          throw ApiError.unprocessableEntity(
+            `Sách "${item.titleSnapshot || 'không xác định'}" đã hết bản sao có thể mượn`
+          );
+        }
+      }
+
+      const settings = await settingsService.getSettings();
+      const pickupHoldDays = settings.pickupHoldDays || 3;
+      const now = new Date();
+      const pickupDeadline = new Date(now.getTime() + pickupHoldDays * 24 * 60 * 60 * 1000);
+
+      loan.status = 'approved';
+      loan.approvedBy = staffId;
+      loan.approvedAt = now;
+      loan.pickupDeadline = pickupDeadline;
+
+      await loan.save({ session });
+      approvedLoan = loan;
+    });
+  } finally {
+    await session.endSession();
+  }
+
+  // Sau commit: thông báo độc giả, emit loan:updated, cập nhật staff:counters, ghi audit log
+  const readerId = approvedLoan.reader.toString();
+  const deadlineStr = approvedLoan.pickupDeadline.toISOString().split('T')[0];
+
+  await notifyService.notifyUser(readerId, {
+    type: 'loan',
+    title: 'Yêu cầu mượn sách đã được duyệt',
+    content: `Yêu cầu mượn sách ${approvedLoan.code} của bạn đã được duyệt. Vui lòng nhận sách trước ngày ${deadlineStr}.`,
+    link: `/my/loans/${approvedLoan._id}`,
+    createdBy: staffId,
+  });
+
+  notifyService.emitLoanUpdated(readerId, approvedLoan._id.toString(), 'approved');
+  await countersService.emitStaffCounters();
+
+  await auditService.log({
+    actor: staffId,
+    action: 'loan.approve',
+    targetType: 'Loan',
+    targetId: approvedLoan._id,
+    detail: {
+      code: approvedLoan.code,
+      pickupDeadline: approvedLoan.pickupDeadline,
+    },
+    ip: options.ip || null,
+  });
+
+  return approvedLoan;
+}
+
+/**
+ * Nhân viên từ chối yêu cầu mượn sách
+ * Bắt buộc phải có lý do từ chối.
+ * Chuyển trạng thái phiếu sang rejected, lưu rejectReason, approvedBy, approvedAt.
+ * Sau khi lưu: thông báo độc giả, emit loan:updated, cập nhật staff:counters, ghi audit log.
+ *
+ * @param {string} loanId - ID phiếu mượn
+ * @param {string} staffId - ID nhân viên từ chối
+ * @param {string} reason - Lý do từ chối (bắt buộc)
+ * @param {object} [options] - Tuỳ chọn bổ sung (ip, ...)
+ * @returns {Promise<object>} Phiếu mượn sau khi từ chối
+ */
+async function rejectLoan(loanId, staffId, reason, options = {}) {
+  if (!reason || typeof reason !== 'string' || !reason.trim()) {
+    throw ApiError.unprocessableEntity('Lý do từ chối là bắt buộc');
+  }
+
+  const loan = await Loan.findById(loanId);
+  if (!loan) {
+    throw ApiError.notFound('Phiếu mượn không tồn tại');
+  }
+  if (loan.status !== 'pending') {
+    throw ApiError.badRequest('Chỉ có thể từ chối phiếu mượn ở trạng thái chờ duyệt');
+  }
+
+  const trimmedReason = reason.trim();
+  loan.status = 'rejected';
+  loan.rejectReason = trimmedReason;
+  loan.approvedBy = staffId;
+  loan.approvedAt = new Date();
+  await loan.save();
+
+  // Sau khi từ chối: thông báo độc giả, emit loan:updated, cập nhật staff:counters, ghi audit log
+  const readerId = loan.reader.toString();
+  await notifyService.notifyUser(readerId, {
+    type: 'loan',
+    title: 'Yêu cầu mượn sách bị từ chối',
+    content: `Yêu cầu mượn sách ${loan.code} của bạn đã bị từ chối. Lý do: ${trimmedReason}`,
+    link: `/my/loans/${loan._id}`,
+    createdBy: staffId,
+  });
+
+  notifyService.emitLoanUpdated(readerId, loan._id.toString(), 'rejected');
+  await countersService.emitStaffCounters();
+
+  await auditService.log({
+    actor: staffId,
+    action: 'loan.reject',
+    targetType: 'Loan',
+    targetId: loan._id,
+    detail: {
+      code: loan.code,
+      reason: trimmedReason,
+    },
+    ip: options.ip || null,
+  });
+
+  return loan;
+}
+
+/**
+ * Nhân viên/Admin lấy danh sách phiếu mượn
+ * Hỗ trợ lọc theo trạng thái, độc giả, từ khóa (mã phiếu, tên sách), khoảng thời gian, phân trang.
+ *
+ * @param {object} query - Tham số truy vấn (status, reader, q, from, to, page, limit, sort)
+ * @returns {Promise<{ items: Array, meta: object }>}
+ */
+async function getAdminLoans(query = {}) {
+  const filter = {};
+  if (query.status) {
+    filter.status = query.status;
+  }
+  if (query.reader) {
+    filter.reader = query.reader;
+  }
+  if (query.q) {
+    const q = query.q.trim();
+    filter.$or = [
+      { code: { $regex: q, $options: 'i' } },
+      { 'items.titleSnapshot': { $regex: q, $options: 'i' } },
+    ];
+  }
+  if (query.from || query.to) {
+    filter.createdAt = {};
+    if (query.from) {
+      filter.createdAt.$gte = new Date(query.from);
+    }
+    if (query.to) {
+      const toDate = new Date(query.to);
+      toDate.setHours(23, 59, 59, 999);
+      filter.createdAt.$lte = toDate;
+    }
+  }
+
+  const { page, limit, skip, sort } = parsePagination(query, {
+    defaultLimit: 10,
+    defaultSort: '-createdAt',
+  });
+
+  const [items, total] = await Promise.all([
+    Loan.find(filter)
+      .sort(sort)
+      .skip(skip)
+      .limit(limit)
+      .populate('reader', 'code firstName lastName email phone avatar')
+      .populate('items.book', 'title slug cover authors authorText price availableCopies')
+      .populate('approvedBy', 'code firstName lastName')
+      .populate('handedOverBy', 'code firstName lastName')
+      .populate('returnedBy', 'code firstName lastName'),
+    Loan.countDocuments(filter),
+  ]);
+
+  return {
+    items,
+    meta: buildPaginationMeta(total, page, limit),
+  };
+}
+
+/**
+ * Nhân viên/Admin lấy chi tiết một phiếu mượn theo ID
+ *
+ * @param {string} loanId - ID phiếu mượn
+ * @returns {Promise<object>}
+ */
+async function getAdminLoanById(loanId) {
+  const loan = await Loan.findById(loanId)
+    .populate('reader', 'code firstName lastName email phone address avatar status unpaidFineTotal')
+    .populate('items.book', 'title slug cover authors authorText price location availableCopies totalCopies')
+    .populate('approvedBy', 'code firstName lastName role')
+    .populate('handedOverBy', 'code firstName lastName role')
+    .populate('returnedBy', 'code firstName lastName role');
+
+  if (!loan) {
+    throw ApiError.notFound('Phiếu mượn không tồn tại');
+  }
+
+  return loan;
+}
+
 module.exports = {
   submitLoan,
   getMyLoans,
   getMyLoanById,
   cancelLoan,
+  approveLoan,
+  rejectLoan,
+  getAdminLoans,
+  getAdminLoanById,
 };
