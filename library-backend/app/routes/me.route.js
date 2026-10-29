@@ -6,6 +6,7 @@ const {
 } = require('../validators/user.validator');
 const userController = require('../controllers/user.controller');
 const notificationRouter = require('./notification.route');
+const { meLoanRouter } = require('./loan.route');
 
 const router = express.Router();
 
@@ -42,6 +43,9 @@ router.post('/avatar', uploadAvatar, userController.uploadAvatar);
 
 // Mount thông báo: /api/v1/me/notifications
 router.use('/notifications', notificationRouter);
+
+// Mount phiếu mượn của tôi: /api/v1/me/loans
+router.use('/loans', meLoanRouter);
 
 module.exports = router;
 
