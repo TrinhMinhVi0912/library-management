@@ -66,6 +66,26 @@ const loanIdParamSchema = Joi.object({
   }),
 });
 
+const renewalBookParamsSchema = Joi.object({
+  id: Joi.string().pattern(objectIdRegex).required(),
+  bookId: Joi.string().pattern(objectIdRegex).required(),
+});
+
+const renewalIdParamSchema = Joi.object({
+  id: Joi.string().pattern(objectIdRegex).required(),
+});
+
+const requestRenewalSchema = Joi.object({
+  reason: Joi.string().trim().max(500).allow('', null),
+});
+
+const getRenewalsQuerySchema = Joi.object({
+  status: Joi.string().valid('pending', 'approved', 'rejected', 'cancelled'),
+  page: Joi.number().integer().min(1).default(1),
+  limit: Joi.number().integer().min(1).max(100).default(12),
+  sort: Joi.string().trim(),
+});
+
 /**
  * Schema validate body khi nhân viên từ chối phiếu mượn
  * POST /api/v1/admin/loans/:id/reject
@@ -127,6 +147,10 @@ module.exports = {
   submitLoanSchema,
   getLoansQuerySchema,
   loanIdParamSchema,
+  renewalBookParamsSchema,
+  renewalIdParamSchema,
+  requestRenewalSchema,
+  getRenewalsQuerySchema,
   rejectLoanSchema,
   returnLoanSchema,
   queryAdminLoansSchema,

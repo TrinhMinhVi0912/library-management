@@ -4,8 +4,11 @@ const {
   submitLoanSchema,
   getLoansQuerySchema,
   loanIdParamSchema,
+  renewalBookParamsSchema,
+  requestRenewalSchema,
 } = require('../validators/loan.validator');
 const loanController = require('../controllers/loan.controller');
+const renewalController = require('../controllers/renewal.controller');
 
 // Router dành cho POST /api/v1/loans
 const loanRouter = express.Router();
@@ -54,6 +57,14 @@ meLoanRouter.post(
   validate(loanIdParamSchema, 'params'),
   loanController.cancelLoan
 );
+
+meLoanRouter.post(
+  '/:id/items/:bookId/renewals',
+  requireRole('reader'),
+  validate({ params: renewalBookParamsSchema, body: requestRenewalSchema }),
+  renewalController.requestRenewal
+);
+
 
 loanRouter.loanRouter = loanRouter;
 loanRouter.meLoanRouter = meLoanRouter;

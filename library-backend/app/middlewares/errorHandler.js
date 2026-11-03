@@ -90,6 +90,7 @@ const errorHandler = (err, req, res, _next) => {
   const responseBody = {
     success: false,
     message,
+    ...(err.errorCode ? { code: err.errorCode } : {}),
     ...(errors ? { errors } : {}),
   };
 

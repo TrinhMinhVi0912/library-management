@@ -624,6 +624,7 @@ async function returnItems(loanId, items, staffId, options = {}) {
       const fines = [];
       let totalFine = 0;
       const returned = [];
+      const cancelledRenewalIds = [];
 
       for (const entry of items) {
         const returnedBookId = entry.bookId || entry.book;
@@ -650,11 +651,13 @@ async function returnItems(loanId, items, staffId, options = {}) {
         item.condition = entry.condition;
         item.returnDate = now;
         returned.push(returnedBookId);
+        const pendingRenewals = await RenewalRequest.find({ loan: loan._id, book: book._id, status: 'pending' }).select('_id').session(session);
         await RenewalRequest.updateMany(
           { loan: loan._id, book: book._id, status: 'pending' },
           { $set: { status: 'cancelled', decidedBy: staffId, decidedAt: now } },
           { session }
         );
+        cancelledRenewalIds.push(...pendingRenewals.map((request) => request._id.toString()));
       }
       if (totalFine) {
         reader.unpaidFineTotal = (reader.unpaidFineTotal || 0) + totalFine;
@@ -667,12 +670,15 @@ async function returnItems(loanId, items, staffId, options = {}) {
       loan.returnedBy = staffId;
       if (!hasBorrowing) loan.closedAt = now;
       await loan.save({ session });
-      result = { loan, fines, totalFine, returned };
+      result = { loan, fines, totalFine, returned, cancelledRenewalIds };
     });
   } finally { await session.endSession(); }
   const readerId = result.loan.reader.toString();
   await notifyService.notifyUser(readerId, { type: 'loan', title: 'Đã ghi nhận trả sách', content: `Phiếu ${result.loan.code} đã cập nhật. Tổng tiền phạt: ${result.totalFine.toLocaleString('vi-VN')}đ.`, link: `/my/loans/${result.loan._id}`, createdBy: staffId });
   notifyService.emitLoanUpdated(readerId, result.loan._id.toString(), result.loan.status);
+  for (const requestId of result.cancelledRenewalIds) {
+    notifyService.emitRenewalUpdated(readerId, requestId, 'cancelled');
+  }
   await auditService.log({ actor: staffId, action: 'loan.return', targetType: 'Loan', targetId: result.loan._id, detail: { code: result.loan.code, totalFine: result.totalFine, items: result.returned }, ip: options.ip || null });
   return result;
 }

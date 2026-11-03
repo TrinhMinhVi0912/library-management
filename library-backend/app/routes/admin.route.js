@@ -3,6 +3,7 @@ const { auth, requireRole, validate } = require('../middlewares');
 const bookController = require('../controllers/book.controller');
 const counterController = require('../controllers/counter.controller');
 const loanController = require('../controllers/loan.controller');
+const fineController = require('../controllers/fine.controller');
 const {
   idParamSchema,
   createBookSchema,
@@ -16,6 +17,12 @@ const {
   queryAdminLoansSchema,
   returnLoanSchema,
 } = require('../validators/loan.validator');
+const {
+  fineIdParamSchema,
+  adminFinesQuerySchema,
+  createFineSchema,
+  waiveFineSchema,
+} = require('../validators/fine.validator');
 
 const router = express.Router();
 
@@ -87,6 +94,17 @@ router.post(
 );
 
 router.post('/loans/:id/return', validate({ params: loanIdParamSchema, body: returnLoanSchema }), loanController.returnItems);
+
+router.get('/fines', validate(adminFinesQuerySchema, 'query'), fineController.getAdminFines);
+router.post('/fines', validate(createFineSchema), fineController.createManualFine);
+router.patch('/fines/:id/pay', validate(fineIdParamSchema, 'params'), fineController.payFine);
+router.patch(
+  '/fines/:id/waive',
+  requireRole('admin'),
+  validate({ params: fineIdParamSchema, body: waiveFineSchema }),
+  fineController.waiveFine
+);
+router.post('/fines/recalculate', requireRole('admin'), fineController.recalculateFines);
 
 module.exports = router;
 

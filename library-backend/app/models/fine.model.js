@@ -57,6 +57,8 @@ const fineSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    waivedAt: { type: Date },
+    waivedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   },
   {
     timestamps: true,

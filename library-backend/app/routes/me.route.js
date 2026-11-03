@@ -1,12 +1,16 @@
 const express = require('express');
-const { auth, validate, uploadAvatar } = require('../middlewares');
+const { auth, requireRole, validate, uploadAvatar } = require('../middlewares');
 const {
   updateProfileSchema,
   changePasswordSchema,
 } = require('../validators/user.validator');
 const userController = require('../controllers/user.controller');
+const fineController = require('../controllers/fine.controller');
+const { myFinesQuerySchema } = require('../validators/fine.validator');
 const notificationRouter = require('./notification.route');
 const { meLoanRouter } = require('./loan.route');
+const renewalController = require('../controllers/renewal.controller');
+const { renewalIdParamSchema, getRenewalsQuerySchema } = require('../validators/loan.validator');
 
 const router = express.Router();
 
@@ -40,6 +44,10 @@ router.patch('/password', validate(changePasswordSchema), userController.changeP
  * @access  Đăng nhập
  */
 router.post('/avatar', uploadAvatar, userController.uploadAvatar);
+
+router.get('/fines', validate(myFinesQuerySchema, 'query'), fineController.getMyFines);
+router.get('/renewals', requireRole('reader'), validate(getRenewalsQuerySchema, 'query'), renewalController.getMyRenewals);
+router.post('/renewals/:id/cancel', requireRole('reader'), validate(renewalIdParamSchema, 'params'), renewalController.cancelRenewal);
 
 // Mount thông báo: /api/v1/me/notifications
 router.use('/notifications', notificationRouter);
