@@ -6,6 +6,7 @@ const ApiError = require('../api-error');
 const { User, RefreshToken } = require('../models');
 const { nextCode } = require('../utils/code.util');
 const mailer = require('../utils/mailer.util');
+const shelfService = require('./shelf.service');
 
 /**
  * Băm refresh token bằng thuật toán SHA-256 trước khi lưu hoặc tra cứu trong DB
@@ -92,6 +93,8 @@ const register = async (userData, userAgent = '') => {
     phone: userData.phone ? userData.phone.trim() : undefined,
     status: 'active',
   });
+
+  await shelfService.ensureDefaultShelves(user._id);
 
   const { accessToken, refreshToken } = await createSession(user, userAgent);
 

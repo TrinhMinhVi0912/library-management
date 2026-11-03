@@ -11,6 +11,7 @@ const notificationRouter = require('./notification.route');
 const { meLoanRouter } = require('./loan.route');
 const renewalController = require('../controllers/renewal.controller');
 const { renewalIdParamSchema, getRenewalsQuerySchema } = require('../validators/loan.validator');
+const shelfRouter = require('./shelf.route');
 
 const router = express.Router();
 
@@ -48,6 +49,7 @@ router.post('/avatar', uploadAvatar, userController.uploadAvatar);
 router.get('/fines', validate(myFinesQuerySchema, 'query'), fineController.getMyFines);
 router.get('/renewals', requireRole('reader'), validate(getRenewalsQuerySchema, 'query'), renewalController.getMyRenewals);
 router.post('/renewals/:id/cancel', requireRole('reader'), validate(renewalIdParamSchema, 'params'), renewalController.cancelRenewal);
+router.use('/shelves', shelfRouter);
 
 // Mount thông báo: /api/v1/me/notifications
 router.use('/notifications', notificationRouter);

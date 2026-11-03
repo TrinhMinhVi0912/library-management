@@ -1,7 +1,7 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const config = require('../app/config');
-const { User, RefreshToken, Counter } = require('../app/models');
+const { User, RefreshToken, Counter, Shelf } = require('../app/models');
 const authService = require('../app/services/auth.service');
 const authController = require('../app/controllers/auth.controller');
 const {
@@ -148,6 +148,10 @@ describe('Auth Module Tests (BE-08)', () => {
 
       jest.spyOn(User, 'create').mockResolvedValue(mockSavedUser);
       jest.spyOn(RefreshToken, 'create').mockResolvedValue({ _id: 'token_id_1' });
+      const existingShelfQuery = { select: jest.fn().mockReturnThis(), lean: jest.fn().mockResolvedValue([]) };
+      const allShelvesQuery = { sort: jest.fn().mockReturnThis(), lean: jest.fn().mockResolvedValue([]) };
+      jest.spyOn(Shelf, 'find').mockImplementation((filter) => filter.name ? existingShelfQuery : allShelvesQuery);
+      jest.spyOn(Shelf, 'bulkWrite').mockResolvedValue({ upsertedCount: 3 });
 
       const result = await authService.register({
         firstName: 'Nguyen',
@@ -162,6 +166,11 @@ describe('Auth Module Tests (BE-08)', () => {
       expect(result.user.passwordHash).toBeUndefined();
       expect(result).toHaveProperty('accessToken');
       expect(result).toHaveProperty('refreshToken');
+      expect(Shelf.bulkWrite).toHaveBeenCalledWith(expect.arrayContaining([
+        expect.objectContaining({ updateOne: expect.objectContaining({ filter: expect.objectContaining({ user: mockSavedUser._id, name: 'Muốn đọc' }) }) }),
+        expect.objectContaining({ updateOne: expect.objectContaining({ filter: expect.objectContaining({ user: mockSavedUser._id, name: 'Đang đọc' }) }) }),
+        expect.objectContaining({ updateOne: expect.objectContaining({ filter: expect.objectContaining({ user: mockSavedUser._id, name: 'Đã đọc' }) }) }),
+      ]), { ordered: false });
 
       // Verify decoded access token payload
       const decodedAccess = jwt.verify(result.accessToken, config.jwt.accessSecret);
