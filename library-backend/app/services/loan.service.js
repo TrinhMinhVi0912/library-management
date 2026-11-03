@@ -1,11 +1,12 @@
 const mongoose = require('mongoose');
 const ApiError = require('../api-error');
-const { Loan, Book, User, Cart, RenewalRequest } = require('../models');
+const { Loan, Book, User, Cart, RenewalRequest, Reservation } = require('../models');
 const settingsService = require('./settings.service');
 const notifyService = require('./notify.service');
 const countersService = require('./counters.service');
 const auditService = require('./audit.service');
 const fineService = require('./fine.service');
+const reservationService = require('./reservation.service');
 const codeUtil = require('../utils/code.util');
 const { parsePagination, buildPaginationMeta } = require('../utils/pagination.util');
 
@@ -74,6 +75,7 @@ async function submitLoan(userId, data = {}) {
 
   // Kiểm tra tính khả dụng của từng cuốn sách và tạo snapshot
   const resolvedItems = [];
+  const requestAt = new Date();
   for (const item of rawItems) {
     const bookDoc = item.book && item.book._id ? item.book : await Book.findById(item.book || item);
     if (!bookDoc) {
@@ -82,7 +84,13 @@ async function submitLoan(userId, data = {}) {
     if (bookDoc.status !== 'active') {
       throw ApiError.badRequest(`Sách "${bookDoc.title}" hiện không khả dụng`);
     }
-    if (bookDoc.availableCopies <= 0) {
+    const heldReservation = bookDoc.availableCopies <= 0 && await Reservation.exists({
+      reader: userId,
+      book: bookDoc._id,
+      status: 'available',
+      holdUntil: { $gt: requestAt },
+    });
+    if (bookDoc.availableCopies <= 0 && !heldReservation) {
       throw ApiError.badRequest(`Sách "${bookDoc.title}" hiện đã hết bản sao có thể mượn`);
     }
 
@@ -130,6 +138,7 @@ async function submitLoan(userId, data = {}) {
     items: resolvedItems,
     expectedPickupDate: data.expectedPickupDate,
     requestNote: data.requestNote || data.note || '',
+    createdAt: requestAt,
   });
 
   // 7. Xóa giỏ mượn của độc giả
@@ -221,6 +230,7 @@ async function cancelLoan(userId, loanId) {
   const session = await mongoose.startSession();
   let wasPending;
   let cancelledLoan;
+  let offeredReservations = [];
 
   try {
     session.startTransaction();
@@ -244,6 +254,8 @@ async function cancelLoan(userId, loanId) {
           { $inc: { availableCopies: 1 } },
           { session }
         );
+        const offered = await reservationService.reserveReturnedCopy(item.book, { session });
+        if (offered) offeredReservations.push(offered);
       }
     }
 
@@ -263,6 +275,10 @@ async function cancelLoan(userId, loanId) {
   notifyService.emitLoanUpdated(userId, loanId, 'cancelled');
   if (wasPending) {
     await countersService.emitStaffCounters();
+  }
+  for (const reservation of offeredReservations) {
+    await reservationService.notifyAvailable(reservation);
+    await auditService.log({ action: 'reservation.available', targetType: 'Reservation', targetId: reservation._id, detail: { book: reservation.book } });
   }
 
   return cancelledLoan;
@@ -298,6 +314,14 @@ async function approveLoan(loanId, staffId, options = {}) {
 
       for (const item of loan.items) {
         const bookId = item.book && item.book._id ? item.book._id : item.book;
+        const heldReservation = await reservationService.findAvailableReservation(loan.reader, bookId, session);
+        if (heldReservation) {
+          if (!heldReservation.holdUntil || (new Date(heldReservation.holdUntil) < new Date() && new Date(loan.createdAt) > new Date(heldReservation.holdUntil))) {
+            throw ApiError.conflict('Thời hạn giữ sách đặt trước đã hết');
+          }
+          await reservationService.fulfillReservation(heldReservation, session);
+          continue;
+        }
         const updatedBook = await Book.findOneAndUpdate(
           { _id: bookId, availableCopies: { $gte: 1 } },
           { $inc: { availableCopies: -1 } },
@@ -625,6 +649,7 @@ async function returnItems(loanId, items, staffId, options = {}) {
       let totalFine = 0;
       const returned = [];
       const cancelledRenewalIds = [];
+      const offeredReservations = [];
 
       for (const entry of items) {
         const returnedBookId = entry.bookId || entry.book;
@@ -646,7 +671,11 @@ async function returnItems(loanId, items, staffId, options = {}) {
           const stockUpdate = await Book.updateOne({ _id: book._id, totalCopies: { $gt: 0 } }, { $inc: { totalCopies: -1 } }, { session });
           if (!stockUpdate.modifiedCount) throw ApiError.conflict('Không thể giảm tồn kho: số lượng bản sách không hợp lệ');
         }
-        else await Book.updateOne({ _id: book._id }, { $inc: { availableCopies: 1 } }, { session });
+        else {
+          await Book.updateOne({ _id: book._id }, { $inc: { availableCopies: 1 } }, { session });
+          const offered = await reservationService.reserveReturnedCopy(book._id, { now, session });
+          if (offered) offeredReservations.push(offered);
+        }
         item.status = entry.condition === 'lost' ? 'lost' : 'returned';
         item.condition = entry.condition;
         item.returnDate = now;
@@ -670,7 +699,7 @@ async function returnItems(loanId, items, staffId, options = {}) {
       loan.returnedBy = staffId;
       if (!hasBorrowing) loan.closedAt = now;
       await loan.save({ session });
-      result = { loan, fines, totalFine, returned, cancelledRenewalIds };
+      result = { loan, fines, totalFine, returned, cancelledRenewalIds, offeredReservations };
     });
   } finally { await session.endSession(); }
   const readerId = result.loan.reader.toString();
@@ -678,6 +707,10 @@ async function returnItems(loanId, items, staffId, options = {}) {
   notifyService.emitLoanUpdated(readerId, result.loan._id.toString(), result.loan.status);
   for (const requestId of result.cancelledRenewalIds) {
     notifyService.emitRenewalUpdated(readerId, requestId, 'cancelled');
+  }
+  for (const reservation of result.offeredReservations) {
+    await reservationService.notifyAvailable(reservation);
+    await auditService.log({ action: 'reservation.available', targetType: 'Reservation', targetId: reservation._id, detail: { book: reservation.book } });
   }
   await auditService.log({ actor: staffId, action: 'loan.return', targetType: 'Loan', targetId: result.loan._id, detail: { code: result.loan.code, totalFine: result.totalFine, items: result.returned }, ip: options.ip || null });
   return result;

@@ -6,12 +6,14 @@ const jobs = {
   markOverdue: require('./markOverdue.job'),
   dueReminder: require('./dueReminder.job'),
   cleanup: require('./cleanup.job'),
+  expireReservation: require('./expireReservation.job'),
 };
 const schedules = {
   expirePickup: '0 * * * *',
   markOverdue: '5 0 * * *',
   dueReminder: '0 8 * * *',
   cleanup: '0 3 * * 0',
+  expireReservation: '0 * * * *',
 };
 let tasks = [];
 

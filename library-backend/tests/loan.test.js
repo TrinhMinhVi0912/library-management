@@ -4,8 +4,9 @@ const request = require('supertest');
 const app = require('../app');
 const config = require('../app/config');
 const loanService = require('../app/services/loan.service');
+const reservationService = require('../app/services/reservation.service');
 const loanController = require('../app/controllers/loan.controller');
-const { Loan, Book, User, Cart } = require('../app/models');
+const { Loan, Book, User, Cart, Reservation } = require('../app/models');
 const settingsService = require('../app/services/settings.service');
 const notifyService = require('../app/services/notify.service');
 const countersService = require('../app/services/counters.service');
@@ -150,6 +151,10 @@ describe('BE-19: Gửi yêu cầu mượn & Phiếu của tôi', () => {
       status: 'active',
       availableCopies: 3,
     };
+
+    beforeEach(() => {
+      jest.spyOn(Reservation, 'exists').mockResolvedValue(false);
+    });
 
     it('tạo phiếu mượn thành công từ giỏ hàng và làm sạch giỏ', async () => {
       jest.spyOn(User, 'findById').mockResolvedValue({
@@ -386,6 +391,7 @@ describe('BE-19: Gửi yêu cầu mượn & Phiếu của tôi', () => {
     let mockSession;
 
     beforeEach(() => {
+      jest.spyOn(reservationService, 'reserveReturnedCopy').mockResolvedValue(null);
       mockSession = {
         startTransaction: jest.fn(),
         commitTransaction: jest.fn(),
@@ -454,6 +460,7 @@ describe('BE-19: Gửi yêu cầu mượn & Phiếu của tôi', () => {
         { $inc: { availableCopies: 1 } },
         { session: mockSession }
       );
+      expect(reservationService.reserveReturnedCopy).toHaveBeenCalledTimes(2);
       expect(mockSession.commitTransaction).toHaveBeenCalled();
       // Phiếu approved khi hủy không giảm pendingLoans nên không gọi emitStaffCounters
       expect(countersService.emitStaffCounters).not.toHaveBeenCalled();
@@ -792,6 +799,7 @@ describe('BE-20: Duyệt / từ chối yêu cầu mượn (transaction)', () => 
         endSession: jest.fn().mockResolvedValue(undefined),
       };
       jest.spyOn(mongoose, 'startSession').mockResolvedValue(mockSession);
+      jest.spyOn(reservationService, 'findAvailableReservation').mockResolvedValue(null);
       jest.spyOn(settingsService, 'getSettings').mockResolvedValue({ pickupHoldDays: 3 });
       jest.spyOn(notifyService, 'notifyUser').mockResolvedValue({});
       jest.spyOn(notifyService, 'emitLoanUpdated').mockReturnValue();
@@ -882,6 +890,37 @@ describe('BE-20: Duyệt / từ chối yêu cầu mượn (transaction)', () => 
         })
       );
       expect(mockSession.endSession).toHaveBeenCalled();
+    });
+
+    it('duyệt lượt đặt trước của đúng độc giả mà không giảm kho lần thứ hai', async () => {
+      const mockLoan = {
+        _id: loanId,
+        code: 'PM000001',
+        reader: readerId,
+        status: 'pending',
+        createdAt: new Date('2026-11-01T00:00:00.000Z'),
+        items: [{ book: bookId1, titleSnapshot: 'Sách được giữ' }],
+        save: jest.fn().mockResolvedValue(true),
+      };
+      const heldReservation = {
+        _id: 'reservation-1',
+        holdUntil: new Date('2026-11-05T00:00:00.000Z'),
+        save: jest.fn().mockResolvedValue(true),
+      };
+      jest.spyOn(Loan, 'findById').mockReturnValue({ session: jest.fn().mockResolvedValue(mockLoan) });
+      const bookUpdate = jest.spyOn(Book, 'findOneAndUpdate');
+      reservationService.findAvailableReservation.mockResolvedValue(heldReservation);
+      jest.spyOn(reservationService, 'fulfillReservation').mockImplementation(async (reservation) => {
+        reservation.status = 'fulfilled';
+        await reservation.save({ session: mockSession });
+        return reservation;
+      });
+
+      await loanService.approveLoan(loanId, staffId);
+
+      expect(reservationService.fulfillReservation).toHaveBeenCalledWith(heldReservation, mockSession);
+      expect(heldReservation.status).toBe('fulfilled');
+      expect(bookUpdate).not.toHaveBeenCalled();
     });
 
     it('hết sách giữa chừng -> ném 422 nêu rõ tên sách hết và rollback transaction', async () => {

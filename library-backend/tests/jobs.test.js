@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 const config = require('../app/config');
 const { Loan, Book, Notification, NotificationRead, RefreshToken } = require('../app/models');
 const notifyService = require('../app/services/notify.service');
+const reservationService = require('../app/services/reservation.service');
 const auditService = require('../app/services/audit.service');
 const { jobs } = require('../app/jobs');
 const systemRouter = require('../app/routes/system.route');
@@ -20,6 +21,7 @@ describe('BE-32: scheduled jobs and manual endpoint', () => {
     config.jobs.secret = 'test-jobs-secret';
     jest.spyOn(notifyService, 'notifyUser').mockResolvedValue({});
     jest.spyOn(auditService, 'log').mockResolvedValue({});
+    jest.spyOn(reservationService, 'reserveReturnedCopy').mockResolvedValue(null);
   });
 
   describe('expirePickup', () => {

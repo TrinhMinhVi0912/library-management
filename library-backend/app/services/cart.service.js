@@ -1,5 +1,5 @@
 const ApiError = require('../api-error');
-const { Cart, Book } = require('../models');
+const { Cart, Book, Reservation } = require('../models');
 const settingsService = require('./settings.service');
 
 /**
@@ -23,13 +23,19 @@ async function getCart(userId) {
     return { items: [] };
   }
 
-  // Gắn cờ available (còn sách & active) cho từng item
+  const bookIds = cart.items.map((item) => item.book?._id).filter(Boolean);
+  const heldReservations = bookIds.length
+    ? await Reservation.find({ reader: userId, book: { $in: bookIds }, status: 'available', holdUntil: { $gt: new Date() } }).select('book').lean()
+    : [];
+  const heldBookIds = new Set(heldReservations.map((reservation) => String(reservation.book)));
+
+  // A reader may add a copy held specifically for their active reservation.
   const items = cart.items.map((item) => {
     const bookObj = item.book ? item.book.toObject() : null;
     return {
       book: bookObj,
       addedAt: item.addedAt,
-      available: bookObj ? bookObj.status === 'active' && bookObj.availableCopies > 0 : false,
+      available: bookObj ? bookObj.status === 'active' && (bookObj.availableCopies > 0 || heldBookIds.has(String(bookObj._id))) : false,
     };
   });
 
@@ -54,8 +60,14 @@ async function addItem(userId, bookId) {
     throw ApiError.badRequest('Sách hiện không khả dụng');
   }
 
-  // 2. Kiểm tra còn bản sao
-  if (book.availableCopies <= 0) {
+  // 2. A held reservation lets only its reader add the otherwise unavailable copy.
+  const hasHeldReservation = book.availableCopies <= 0 && await Reservation.exists({
+    reader: userId,
+    book: bookId,
+    status: 'available',
+    holdUntil: { $gt: new Date() },
+  });
+  if (book.availableCopies <= 0 && !hasHeldReservation) {
     throw ApiError.badRequest('Sách đã hết, không thể thêm vào giỏ');
   }
 
