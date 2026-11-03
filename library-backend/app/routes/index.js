@@ -7,6 +7,7 @@ const adminRouter = require('./admin.route');
 const bookRouter = require('./book.route');
 const cartRouter = require('./cart.route');
 const loanRouter = require('./loan.route');
+const reviewRouter = require('./review.route');
 
 const router = express.Router();
 
@@ -21,6 +22,7 @@ router.get('/', (req, res) => {
 // Mount các module routes
 router.use('/auth', authRouter);
 router.use('/me', meRouter);
+router.use('/', reviewRouter);
 router.use('/admin/uploads', uploadRouter);
 router.use('/admin', adminRouter);
 router.use('/books', bookRouter);
