@@ -14,6 +14,7 @@ const {
   loanIdParamSchema,
   rejectLoanSchema,
   queryAdminLoansSchema,
+  returnLoanSchema,
 } = require('../validators/loan.validator');
 
 const router = express.Router();
@@ -84,6 +85,8 @@ router.post(
   validate(loanIdParamSchema, 'params'),
   loanController.handoverLoan
 );
+
+router.post('/loans/:id/return', validate({ params: loanIdParamSchema, body: returnLoanSchema }), loanController.returnItems);
 
 module.exports = router;
 

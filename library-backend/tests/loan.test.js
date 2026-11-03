@@ -16,6 +16,7 @@ const {
   getLoansQuerySchema,
   loanIdParamSchema,
   rejectLoanSchema,
+  returnLoanSchema,
   queryAdminLoansSchema,
 } = require('../app/validators/loan.validator');
 
@@ -1165,6 +1166,17 @@ describe('BE-20: Duyệt / từ chối yêu cầu mượn (transaction)', () => 
         })
       );
       expect(mockSession.endSession).toHaveBeenCalled();
+    });
+  });
+
+  describe('3.2. BE-22: returnLoanSchema', () => {
+    it('chấp nhận payload theo API bookId và fineAmount cho sách hỏng', () => {
+      const { error } = returnLoanSchema.validate({ items: [{ bookId: bookId1, condition: 'damaged', fineAmount: 5000 }] });
+      expect(error).toBeUndefined();
+    });
+    it('từ chối payload thiếu định danh sách hoặc thiếu fineAmount sách hỏng', () => {
+      expect(returnLoanSchema.validate({ items: [{ condition: 'good' }] }).error).toBeDefined();
+      expect(returnLoanSchema.validate({ items: [{ bookId: bookId1, condition: 'damaged' }] }).error).toBeDefined();
     });
   });
 

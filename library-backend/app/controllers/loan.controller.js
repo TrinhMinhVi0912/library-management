@@ -91,6 +91,11 @@ const handoverLoan = asyncHandler(async (req, res) => {
   return ok(res, loan);
 });
 
+const returnItems = asyncHandler(async (req, res) => {
+  const result = await loanService.returnItems(req.params.id, req.body.items, req.user._id, { ip: req.ip });
+  return ok(res, result);
+});
+
 module.exports = {
   submitLoan,
   getMyLoans,
@@ -101,5 +106,6 @@ module.exports = {
   approveLoan,
   rejectLoan,
   handoverLoan,
+  returnItems,
 };
 

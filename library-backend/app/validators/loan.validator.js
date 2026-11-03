@@ -80,6 +80,15 @@ const rejectLoanSchema = Joi.object({
   }),
 });
 
+const returnLoanSchema = Joi.object({
+  items: Joi.array().min(1).required().items(Joi.object({
+    bookId: Joi.string().pattern(objectIdRegex),
+    book: Joi.string().pattern(objectIdRegex),
+    condition: Joi.string().valid('good', 'damaged', 'lost').required(),
+    fineAmount: Joi.when('condition', { is: 'damaged', then: Joi.number().min(0).required(), otherwise: Joi.forbidden() }),
+  }).xor('bookId', 'book').required()).messages({ 'any.required': 'Danh sách sách trả là bắt buộc' }),
+}).unknown(false);
+
 /**
  * Schema validate query khi nhân viên/admin lấy danh sách phiếu mượn
  * GET /api/v1/admin/loans?status=&q=&from=&to=&page=&limit=&sort=
@@ -119,6 +128,7 @@ module.exports = {
   getLoansQuerySchema,
   loanIdParamSchema,
   rejectLoanSchema,
+  returnLoanSchema,
   queryAdminLoansSchema,
 };
 

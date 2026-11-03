@@ -1,10 +1,11 @@
 const mongoose = require('mongoose');
 const ApiError = require('../api-error');
-const { Loan, Book, User, Cart } = require('../models');
+const { Loan, Book, User, Cart, RenewalRequest } = require('../models');
 const settingsService = require('./settings.service');
 const notifyService = require('./notify.service');
 const countersService = require('./counters.service');
 const auditService = require('./audit.service');
+const fineService = require('./fine.service');
 const codeUtil = require('../utils/code.util');
 const { parsePagination, buildPaginationMeta } = require('../utils/pagination.util');
 
@@ -605,6 +606,77 @@ async function getAdminLoanById(loanId) {
   return loan;
 }
 
+/** Nhân viên ghi nhận trả một hoặc nhiều quyển sách trong transaction. */
+async function returnItems(loanId, items, staffId, options = {}) {
+  const session = await mongoose.startSession();
+  let result;
+  try {
+    await session.withTransaction(async () => {
+      const loan = await Loan.findById(loanId).session(session);
+      if (!loan) throw ApiError.notFound('Phiếu mượn không tồn tại');
+      if (!['borrowing', 'overdue'].includes(loan.status)) {
+        throw ApiError.badRequest('Chỉ có thể trả sách thuộc phiếu đang mượn hoặc quá hạn');
+      }
+      const reader = await User.findById(loan.reader).session(session);
+      if (!reader) throw ApiError.notFound('Độc giả không tồn tại');
+      const settings = await settingsService.getSettings();
+      const now = new Date();
+      const fines = [];
+      let totalFine = 0;
+      const returned = [];
+
+      for (const entry of items) {
+        const returnedBookId = entry.bookId || entry.book;
+        const item = loan.items.find((row) => row.book.toString() === returnedBookId);
+        if (!item || item.status !== 'borrowing') throw ApiError.badRequest('Sách không thuộc danh sách đang mượn của phiếu');
+        if (returned.includes(returnedBookId)) throw ApiError.badRequest('Không thể trả trùng một quyển sách');
+        const book = await Book.findById(item.book).session(session);
+        if (!book) throw ApiError.notFound('Sách không tồn tại');
+        const daysLate = item.dueDate ? Math.max(0, Math.ceil((now - new Date(item.dueDate)) / 86400000)) : 0;
+        const addFine = async (type, amount, reason, lateDays = 0) => {
+          if (!amount) return;
+          fines.push(await fineService.createFine({ reader: reader._id, loan: loan._id, book: book._id, type, amount, reason, daysLate: lateDays, recordedBy: staffId }, { session }));
+          totalFine += amount;
+        };
+        if (daysLate) await addFine('late', daysLate * (settings.lateFeePerDay || 0), `Trễ hạn ${daysLate} ngày`, daysLate);
+        if (entry.condition === 'damaged') await addFine('damaged', entry.fineAmount, 'Phạt sách hư hỏng');
+        if (entry.condition === 'lost') await addFine('lost', item.priceSnapshot * (settings.lostBookFeeRate ?? 1) + (settings.lostBookProcessingFee || 0), 'Mất sách');
+        if (entry.condition === 'lost') {
+          const stockUpdate = await Book.updateOne({ _id: book._id, totalCopies: { $gt: 0 } }, { $inc: { totalCopies: -1 } }, { session });
+          if (!stockUpdate.modifiedCount) throw ApiError.conflict('Không thể giảm tồn kho: số lượng bản sách không hợp lệ');
+        }
+        else await Book.updateOne({ _id: book._id }, { $inc: { availableCopies: 1 } }, { session });
+        item.status = entry.condition === 'lost' ? 'lost' : 'returned';
+        item.condition = entry.condition;
+        item.returnDate = now;
+        returned.push(returnedBookId);
+        await RenewalRequest.updateMany(
+          { loan: loan._id, book: book._id, status: 'pending' },
+          { $set: { status: 'cancelled', decidedBy: staffId, decidedAt: now } },
+          { session }
+        );
+      }
+      if (totalFine) {
+        reader.unpaidFineTotal = (reader.unpaidFineTotal || 0) + totalFine;
+        await reader.save({ session });
+      }
+      const hasBorrowing = loan.items.some((item) => item.status === 'borrowing');
+      loan.status = hasBorrowing
+        ? (loan.items.some((item) => item.status === 'borrowing' && item.dueDate < now) ? 'overdue' : 'borrowing')
+        : 'returned';
+      loan.returnedBy = staffId;
+      if (!hasBorrowing) loan.closedAt = now;
+      await loan.save({ session });
+      result = { loan, fines, totalFine, returned };
+    });
+  } finally { await session.endSession(); }
+  const readerId = result.loan.reader.toString();
+  await notifyService.notifyUser(readerId, { type: 'loan', title: 'Đã ghi nhận trả sách', content: `Phiếu ${result.loan.code} đã cập nhật. Tổng tiền phạt: ${result.totalFine.toLocaleString('vi-VN')}đ.`, link: `/my/loans/${result.loan._id}`, createdBy: staffId });
+  notifyService.emitLoanUpdated(readerId, result.loan._id.toString(), result.loan.status);
+  await auditService.log({ actor: staffId, action: 'loan.return', targetType: 'Loan', targetId: result.loan._id, detail: { code: result.loan.code, totalFine: result.totalFine, items: result.returned }, ip: options.ip || null });
+  return result;
+}
+
 module.exports = {
   submitLoan,
   getMyLoans,
@@ -615,4 +687,5 @@ module.exports = {
   handoverLoan,
   getAdminLoans,
   getAdminLoanById,
+  returnItems,
 };
