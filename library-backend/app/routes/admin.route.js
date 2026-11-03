@@ -52,7 +52,16 @@ const {
 } = require('../validators/admin-notification.validator');
 const { dashboardChartsQuerySchema, reportDateRangeSchema } = require('../validators/dashboard.validator');
 const forumController = require('../controllers/forum.controller');
-const { idParamSchema: forumIdParamSchema, createCategorySchema, updateCategorySchema } = require('../validators/forum.validator');
+const {
+  idParamSchema: forumIdParamSchema,
+  createCategorySchema,
+  updateCategorySchema,
+  adminReportsQuerySchema,
+  reportStatusSchema,
+  pinStateSchema,
+  lockStateSchema,
+  hideStateSchema,
+} = require('../validators/forum.validator');
 
 const router = express.Router();
 
@@ -88,6 +97,13 @@ router.route('/forum/categories')
   .post(validate(createCategorySchema, 'body'), forumController.createCategory);
 router.patch('/forum/categories/:id', validate({ params: forumIdParamSchema, body: updateCategorySchema }), forumController.updateCategory);
 router.delete('/forum/categories/:id', validate(forumIdParamSchema, 'params'), forumController.deleteCategory);
+router.get('/forum/reports', validate(adminReportsQuerySchema, 'query'), forumController.getAdminReports);
+router.patch('/forum/reports/:id', validate({ params: forumIdParamSchema, body: reportStatusSchema }), forumController.updateReportStatus);
+router.patch('/forum/threads/:id/pin', validate({ params: forumIdParamSchema, body: pinStateSchema }), forumController.pinThread);
+router.patch('/forum/threads/:id/lock', validate({ params: forumIdParamSchema, body: lockStateSchema }), forumController.lockThread);
+router.patch('/forum/threads/:id/hide', validate({ params: forumIdParamSchema, body: hideStateSchema }), forumController.hideThread);
+router.patch('/forum/posts/:id/hide', validate({ params: forumIdParamSchema, body: hideStateSchema }), forumController.hidePost);
+router.delete('/forum/posts/:id', validate(forumIdParamSchema, 'params'), forumController.deletePostAsAdmin);
 
 router.route('/notifications')
   .get(validate(adminNotificationsQuerySchema, 'query'), notificationController.getAdminNotifications)

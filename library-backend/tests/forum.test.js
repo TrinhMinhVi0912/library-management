@@ -1,5 +1,4 @@
-const { ForumCategory, ForumThread, ForumPost, Book } = require('../app/models');
-const { User } = require('../app/models');
+const { ForumCategory, ForumThread, ForumPost, ForumReport, Book, User } = require('../app/models');
 const request = require('supertest');
 const jwt = require('jsonwebtoken');
 const app = require('../app');
@@ -14,6 +13,12 @@ const {
   createPostSchema,
   updatePostSchema,
   forumListQuerySchema,
+  createReportSchema,
+  adminReportsQuerySchema,
+  reportStatusSchema,
+  pinStateSchema,
+  lockStateSchema,
+  hideStateSchema,
 } = require('../app/validators/forum.validator');
 
 const reader = { _id: '507f1f77bcf86cd799439011', role: 'reader', status: 'active' };
@@ -41,6 +46,13 @@ describe('BE-33: forum', () => {
       expect(updatePostSchema.validate({ content: 'Cập nhật' }).error).toBeUndefined();
       expect(updateThreadSchema.validate({}).error).toBeDefined();
       expect(forumListQuerySchema.validate({ sort: 'popular', page: '2' }).error).toBeUndefined();
+      expect(createReportSchema.validate({ targetType: 'thread', targetId: threadId, reason: 'Nội dung vi phạm' }).error).toBeUndefined();
+      expect(createReportSchema.validate({ targetType: 'book', targetId: threadId, reason: 'Sai loại' }).error).toBeDefined();
+      expect(adminReportsQuerySchema.validate({ status: 'open', targetType: 'post' }).error).toBeUndefined();
+      expect(reportStatusSchema.validate({ status: 'open' }).error).toBeDefined();
+      expect(pinStateSchema.validate({ pinned: 'true' }).error).toBeDefined();
+      expect(lockStateSchema.validate({ locked: false }).error).toBeUndefined();
+      expect(hideStateSchema.validate({ hidden: false }).error).toBeDefined();
     });
 
     it('removes script elements and rejects content that becomes empty', () => {
@@ -175,6 +187,74 @@ describe('BE-33: forum', () => {
 
     it('requires authentication for category administration', async () => {
       await request(app).post('/api/v1/admin/forum/categories').send({ name: 'Mới' }).expect(401);
+    });
+
+    it('requires authentication for report creation and admin report access', async () => {
+      await request(app).post('/api/v1/forum/reports').send({}).expect(401);
+      await request(app).get('/api/v1/admin/forum/reports').expect(401);
+    });
+  });
+
+  describe('reports and moderation', () => {
+    it('creates reports only for visible targets and audits the submission', async () => {
+      jest.spyOn(ForumThread, 'exists').mockResolvedValue({ _id: threadId });
+      jest.spyOn(ForumReport, 'create').mockResolvedValue({ _id: 'report-1', targetType: 'thread', targetId: threadId });
+      const report = await forumService.createReport(reader, { targetType: 'thread', targetId: threadId, reason: 'Nội dung không phù hợp' });
+      expect(report._id).toBe('report-1');
+      expect(auditService.log).toHaveBeenCalledWith(expect.objectContaining({ action: 'forum.report.create', actor: reader._id }));
+    });
+
+    it('lists reports with filters and changes status plus handler', async () => {
+      const findQuery = {
+        populate: jest.fn().mockReturnThis(), sort: jest.fn().mockReturnThis(),
+        skip: jest.fn().mockReturnThis(), limit: jest.fn().mockReturnThis(),
+        lean: jest.fn().mockResolvedValue([{ _id: 'report-2' }]),
+      };
+      jest.spyOn(ForumReport, 'find').mockReturnValue(findQuery);
+      jest.spyOn(ForumReport, 'countDocuments').mockResolvedValue(1);
+      await expect(forumService.getAdminReports({ status: 'open', targetType: 'post' }))
+        .resolves.toMatchObject({ items: [{ _id: 'report-2' }], meta: { total: 1 } });
+      expect(ForumReport.find).toHaveBeenCalledWith({ status: 'open', targetType: 'post' });
+
+      const reportDoc = { _id: 'report-2', status: 'open', targetType: 'post', targetId: postId, save: jest.fn().mockResolvedValue(true) };
+      jest.spyOn(ForumReport, 'findById').mockResolvedValue(reportDoc);
+      await expect(forumService.updateReportStatus('report-2', staff, 'resolved')).resolves.toBe(reportDoc);
+      expect(reportDoc).toMatchObject({ status: 'resolved', handledBy: staff._id });
+      expect(auditService.log).toHaveBeenCalledWith(expect.objectContaining({ action: 'forum.report.resolved' }));
+    });
+
+    it('audits pin/lock/hide actions and hides posts from public results', async () => {
+      const thread = { _id: threadId, pinned: false, locked: false, status: 'active', save: jest.fn().mockResolvedValue(true) };
+      jest.spyOn(ForumThread, 'findById').mockResolvedValue(thread);
+      jest.spyOn(ForumPost, 'updateMany').mockResolvedValue({ modifiedCount: 2 });
+      await forumService.setThreadPinned(threadId, staff, true);
+      await forumService.setThreadLocked(threadId, staff, true);
+      await forumService.hideThread(threadId, staff);
+      expect(thread).toMatchObject({ pinned: true, locked: true, status: 'hidden' });
+      expect(ForumPost.updateMany).toHaveBeenCalledWith({ thread: threadId, status: 'active' }, { $set: { status: 'hidden' } });
+      expect(auditService.log).toHaveBeenCalledWith(expect.objectContaining({ action: 'forum.thread.hide' }));
+
+      const post = { _id: postId, thread: threadId, status: 'active', save: jest.fn().mockResolvedValue(true) };
+      jest.spyOn(ForumPost, 'findById').mockResolvedValue(post);
+      const latestQuery = { sort: jest.fn().mockReturnThis(), select: jest.fn().mockReturnThis(), lean: jest.fn().mockResolvedValue(null) };
+      jest.spyOn(ForumPost, 'findOne').mockReturnValue(latestQuery);
+      jest.spyOn(ForumThread, 'updateOne').mockResolvedValue({ modifiedCount: 1 });
+      await forumService.hidePost(postId, staff);
+      expect(post.status).toBe('hidden');
+      expect(auditService.log).toHaveBeenCalledWith(expect.objectContaining({ action: 'forum.post.hide' }));
+    });
+
+    it('filters hidden posts from the public thread post list', async () => {
+      jest.spyOn(ForumThread, 'exists').mockResolvedValue({ _id: threadId });
+      const postQuery = {
+        populate: jest.fn().mockReturnThis(), sort: jest.fn().mockReturnThis(),
+        skip: jest.fn().mockReturnThis(), limit: jest.fn().mockReturnThis(),
+        lean: jest.fn().mockResolvedValue([]),
+      };
+      jest.spyOn(ForumPost, 'find').mockReturnValue(postQuery);
+      jest.spyOn(ForumPost, 'countDocuments').mockResolvedValue(0);
+      await forumService.listPosts(threadId);
+      expect(ForumPost.find).toHaveBeenCalledWith({ thread: threadId, status: 'active' });
     });
   });
 });

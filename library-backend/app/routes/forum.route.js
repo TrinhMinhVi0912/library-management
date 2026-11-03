@@ -9,6 +9,7 @@ const {
   createPostSchema,
   updatePostSchema,
   forumListQuerySchema,
+  createReportSchema,
 } = require('../validators/forum.validator');
 
 const router = express.Router();
@@ -26,5 +27,6 @@ router.patch('/posts/:id', auth, validate({ params: idParamSchema, body: updateP
 router.delete('/posts/:id', auth, validate(idParamSchema, 'params'), forumController.deletePost);
 router.post('/threads/:id/like', auth, validate(idParamSchema, 'params'), forumController.toggleThreadLike);
 router.post('/posts/:id/like', auth, validate(idParamSchema, 'params'), forumController.togglePostLike);
+router.post('/reports', auth, validate(createReportSchema, 'body'), forumController.createReport);
 
 module.exports = router;

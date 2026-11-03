@@ -1,7 +1,7 @@
 const slugify = require('slugify');
 const sanitizeHtml = require('sanitize-html');
 const ApiError = require('../api-error');
-const { ForumCategory, ForumThread, ForumPost, Book } = require('../models');
+const { ForumCategory, ForumThread, ForumPost, ForumReport, Book } = require('../models');
 const { parsePagination, buildPaginationMeta } = require('../utils/pagination.util');
 const notifyService = require('./notify.service');
 const auditService = require('./audit.service');
@@ -79,6 +79,104 @@ async function deleteCategory(categoryId, actor) {
   return { deleted: true, categoryId };
 }
 
+async function createReport(reporter, data) {
+  assertActiveUser(reporter);
+  let target;
+  if (data.targetType === 'thread') {
+    target = await ForumThread.exists({ _id: data.targetId, status: 'active' });
+  } else {
+    const post = await ForumPost.findOne({ _id: data.targetId, status: 'active' }).select('thread').lean();
+    target = post && await ForumThread.exists({ _id: post.thread, status: 'active' });
+  }
+  if (!target) throw ApiError.notFound('Nội dung cần báo cáo không tồn tại');
+  const report = await ForumReport.create({
+    targetType: data.targetType,
+    targetId: data.targetId,
+    reporter: reporter._id,
+    reason: data.reason,
+  });
+  await auditService.log({
+    actor: reporter._id,
+    action: 'forum.report.create',
+    targetType: 'ForumReport',
+    targetId: report._id,
+    detail: { reportedType: report.targetType, reportedId: report.targetId },
+  });
+  return report;
+}
+
+async function getAdminReports(query = {}) {
+  const { page, limit, skip, sort } = parsePagination(query, { defaultLimit: 10 });
+  const filter = { status: query.status || 'open' };
+  if (query.targetType) filter.targetType = query.targetType;
+  const [items, total] = await Promise.all([
+    ForumReport.find(filter)
+      .populate('reporter', 'code firstName lastName avatar')
+      .populate('handledBy', 'code firstName lastName role')
+      .populate('targetId')
+      .sort(sort)
+      .skip(skip)
+      .limit(limit)
+      .lean(),
+    ForumReport.countDocuments(filter),
+  ]);
+  return { items, meta: buildPaginationMeta(total, page, limit) };
+}
+
+async function updateReportStatus(reportId, actor, status) {
+  const report = await ForumReport.findById(reportId);
+  if (!report) throw ApiError.notFound('Báo cáo không tồn tại');
+  if (report.status === status && String(report.handledBy) === String(actor._id)) return report;
+  const previousStatus = report.status;
+  report.status = status;
+  report.handledBy = actor._id;
+  await report.save();
+  await auditService.log({
+    actor: actor._id,
+    action: `forum.report.${status}`,
+    targetType: 'ForumReport',
+    targetId: report._id,
+    detail: { previousStatus, status, reportedType: report.targetType, reportedId: report.targetId },
+  });
+  return report;
+}
+
+async function setThreadModeration(threadId, actor, field, value) {
+  const thread = await ForumThread.findById(threadId);
+  if (!thread) throw ApiError.notFound('Chủ đề không tồn tại');
+  if (thread[field] === value) return thread;
+  thread[field] = value;
+  await thread.save();
+  await auditService.log({
+    actor: actor._id,
+    action: `forum.thread.${field}`,
+    targetType: 'ForumThread',
+    targetId: thread._id,
+    detail: { [field]: value },
+  });
+  return thread;
+}
+
+async function setThreadPinned(threadId, actor, pinned) {
+  return setThreadModeration(threadId, actor, 'pinned', pinned);
+}
+
+async function setThreadLocked(threadId, actor, locked) {
+  return setThreadModeration(threadId, actor, 'locked', locked);
+}
+
+async function hideThread(threadId, actor) {
+  const thread = await ForumThread.findById(threadId);
+  if (!thread) throw ApiError.notFound('Chủ đề không tồn tại');
+  if (thread.status !== 'hidden') {
+    thread.status = 'hidden';
+    await thread.save();
+    await auditService.log({ actor: actor._id, action: 'forum.thread.hide', targetType: 'ForumThread', targetId: thread._id });
+  }
+  await ForumPost.updateMany({ thread: thread._id, status: 'active' }, { $set: { status: 'hidden' } });
+  return thread;
+}
+
 function threadSort(sort) {
   const sorts = {
     latest: { createdAt: -1 },
@@ -140,11 +238,6 @@ async function updateThread(threadId, user, data) {
   for (const field of ['category', 'title', 'book', 'tags']) if (data[field] !== undefined) thread[field] = data[field] || null;
   if (data.content !== undefined) thread.content = cleanContent(data.content);
   if (data.title !== undefined) thread.slug = await uniqueSlug(ForumThread, data.title, thread._id);
-  if (data.pinned !== undefined || data.locked !== undefined) {
-    if (!['staff', 'admin'].includes(user.role)) throw ApiError.forbidden('Chỉ nhân viên mới được ghim hoặc khóa chủ đề');
-    if (data.pinned !== undefined) thread.pinned = data.pinned;
-    if (data.locked !== undefined) thread.locked = data.locked;
-  }
   await thread.save();
   return thread;
 }
@@ -156,6 +249,7 @@ async function deleteThread(threadId, user) {
   thread.status = 'hidden';
   await thread.save();
   await ForumPost.updateMany({ thread: thread._id }, { $set: { status: 'hidden' } });
+  await auditService.log({ actor: user._id, action: 'forum.thread.delete', targetType: 'ForumThread', targetId: thread._id });
   return { deleted: true, threadId: thread._id };
 }
 
@@ -165,7 +259,10 @@ async function listPosts(threadId, query = {}) {
   const { page, limit, skip } = parsePagination(query);
   const filter = { thread: threadId, status: 'active' };
   const [items, total] = await Promise.all([
-    ForumPost.find(filter).populate('author', 'firstName lastName avatar role').populate('parent').sort({ createdAt: 1 }).skip(skip).limit(limit).lean(),
+    ForumPost.find(filter)
+      .populate('author', 'firstName lastName avatar role')
+      .populate({ path: 'parent', match: { status: 'active' } })
+      .sort({ createdAt: 1 }).skip(skip).limit(limit).lean(),
     ForumPost.countDocuments(filter),
   ]);
   return { items, meta: buildPaginationMeta(total, page, limit) };
@@ -201,10 +298,8 @@ async function updatePost(postId, user, data) {
   return post;
 }
 
-async function deletePost(postId, user) {
-  const post = await ForumPost.findById(postId);
-  if (!post || post.status !== 'active') throw ApiError.notFound('Bài trả lời không tồn tại');
-  if (!canManage(post, user)) throw ApiError.forbidden('Chỉ chủ bài hoặc nhân viên mới được xóa bài trả lời');
+async function markPostHidden(post, actor, action) {
+  if (post.status === 'hidden') return post;
   post.status = 'hidden';
   await post.save();
   const latestReply = await ForumPost.findOne({ thread: post.thread, status: 'active' }).sort({ createdAt: -1 }).select('createdAt author').lean();
@@ -212,6 +307,29 @@ async function deletePost(postId, user) {
     { _id: post.thread, replyCount: { $gt: 0 } },
     { $inc: { replyCount: -1 }, $set: { lastReplyAt: latestReply?.createdAt || null, lastReplyBy: latestReply?.author || null } }
   );
+  await auditService.log({ actor: actor._id, action, targetType: 'ForumPost', targetId: post._id, detail: { thread: post.thread } });
+  return post;
+}
+
+async function deletePost(postId, user) {
+  const post = await ForumPost.findById(postId);
+  if (!post || post.status !== 'active') throw ApiError.notFound('Bài trả lời không tồn tại');
+  if (!canManage(post, user)) throw ApiError.forbidden('Chỉ chủ bài hoặc nhân viên mới được xóa bài trả lời');
+  await markPostHidden(post, user, 'forum.post.delete');
+  return { deleted: true, postId: post._id };
+}
+
+async function hidePost(postId, actor) {
+  const post = await ForumPost.findById(postId);
+  if (!post) throw ApiError.notFound('Bài trả lời không tồn tại');
+  await markPostHidden(post, actor, 'forum.post.hide');
+  return post;
+}
+
+async function deletePostAsStaff(postId, actor) {
+  const post = await ForumPost.findById(postId);
+  if (!post) throw ApiError.notFound('Bài trả lời không tồn tại');
+  await markPostHidden(post, actor, 'forum.post.delete');
   return { deleted: true, postId: post._id };
 }
 
@@ -244,6 +362,12 @@ module.exports = {
   createCategory,
   updateCategory,
   deleteCategory,
+  createReport,
+  getAdminReports,
+  updateReportStatus,
+  setThreadPinned,
+  setThreadLocked,
+  hideThread,
   listThreads,
   getThread,
   createThread,
@@ -253,6 +377,8 @@ module.exports = {
   createPost,
   updatePost,
   deletePost,
+  hidePost,
+  deletePostAsStaff,
   toggleThreadLike,
   togglePostLike,
 };

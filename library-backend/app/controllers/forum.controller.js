@@ -5,6 +5,17 @@ const listCategories = asyncHandler(async (_req, res) => ok(res, await forumServ
 const createCategory = asyncHandler(async (req, res) => ok(res, await forumService.createCategory(req.body, req.user), null, 201));
 const updateCategory = asyncHandler(async (req, res) => ok(res, await forumService.updateCategory(req.params.id, req.body, req.user)));
 const deleteCategory = asyncHandler(async (req, res) => ok(res, await forumService.deleteCategory(req.params.id, req.user)));
+const createReport = asyncHandler(async (req, res) => ok(res, await forumService.createReport(req.user, req.body), null, 201));
+const getAdminReports = asyncHandler(async (req, res) => {
+  const result = await forumService.getAdminReports(req.query);
+  return ok(res, result.items, result.meta);
+});
+const updateReportStatus = asyncHandler(async (req, res) => ok(res, await forumService.updateReportStatus(req.params.id, req.user, req.body.status)));
+const pinThread = asyncHandler(async (req, res) => ok(res, await forumService.setThreadPinned(req.params.id, req.user, req.body.pinned)));
+const lockThread = asyncHandler(async (req, res) => ok(res, await forumService.setThreadLocked(req.params.id, req.user, req.body.locked)));
+const hideThread = asyncHandler(async (req, res) => ok(res, await forumService.hideThread(req.params.id, req.user)));
+const hidePost = asyncHandler(async (req, res) => ok(res, await forumService.hidePost(req.params.id, req.user)));
+const deletePostAsAdmin = asyncHandler(async (req, res) => ok(res, await forumService.deletePostAsStaff(req.params.id, req.user)));
 const listThreads = asyncHandler(async (req, res) => {
   const result = await forumService.listThreads(req.query);
   return ok(res, result.items, result.meta);
@@ -25,6 +36,7 @@ const togglePostLike = asyncHandler(async (req, res) => ok(res, await forumServi
 
 module.exports = {
   listCategories, createCategory, updateCategory, deleteCategory,
+  createReport, getAdminReports, updateReportStatus, pinThread, lockThread, hideThread, hidePost, deletePostAsAdmin,
   listThreads, getThread, createThread, updateThread, deleteThread,
   listPosts, createPost, updatePost, deletePost, toggleThreadLike, togglePostLike,
 };

@@ -28,8 +28,6 @@ const updateThreadSchema = Joi.object({
   content: contentSchema,
   book: Joi.string().pattern(objectIdRegex).allow(null, ''),
   tags: Joi.array().items(Joi.string().trim().min(1).max(40)).max(10).unique(),
-  pinned: Joi.boolean().strict(),
-  locked: Joi.boolean().strict(),
 }).min(1);
 const createPostSchema = Joi.object({
   content: postContentSchema,
@@ -44,6 +42,21 @@ const forumListQuerySchema = Joi.object({
   q: Joi.string().trim().max(100),
   sort: Joi.string().valid('latest', 'active', 'popular', 'views').default('active'),
 });
+const createReportSchema = Joi.object({
+  targetType: Joi.string().valid('thread', 'post').required(),
+  targetId: Joi.string().pattern(objectIdRegex).required(),
+  reason: Joi.string().trim().min(1).max(1000).required(),
+});
+const adminReportsQuerySchema = Joi.object({
+  page: Joi.number().integer().min(1).default(1),
+  limit: Joi.number().integer().min(1).max(100).default(10),
+  status: Joi.string().valid('open', 'resolved', 'dismissed').default('open'),
+  targetType: Joi.string().valid('thread', 'post'),
+});
+const reportStatusSchema = Joi.object({ status: Joi.string().valid('resolved', 'dismissed').required() });
+const pinStateSchema = Joi.object({ pinned: Joi.boolean().strict().required() });
+const lockStateSchema = Joi.object({ locked: Joi.boolean().strict().required() });
+const hideStateSchema = Joi.object({ hidden: Joi.boolean().strict().valid(true).required() });
 
 module.exports = {
   idParamSchema,
@@ -55,4 +68,10 @@ module.exports = {
   createPostSchema,
   updatePostSchema,
   forumListQuerySchema,
+  createReportSchema,
+  adminReportsQuerySchema,
+  reportStatusSchema,
+  pinStateSchema,
+  lockStateSchema,
+  hideStateSchema,
 };
