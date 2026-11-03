@@ -6,6 +6,7 @@ const { RefreshToken } = require('../models');
 const { nextCode } = require('../utils/code.util');
 const { parsePagination, buildPaginationMeta } = require('../utils/pagination.util');
 const auditService = require('./audit.service');
+const authService = require('./auth.service');
 
 const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
@@ -102,6 +103,23 @@ const updateUserRole = async (actor, targetId, role, options = {}) => {
   await user.save();
   await auditService.log({ actor: actor._id, action: 'user.role_update', targetType: 'User', targetId: user._id, detail: { from: previousRole, to: role }, ip: options.ip || null });
   return user.toJSON();
+};
+
+const requestPasswordReset = async (actor, targetId, options = {}) => {
+  const user = await User.findById(targetId);
+  if (!user) throw ApiError.notFound('Người dùng không tồn tại');
+  ensureCanManage(actor, user);
+  if (user.status !== 'active') throw ApiError.conflict('Chỉ gửi liên kết đặt lại mật khẩu cho tài khoản đang hoạt động');
+
+  await authService.forgotPassword(user.email);
+  await auditService.log({
+    actor: actor._id,
+    action: 'user.password_reset_requested',
+    targetType: 'User',
+    targetId: user._id,
+    ip: options.ip || null,
+  });
+  return { message: 'Đã gửi hướng dẫn đặt lại mật khẩu đến email của người dùng.' };
 };
 
 /**
@@ -230,5 +248,6 @@ module.exports = {
   unlockUser,
   createStaff,
   updateUserRole,
+  requestPasswordReset,
 };
 

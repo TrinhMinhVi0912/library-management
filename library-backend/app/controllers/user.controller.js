@@ -31,6 +31,10 @@ const updateUserRole = asyncHandler(async (req, res) => {
   return ok(res, await userService.updateUserRole(req.user, req.params.id, req.body.role, { ip: req.ip }));
 });
 
+const requestPasswordReset = asyncHandler(async (req, res) => {
+  return ok(res, await userService.requestPasswordReset(req.user, req.params.id, { ip: req.ip }));
+});
+
 /**
  * Xem thông tin hồ sơ của người dùng đang đăng nhập
  * GET /api/v1/me
@@ -86,5 +90,6 @@ module.exports = {
   unlockUser,
   createStaff,
   updateUserRole,
+  requestPasswordReset,
 };
 

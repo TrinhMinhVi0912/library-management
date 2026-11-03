@@ -57,6 +57,7 @@ router.patch('/users/:id', validate({ params: userIdParamSchema, body: updateAdm
 router.patch('/users/:id/lock', validate({ params: userIdParamSchema, body: lockUserSchema }), userController.lockUser);
 router.patch('/users/:id/unlock', validate(userIdParamSchema, 'params'), userController.unlockUser);
 router.patch('/users/:id/role', requireRole('admin'), validate({ params: userIdParamSchema, body: updateRoleSchema }), userController.updateUserRole);
+router.post('/users/:id/password-reset', validate(userIdParamSchema, 'params'), userController.requestPasswordReset);
 
 // =============================================================================
 // SỐ ĐẾM / BADGE (/admin/counters)

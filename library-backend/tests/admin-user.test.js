@@ -1,6 +1,7 @@
 const { User, RefreshToken } = require('../app/models');
 const userService = require('../app/services/user.service');
 const auditService = require('../app/services/audit.service');
+const authService = require('../app/services/auth.service');
 const jwt = require('jsonwebtoken');
 const request = require('supertest');
 const app = require('../app');
@@ -116,6 +117,31 @@ describe('BE-28: Admin user management', () => {
         .rejects.toMatchObject({ statusCode: 403 });
       await expect(userService.updateUserRole(staff, readerId, 'staff'))
         .rejects.toMatchObject({ statusCode: 403 });
+    });
+
+    it('sends a reset link through the existing email flow and audits the request', async () => {
+      const reader = { _id: readerId, role: 'reader', status: 'active', email: 'reader@example.com' };
+      jest.spyOn(User, 'findById').mockResolvedValue(reader);
+      jest.spyOn(authService, 'forgotPassword').mockResolvedValue({ message: 'sent' });
+
+      const result = await userService.requestPasswordReset(staff, readerId, { ip: '127.0.0.1' });
+
+      expect(authService.forgotPassword).toHaveBeenCalledWith(reader.email);
+      expect(auditService.log).toHaveBeenCalledWith(expect.objectContaining({
+        actor: staffId, action: 'user.password_reset_requested', targetId: readerId, ip: '127.0.0.1',
+      }));
+      expect(result.message).toContain('email');
+    });
+
+    it('prevents staff from requesting resets for staff accounts and blocks locked accounts', async () => {
+      const findByIdSpy = jest.spyOn(User, 'findById')
+        .mockResolvedValueOnce({ _id: otherStaffId, role: 'staff', status: 'active' })
+        .mockResolvedValueOnce({ _id: readerId, role: 'reader', status: 'locked' });
+      const forgotPasswordSpy = jest.spyOn(authService, 'forgotPassword');
+      await expect(userService.requestPasswordReset(staff, otherStaffId)).rejects.toMatchObject({ statusCode: 403 });
+      await expect(userService.requestPasswordReset(staff, readerId)).rejects.toMatchObject({ statusCode: 409 });
+      expect(findByIdSpy).toHaveBeenCalledTimes(2);
+      expect(forgotPasswordSpy).not.toHaveBeenCalled();
     });
   });
 
