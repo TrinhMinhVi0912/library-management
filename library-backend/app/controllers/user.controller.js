@@ -2,6 +2,35 @@ const ApiError = require('../api-error');
 const { ok, asyncHandler } = require('../middlewares');
 const userService = require('../services/user.service');
 
+const getAdminUsers = asyncHandler(async (req, res) => {
+  const result = await userService.getAdminUsers(req.user, req.query);
+  return ok(res, result.items, result.meta);
+});
+
+const getAdminUserById = asyncHandler(async (req, res) => {
+  return ok(res, await userService.getAdminUserById(req.user, req.params.id));
+});
+
+const updateAdminUser = asyncHandler(async (req, res) => {
+  return ok(res, await userService.updateAdminUser(req.user, req.params.id, req.body, { ip: req.ip }));
+});
+
+const lockUser = asyncHandler(async (req, res) => {
+  return ok(res, await userService.lockUser(req.user, req.params.id, req.body.reason, { ip: req.ip }));
+});
+
+const unlockUser = asyncHandler(async (req, res) => {
+  return ok(res, await userService.unlockUser(req.user, req.params.id, { ip: req.ip }));
+});
+
+const createStaff = asyncHandler(async (req, res) => {
+  return ok(res, await userService.createStaff(req.user, req.body, { ip: req.ip }), null, 201);
+});
+
+const updateUserRole = asyncHandler(async (req, res) => {
+  return ok(res, await userService.updateUserRole(req.user, req.params.id, req.body.role, { ip: req.ip }));
+});
+
 /**
  * Xem thông tin hồ sơ của người dùng đang đăng nhập
  * GET /api/v1/me
@@ -50,5 +79,12 @@ module.exports = {
   updateProfile,
   changePassword,
   uploadAvatar,
+  getAdminUsers,
+  getAdminUserById,
+  updateAdminUser,
+  lockUser,
+  unlockUser,
+  createStaff,
+  updateUserRole,
 };
 

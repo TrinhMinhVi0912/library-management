@@ -5,6 +5,7 @@ const counterController = require('../controllers/counter.controller');
 const loanController = require('../controllers/loan.controller');
 const fineController = require('../controllers/fine.controller');
 const renewalController = require('../controllers/admin-renewal.controller');
+const userController = require('../controllers/user.controller');
 const {
   idParamSchema,
   createBookSchema,
@@ -29,12 +30,33 @@ const {
   adminRenewalsQuerySchema,
   rejectRenewalSchema,
 } = require('../validators/renewal.validator');
+const {
+  userIdParamSchema,
+  adminUsersQuerySchema,
+  updateAdminUserSchema,
+  lockUserSchema,
+  createStaffSchema,
+  updateRoleSchema,
+} = require('../validators/admin-user.validator');
 
 const router = express.Router();
 
 // Tất cả các route quản trị đều yêu cầu xác thực và phân quyền nhân viên (staff) hoặc quản trị viên (admin)
 router.use(auth);
 router.use(requireRole('staff', 'admin'));
+
+// =============================================================================
+// QUẢN LÝ NGƯỜI DÙNG (/admin/users)
+// =============================================================================
+router.route('/users')
+  .get(validate(adminUsersQuerySchema, 'query'), userController.getAdminUsers)
+  .post(requireRole('admin'), validate(createStaffSchema, 'body'), userController.createStaff);
+
+router.get('/users/:id', validate(userIdParamSchema, 'params'), userController.getAdminUserById);
+router.patch('/users/:id', validate({ params: userIdParamSchema, body: updateAdminUserSchema }), userController.updateAdminUser);
+router.patch('/users/:id/lock', validate({ params: userIdParamSchema, body: lockUserSchema }), userController.lockUser);
+router.patch('/users/:id/unlock', validate(userIdParamSchema, 'params'), userController.unlockUser);
+router.patch('/users/:id/role', requireRole('admin'), validate({ params: userIdParamSchema, body: updateRoleSchema }), userController.updateUserRole);
 
 // =============================================================================
 // SỐ ĐẾM / BADGE (/admin/counters)
