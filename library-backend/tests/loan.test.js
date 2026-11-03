@@ -1105,7 +1105,7 @@ describe('BE-20: Duyệt / từ chối yêu cầu mượn (transaction)', () => 
       jest.spyOn(Loan, 'findById').mockReturnValue({
         session: jest.fn().mockResolvedValue(mockLoan),
       });
-      jest.spyOn(settingsService, 'getSettings').mockResolvedValue({ loanDays: 14 });
+      jest.spyOn(settingsService, 'getSettings').mockResolvedValue({ loanDays: 21 });
       jest.spyOn(Book, 'findByIdAndUpdate').mockResolvedValue({});
 
       const result = await loanService.handoverLoan(loanId, staffId, { ip: '127.0.0.1' });
@@ -1123,11 +1123,11 @@ describe('BE-20: Duyệt / từ chối yêu cầu mượn (transaction)', () => 
       expect(result.items[1].borrowDate).toBeInstanceOf(Date);
       expect(result.items[1].dueDate).toBeInstanceOf(Date);
 
-      // Chênh lệch giữa dueDate và borrowDate xấp xỉ 14 ngày (trong khoảng sai số 1000ms)
+      // Ngày đến hạn phản ánh loanDays cấu hình hiện tại.
       const diffDays = Math.round(
         (result.items[0].dueDate.getTime() - result.items[0].borrowDate.getTime()) / (24 * 60 * 60 * 1000)
       );
-      expect(diffDays).toBe(14);
+      expect(diffDays).toBe(21);
 
       // Tăng borrowCount của 2 cuốn sách
       expect(Book.findByIdAndUpdate).toHaveBeenCalledTimes(2);

@@ -75,7 +75,7 @@ async function addItem(userId, bookId) {
 
   // 5. Kiểm tra giỏ < maxBooksPerLoan
   const settings = await settingsService.getSettings();
-  const maxBooks = settings.maxBooksPerLoan || 5;
+  const maxBooks = settings.maxBooksPerLoan;
   if (cart.items.length >= maxBooks) {
     throw ApiError.badRequest(
       `Giỏ mượn đã đầy (tối đa ${maxBooks} cuốn)`

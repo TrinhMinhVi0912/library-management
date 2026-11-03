@@ -1,4 +1,5 @@
 const { AuditLog } = require('../models');
+const { parsePagination, buildPaginationMeta } = require('../utils/pagination.util');
 
 /**
  * Ghi nhật ký hoạt động hệ thống (audit log).
@@ -36,7 +37,27 @@ async function log({
   }
 }
 
+async function getAuditLogs(query = {}) {
+  const { page, limit, skip, sort } = parsePagination(query, { defaultLimit: 10 });
+  const filter = {};
+  if (query.actor) filter.actor = query.actor;
+  if (query.action) filter.action = query.action;
+  if (query.from || query.to) {
+    filter.createdAt = {};
+    if (query.from) filter.createdAt.$gte = query.from;
+    if (query.to) filter.createdAt.$lte = query.to;
+  }
+  const [items, total] = await Promise.all([
+    AuditLog.find(filter)
+      .populate('actor', 'code firstName lastName role')
+      .sort(sort).skip(skip).limit(limit).lean(),
+    AuditLog.countDocuments(filter),
+  ]);
+  return { items, meta: buildPaginationMeta(total, page, limit) };
+}
+
 module.exports = {
   log,
+  getAuditLogs,
 };
 

@@ -16,7 +16,7 @@ const { parsePagination, buildPaginationMeta } = require('../utils/pagination.ut
  * 1. User active, không bị khóa
  * 2. Nợ phạt = 0 (unpaidFineTotal === 0)
  * 3. Không có sách đang mượn quá hạn
- * 4. Tổng sách đang mượn + đang chờ duyệt + yêu cầu mới <= maxBooksPerLoan (mặc định 5)
+ * 4. Tổng sách đang mượn + đang chờ duyệt + yêu cầu mới <= maxBooksPerLoan trong settings
  * 
  * Tạo phiếu mượn với snapshot tên/giá, xóa giỏ mượn, thông báo nhân viên & emit counters
  * 
@@ -96,7 +96,7 @@ async function submitLoan(userId, data = {}) {
 
   // 4. Kiểm tra giới hạn số lượng sách (đang mượn + đang chờ + mới <= maxBooksPerLoan)
   const settings = await settingsService.getSettings();
-  const maxBooks = settings.maxBooksPerLoan || 5;
+  const maxBooks = settings.maxBooksPerLoan;
 
   const activeLoans = await Loan.find({
     reader: userId,
@@ -312,7 +312,7 @@ async function approveLoan(loanId, staffId, options = {}) {
       }
 
       const settings = await settingsService.getSettings();
-      const pickupHoldDays = settings.pickupHoldDays || 3;
+      const pickupHoldDays = settings.pickupHoldDays;
       const now = new Date();
       const pickupDeadline = new Date(now.getTime() + pickupHoldDays * 24 * 60 * 60 * 1000);
 
@@ -422,7 +422,7 @@ async function rejectLoan(loanId, staffId, reason, options = {}) {
  * Nhân viên xác nhận giao sách cho độc giả (transaction)
  * Điều kiện:
  * 1. Phiếu mượn phải ở trạng thái approved
- * 2. Cập nhật từng item: status = 'borrowing', borrowDate = now, dueDate = now + loanDays (từ settings, mặc định 14 ngày)
+ * 2. Cập nhật từng item: status = 'borrowing', borrowDate = now, dueDate = now + loanDays từ settings
  * 3. Tăng borrowCount của các sách tương ứng (+1)
  * 4. Cập nhật phiếu mượn: status = 'borrowing', handedOverBy = staffId, handedOverAt = now
  * 5. Sau commit: thông báo cho độc giả, emit socket loan:updated, emit staff:counters, ghi audit log
@@ -447,7 +447,7 @@ async function handoverLoan(loanId, staffId, options = {}) {
       }
 
       const settings = await settingsService.getSettings();
-      const loanDays = settings.loanDays || 14;
+      const loanDays = settings.loanDays;
       const now = new Date();
       const dueDate = new Date(now.getTime() + loanDays * 24 * 60 * 60 * 1000);
 
@@ -639,9 +639,9 @@ async function returnItems(loanId, items, staffId, options = {}) {
           fines.push(await fineService.createFine({ reader: reader._id, loan: loan._id, book: book._id, type, amount, reason, daysLate: lateDays, recordedBy: staffId }, { session }));
           totalFine += amount;
         };
-        if (daysLate) await addFine('late', daysLate * (settings.lateFeePerDay || 0), `Trễ hạn ${daysLate} ngày`, daysLate);
+        if (daysLate) await addFine('late', daysLate * settings.lateFeePerDay, `Trễ hạn ${daysLate} ngày`, daysLate);
         if (entry.condition === 'damaged') await addFine('damaged', entry.fineAmount, 'Phạt sách hư hỏng');
-        if (entry.condition === 'lost') await addFine('lost', item.priceSnapshot * (settings.lostBookFeeRate ?? 1) + (settings.lostBookProcessingFee || 0), 'Mất sách');
+        if (entry.condition === 'lost') await addFine('lost', item.priceSnapshot * settings.lostBookFeeRate + settings.lostBookProcessingFee, 'Mất sách');
         if (entry.condition === 'lost') {
           const stockUpdate = await Book.updateOne({ _id: book._id, totalCopies: { $gt: 0 } }, { $inc: { totalCopies: -1 } }, { session });
           if (!stockUpdate.modifiedCount) throw ApiError.conflict('Không thể giảm tồn kho: số lượng bản sách không hợp lệ');

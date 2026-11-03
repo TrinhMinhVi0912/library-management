@@ -1,4 +1,5 @@
 const { Setting } = require('../models');
+const auditService = require('./audit.service');
 
 let cachedSettings = null;
 let cacheExpiresAt = 0;
@@ -33,7 +34,7 @@ async function getSettings() {
  * @param {Object} data Dữ liệu cập nhật
  * @returns {Promise<import('mongoose').Document>}
  */
-async function updateSettings(data) {
+async function updateSettings(data, options = {}) {
   let settings = await Setting.findOne();
   if (!settings) {
     settings = await Setting.create(data);
@@ -42,6 +43,14 @@ async function updateSettings(data) {
     await settings.save();
   }
   invalidate();
+  await auditService.log({
+    actor: options.actor || null,
+    action: 'settings.update',
+    targetType: 'Setting',
+    targetId: settings._id,
+    detail: { fields: Object.keys(data) },
+    ip: options.ip || null,
+  });
   return settings;
 }
 
