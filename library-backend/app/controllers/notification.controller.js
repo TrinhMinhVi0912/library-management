@@ -45,10 +45,37 @@ const markAllAsRead = asyncHandler(async (req, res) => {
   return ok(res, result);
 });
 
+const getAdminNotifications = asyncHandler(async (req, res) => {
+  const result = await notifyService.getAdminNotifications(req.query);
+  return ok(res, result.items, result.meta);
+});
+
+const getAdminNotificationById = asyncHandler(async (req, res) => {
+  return ok(res, await notifyService.getAdminNotificationById(req.params.id));
+});
+
+const createAdminNotification = asyncHandler(async (req, res) => {
+  const notification = await notifyService.createAdminNotification(req.body, req.user, { ip: req.ip });
+  return ok(res, notification, null, 201);
+});
+
+const updateAdminNotification = asyncHandler(async (req, res) => {
+  return ok(res, await notifyService.updateAdminNotification(req.params.id, req.body, req.user, { ip: req.ip }));
+});
+
+const deleteAdminNotification = asyncHandler(async (req, res) => {
+  return ok(res, await notifyService.deleteAdminNotification(req.params.id, req.user, { ip: req.ip }));
+});
+
 module.exports = {
   getMyNotifications,
   getUnreadCount,
   markAsRead,
   markAllAsRead,
+  getAdminNotifications,
+  getAdminNotificationById,
+  createAdminNotification,
+  updateAdminNotification,
+  deleteAdminNotification,
 };
 

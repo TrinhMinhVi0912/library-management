@@ -5,6 +5,7 @@ const counterController = require('../controllers/counter.controller');
 const loanController = require('../controllers/loan.controller');
 const fineController = require('../controllers/fine.controller');
 const renewalController = require('../controllers/admin-renewal.controller');
+const notificationController = require('../controllers/notification.controller');
 const settingController = require('../controllers/setting.controller');
 const auditLogController = require('../controllers/audit-log.controller');
 const userController = require('../controllers/user.controller');
@@ -41,6 +42,12 @@ const {
   updateRoleSchema,
 } = require('../validators/admin-user.validator');
 const { settingsUpdateSchema, auditLogsQuerySchema } = require('../validators/settings.validator');
+const {
+  notificationIdParamSchema,
+  adminNotificationsQuerySchema,
+  createAdminNotificationSchema,
+  updateAdminNotificationSchema,
+} = require('../validators/admin-notification.validator');
 
 const router = express.Router();
 
@@ -65,6 +72,14 @@ router.get('/settings', requireRole('admin'), settingController.getSettings);
 router.put('/settings', requireRole('admin'), validate(settingsUpdateSchema, 'body'), settingController.updateSettings);
 router.get('/audit-logs', requireRole('admin'), validate(auditLogsQuerySchema, 'query'), auditLogController.getAuditLogs);
 router.post('/users/:id/password-reset', validate(userIdParamSchema, 'params'), userController.requestPasswordReset);
+
+router.route('/notifications')
+  .get(validate(adminNotificationsQuerySchema, 'query'), notificationController.getAdminNotifications)
+  .post(validate(createAdminNotificationSchema, 'body'), notificationController.createAdminNotification);
+router.route('/notifications/:id')
+  .get(validate(notificationIdParamSchema, 'params'), notificationController.getAdminNotificationById)
+  .patch(validate({ params: notificationIdParamSchema, body: updateAdminNotificationSchema }), notificationController.updateAdminNotification)
+  .delete(validate(notificationIdParamSchema, 'params'), notificationController.deleteAdminNotification);
 
 // =============================================================================
 // SỐ ĐẾM / BADGE (/admin/counters)

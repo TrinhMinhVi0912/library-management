@@ -1,4 +1,9 @@
 const { Notification, NotificationRead } = require('../models');
+const ApiError = require('../api-error');
+const auditService = require('./audit.service');
+const { parsePagination, buildPaginationMeta } = require('../utils/pagination.util');
+
+const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 // Placeholder cho Socket.IO - sẽ được gán khi io sẵn sàng (task sau)
 let _io = null;
@@ -20,6 +25,55 @@ function setIO(io) {
 function emit(room, event, data) {
   if (!_io) return; // no-op khi chưa gắn io
   _io.to(room).emit(event, data);
+}
+
+function emitNotification(notification) {
+  const room = notification.audience === 'user'
+    ? `user:${notification.recipient}`
+    : ({ all: 'all', readers: 'role:reader', staff: 'role:staff' }[notification.audience]);
+  emit(room, 'notification:new', {
+    _id: notification._id,
+    type: notification.type,
+    title: notification.title,
+    content: notification.content,
+    link: notification.link,
+    createdAt: notification.createdAt,
+    expiresAt: notification.expiresAt,
+  });
+}
+
+function emitAdminNotificationDeleted(notification) {
+  const room = notification.audience === 'user'
+    ? `user:${notification.recipient}`
+    : ({ all: 'all', readers: 'role:reader', staff: 'role:staff' }[notification.audience]);
+  emit(room, 'notification:deleted', { _id: notification._id });
+}
+
+function emitAdminNotificationUpdated(notification) {
+  const room = notification.audience === 'user'
+    ? `user:${notification.recipient}`
+    : ({ all: 'all', readers: 'role:reader', staff: 'role:staff' }[notification.audience]);
+  emit(room, 'notification:updated', {
+    _id: notification._id,
+    type: notification.type,
+    title: notification.title,
+    content: notification.content,
+    link: notification.link,
+    createdAt: notification.createdAt,
+    expiresAt: notification.expiresAt,
+  });
+}
+
+function buildUserNotificationFilter(userId, userRole) {
+  const audienceFilter = ['all'];
+  if (userRole === 'reader') audienceFilter.push('readers');
+  if (userRole === 'staff' || userRole === 'admin') audienceFilter.push('staff');
+  return {
+    $and: [
+      { $or: [{ recipient: userId, audience: 'user' }, { audience: { $in: audienceFilter } }] },
+      { $or: [{ expiresAt: null }, { expiresAt: { $gt: new Date() } }] },
+    ],
+  };
 }
 
 /**
@@ -48,14 +102,7 @@ async function notifyUser(userId, { type, title, content, link, createdBy = null
   });
 
   // Emit realtime (no-op nếu chưa có io)
-  emit(`user:${userId}`, 'notification:new', {
-    _id: notification._id,
-    type: notification.type,
-    title: notification.title,
-    content: notification.content,
-    link: notification.link,
-    createdAt: notification.createdAt,
-  });
+  emitNotification(notification);
 
   return notification;
 }
@@ -78,14 +125,7 @@ async function notifyStaff({ type, title, content, link, createdBy = null, expir
     expiresAt,
   });
 
-  emit('role:staff', 'notification:new', {
-    _id: notification._id,
-    type: notification.type,
-    title: notification.title,
-    content: notification.content,
-    link: notification.link,
-    createdAt: notification.createdAt,
-  });
+  emitNotification(notification);
 
   return notification;
 }
@@ -109,23 +149,102 @@ async function notifyAudience(audience, { type, title, content, link, createdBy 
     expiresAt,
   });
 
-  // Map audience → Socket room
-  const roomMap = {
-    all: 'all',
-    readers: 'role:reader',
-    staff: 'role:staff',
+  emitNotification(notification);
+
+  return notification;
+}
+
+async function getAdminNotifications(query = {}) {
+  const { page, limit, skip, sort } = parsePagination(query, { defaultLimit: 10 });
+  const filter = {};
+  if (query.audience) filter.audience = query.audience;
+  if (query.type) filter.type = query.type;
+  if (query.q) {
+    const pattern = new RegExp(escapeRegex(query.q.trim()), 'i');
+    filter.$or = [{ title: pattern }, { content: pattern }];
+  }
+  const [items, total] = await Promise.all([
+    Notification.find(filter).sort(sort).skip(skip).limit(limit).lean(),
+    Notification.countDocuments(filter),
+  ]);
+  return { items, meta: buildPaginationMeta(total, page, limit) };
+}
+
+async function createAdminNotification(data, actor, options = {}) {
+  const payload = {
+    type: data.type,
+    title: data.title,
+    content: data.content,
+    link: data.link || undefined,
+    expiresAt: data.expiresAt || undefined,
+    createdBy: actor._id,
   };
-
-  const room = roomMap[audience] || 'all';
-  emit(room, 'notification:new', {
-    _id: notification._id,
-    type: notification.type,
-    title: notification.title,
-    content: notification.content,
-    link: notification.link,
-    createdAt: notification.createdAt,
+  const notification = data.audience === 'user'
+    ? await notifyUser(data.recipient, payload)
+    : await notifyAudience(data.audience, payload);
+  await auditService.log({
+    actor: actor._id,
+    action: 'notification.create',
+    targetType: 'Notification',
+    targetId: notification._id,
+    detail: { audience: notification.audience, type: notification.type },
+    ip: options.ip || null,
   });
+  return notification;
+}
 
+async function updateAdminNotification(notificationId, data, actor, options = {}) {
+  const notification = await Notification.findById(notificationId);
+  if (!notification) throw ApiError.notFound('Thông báo không tồn tại');
+  const previous = { audience: notification.audience, recipient: notification.recipient };
+  const fields = ['audience', 'recipient', 'type', 'title', 'content', 'link', 'expiresAt'];
+  for (const field of fields) {
+    if (data[field] !== undefined) notification[field] = data[field] || undefined;
+  }
+  if (notification.audience === 'user') {
+    if (!notification.recipient) throw ApiError.badRequest('Thông báo cá nhân cần có người nhận');
+  } else {
+    notification.recipient = null;
+  }
+  await notification.save();
+  await auditService.log({
+    actor: actor._id,
+    action: 'notification.update',
+    targetType: 'Notification',
+    targetId: notification._id,
+    detail: { fields: Object.keys(data), previousAudience: previous.audience, audience: notification.audience },
+    ip: options.ip || null,
+  });
+  const recipientChanged = previous.audience === 'user' && notification.audience === 'user'
+    && String(previous.recipient) !== String(notification.recipient);
+  if (previous.audience !== notification.audience || recipientChanged) {
+    await NotificationRead.deleteMany({ notification: notification._id });
+    emitAdminNotificationDeleted({ _id: notification._id, ...previous });
+  }
+  emitAdminNotificationUpdated(notification);
+  return notification;
+}
+
+async function deleteAdminNotification(notificationId, actor, options = {}) {
+  const notification = await Notification.findById(notificationId);
+  if (!notification) throw ApiError.notFound('Thông báo không tồn tại');
+  await NotificationRead.deleteMany({ notification: notification._id });
+  await Notification.deleteOne({ _id: notification._id });
+  await auditService.log({
+    actor: actor._id,
+    action: 'notification.delete',
+    targetType: 'Notification',
+    targetId: notification._id,
+    detail: { audience: notification.audience, type: notification.type },
+    ip: options.ip || null,
+  });
+  emitAdminNotificationDeleted(notification);
+  return { success: true };
+}
+
+async function getAdminNotificationById(notificationId) {
+  const notification = await Notification.findById(notificationId).lean();
+  if (!notification) throw ApiError.notFound('Thông báo không tồn tại');
   return notification;
 }
 
@@ -139,23 +258,7 @@ async function notifyAudience(audience, { type, title, content, link, createdBy 
  * @returns {Promise<Object>} { notifications, meta }
  */
 async function getNotifications(userId, userRole, { unread, page = 1, limit = 20 } = {}) {
-  // Thông báo dành cho người dùng này:
-  // 1. recipient = userId (cá nhân)
-  // 2. audience = 'all' (chung cho tất cả)
-  // 3. audience phù hợp role: reader → 'readers', staff/admin → 'staff'
-  const audienceFilter = ['all'];
-  if (userRole === 'reader') {
-    audienceFilter.push('readers');
-  } else if (userRole === 'staff' || userRole === 'admin') {
-    audienceFilter.push('staff');
-  }
-
-  const matchCondition = {
-    $or: [
-      { recipient: userId, audience: 'user' },
-      { audience: { $in: audienceFilter } },
-    ],
-  };
+  const matchCondition = buildUserNotificationFilter(userId, userRole);
 
   // Nếu lọc theo unread
   if (unread === 'true' || unread === true) {
@@ -207,19 +310,7 @@ async function getNotifications(userId, userRole, { unread, page = 1, limit = 20
  * @returns {Promise<Object>} { unreadCount }
  */
 async function getUnreadCount(userId, userRole) {
-  const audienceFilter = ['all'];
-  if (userRole === 'reader') {
-    audienceFilter.push('readers');
-  } else if (userRole === 'staff' || userRole === 'admin') {
-    audienceFilter.push('staff');
-  }
-
-  const matchCondition = {
-    $or: [
-      { recipient: userId, audience: 'user' },
-      { audience: { $in: audienceFilter } },
-    ],
-  };
+  const matchCondition = buildUserNotificationFilter(userId, userRole);
 
   const readIds = await NotificationRead.find({ user: userId }).distinct('notification');
   if (readIds.length > 0) {
@@ -255,19 +346,7 @@ async function markAsRead(userId, notificationId) {
  * @returns {Promise<Object>} { markedCount }
  */
 async function markAllAsRead(userId, userRole) {
-  const audienceFilter = ['all'];
-  if (userRole === 'reader') {
-    audienceFilter.push('readers');
-  } else if (userRole === 'staff' || userRole === 'admin') {
-    audienceFilter.push('staff');
-  }
-
-  const matchCondition = {
-    $or: [
-      { recipient: userId, audience: 'user' },
-      { audience: { $in: audienceFilter } },
-    ],
-  };
+  const matchCondition = buildUserNotificationFilter(userId, userRole);
 
   // Tìm những thông báo chưa đọc
   const readIds = await NotificationRead.find({ user: userId }).distinct('notification');
@@ -326,6 +405,11 @@ module.exports = {
   notifyUser,
   notifyStaff,
   notifyAudience,
+  getAdminNotifications,
+  getAdminNotificationById,
+  createAdminNotification,
+  updateAdminNotification,
+  deleteAdminNotification,
   getNotifications,
   getUnreadCount,
   markAsRead,
