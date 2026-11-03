@@ -6,6 +6,8 @@ const loanController = require('../controllers/loan.controller');
 const fineController = require('../controllers/fine.controller');
 const renewalController = require('../controllers/admin-renewal.controller');
 const notificationController = require('../controllers/notification.controller');
+const dashboardController = require('../controllers/dashboard.controller');
+const reportController = require('../controllers/report.controller');
 const settingController = require('../controllers/setting.controller');
 const auditLogController = require('../controllers/audit-log.controller');
 const userController = require('../controllers/user.controller');
@@ -48,12 +50,18 @@ const {
   createAdminNotificationSchema,
   updateAdminNotificationSchema,
 } = require('../validators/admin-notification.validator');
+const { dashboardChartsQuerySchema, reportDateRangeSchema } = require('../validators/dashboard.validator');
 
 const router = express.Router();
 
 // Tất cả các route quản trị đều yêu cầu xác thực và phân quyền nhân viên (staff) hoặc quản trị viên (admin)
 router.use(auth);
 router.use(requireRole('staff', 'admin'));
+
+router.get('/dashboard/summary', dashboardController.getSummary);
+router.get('/dashboard/charts', validate(dashboardChartsQuerySchema, 'query'), dashboardController.getCharts);
+router.get('/reports/loans.xlsx', validate(reportDateRangeSchema, 'query'), reportController.exportLoans);
+router.get('/reports/fines.xlsx', validate(reportDateRangeSchema, 'query'), reportController.exportFines);
 
 // =============================================================================
 // QUẢN LÝ NGƯỜI DÙNG (/admin/users)
