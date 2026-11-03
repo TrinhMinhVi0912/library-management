@@ -89,7 +89,7 @@ function buildUserNotificationFilter(userId, userRole) {
  * @param {Date}   [opts.expiresAt] Ngày hết hạn
  * @returns {Promise<Object>}     Document notification đã tạo
  */
-async function notifyUser(userId, { type, title, content, link, createdBy = null, expiresAt } = {}) {
+async function notifyUser(userId, { type, title, content, link, createdBy = null, expiresAt, jobKey } = {}) {
   const notification = await Notification.create({
     recipient: userId,
     audience: 'user',
@@ -99,6 +99,7 @@ async function notifyUser(userId, { type, title, content, link, createdBy = null
     link,
     createdBy,
     expiresAt,
+    jobKey,
   });
 
   // Emit realtime (no-op nếu chưa có io)

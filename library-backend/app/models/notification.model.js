@@ -42,6 +42,10 @@ const notificationSchema = new mongoose.Schema(
     expiresAt: {
       type: Date,
     },
+    jobKey: {
+      type: String,
+      trim: true,
+    },
   },
   {
     timestamps: true,
@@ -57,6 +61,7 @@ const notificationSchema = new mongoose.Schema(
 // Indexes
 notificationSchema.index({ recipient: 1, createdAt: -1 });
 notificationSchema.index({ audience: 1, createdAt: -1 });
+notificationSchema.index({ jobKey: 1 }, { unique: true, sparse: true });
 
 module.exports = mongoose.model('Notification', notificationSchema);
 

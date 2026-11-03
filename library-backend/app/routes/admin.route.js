@@ -51,6 +51,8 @@ const {
   updateAdminNotificationSchema,
 } = require('../validators/admin-notification.validator');
 const { dashboardChartsQuerySchema, reportDateRangeSchema } = require('../validators/dashboard.validator');
+const forumController = require('../controllers/forum.controller');
+const { idParamSchema: forumIdParamSchema, createCategorySchema, updateCategorySchema } = require('../validators/forum.validator');
 
 const router = express.Router();
 
@@ -80,6 +82,12 @@ router.get('/settings', requireRole('admin'), settingController.getSettings);
 router.put('/settings', requireRole('admin'), validate(settingsUpdateSchema, 'body'), settingController.updateSettings);
 router.get('/audit-logs', requireRole('admin'), validate(auditLogsQuerySchema, 'query'), auditLogController.getAuditLogs);
 router.post('/users/:id/password-reset', validate(userIdParamSchema, 'params'), userController.requestPasswordReset);
+
+router.route('/forum/categories')
+  .get(forumController.listCategories)
+  .post(validate(createCategorySchema, 'body'), forumController.createCategory);
+router.patch('/forum/categories/:id', validate({ params: forumIdParamSchema, body: updateCategorySchema }), forumController.updateCategory);
+router.delete('/forum/categories/:id', validate(forumIdParamSchema, 'params'), forumController.deleteCategory);
 
 router.route('/notifications')
   .get(validate(adminNotificationsQuerySchema, 'query'), notificationController.getAdminNotifications)

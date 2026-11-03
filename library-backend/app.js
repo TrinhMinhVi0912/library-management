@@ -6,6 +6,7 @@ const mongoSanitize = require('express-mongo-sanitize');
 const morgan = require('morgan');
 const config = require('./app/config');
 const apiV1Router = require('./app/routes');
+const systemRouter = require('./app/routes/system.route');
 const {
   ok,
   notFoundHandler,
@@ -81,6 +82,7 @@ app.get('/', (_req, res) => {
 
 // 9. Mount API v1
 app.use('/api/v1', apiV1Router);
+app.use('/jobs', systemRouter);
 
 // 10. Bắt 404 cho các route không tồn tại
 app.use(notFoundHandler);

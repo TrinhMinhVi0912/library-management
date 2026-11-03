@@ -9,15 +9,14 @@ const server = http.createServer(app);
 const { initSocket } = require('./app/sockets');
 initSocket(server);
 
-// TODO: Khởi chạy Scheduled Jobs (task sau)
-// if (!config.jobs.disableInternalCron) {
-//   require('./app/jobs');
-// }
+const jobs = require('./app/jobs');
 
 async function startServer() {
   try {
     // 1. Kết nối cơ sở dữ liệu MongoDB
     await MongoDB.connect(config.mongodbUri);
+
+    jobs.startJobs();
 
     // 2. Lắng nghe trên 0.0.0.0 và PORT
     server.listen(config.port, '0.0.0.0', () => {
@@ -33,6 +32,7 @@ async function startServer() {
 // Xử lý các tín hiệu tắt tiến trình an toàn (Graceful Shutdown)
 const handleShutdown = async (signal) => {
   console.log(`\n[Server] Nhận tín hiệu ${signal}. Đang đóng các kết nối...`);
+  jobs.stopJobs();
   server.close(async () => {
     try {
       await MongoDB.disconnect();
