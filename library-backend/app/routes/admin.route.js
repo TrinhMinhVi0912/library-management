@@ -4,6 +4,7 @@ const bookController = require('../controllers/book.controller');
 const counterController = require('../controllers/counter.controller');
 const loanController = require('../controllers/loan.controller');
 const fineController = require('../controllers/fine.controller');
+const renewalController = require('../controllers/admin-renewal.controller');
 const {
   idParamSchema,
   createBookSchema,
@@ -23,6 +24,11 @@ const {
   createFineSchema,
   waiveFineSchema,
 } = require('../validators/fine.validator');
+const {
+  renewalIdParamSchema,
+  adminRenewalsQuerySchema,
+  rejectRenewalSchema,
+} = require('../validators/renewal.validator');
 
 const router = express.Router();
 
@@ -105,6 +111,14 @@ router.patch(
   fineController.waiveFine
 );
 router.post('/fines/recalculate', requireRole('admin'), fineController.recalculateFines);
+
+router.get('/renewals', validate(adminRenewalsQuerySchema, 'query'), renewalController.getAdminRenewals);
+router.post('/renewals/:id/approve', validate(renewalIdParamSchema, 'params'), renewalController.approveRenewal);
+router.post(
+  '/renewals/:id/reject',
+  validate({ params: renewalIdParamSchema, body: rejectRenewalSchema }),
+  renewalController.rejectRenewal
+);
 
 module.exports = router;
 
