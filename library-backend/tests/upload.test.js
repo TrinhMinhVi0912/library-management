@@ -1,3 +1,5 @@
+const express = require('express');
+const supertest = require('supertest');
 const { User } = require('../app/models');
 const cloudinaryUtil = require('../app/utils/cloudinary.util');
 const userService = require('../app/services/user.service');
@@ -78,6 +80,19 @@ describe('Cloudinary & Image Upload Test Suite (BE-10)', () => {
         expect(pass).toBeUndefined();
         done();
       });
+    });
+
+    it('từ chối tệp vượt quá 2MB qua luồng multipart thực tế', async () => {
+      const app = express();
+      app.post('/upload', uploadSingle('file'), (_req, res) => res.sendStatus(200));
+      app.use((error, _req, res, _next) => res.status(error.statusCode || 500).json({ message: error.message }));
+
+      const response = await supertest(app)
+        .post('/upload')
+        .attach('file', Buffer.alloc(2 * 1024 * 1024 + 1), { filename: 'large.png', contentType: 'image/png' });
+
+      expect(response.statusCode).toBe(400);
+      expect(response.body.message).toContain('không được vượt quá 2MB');
     });
 
     it('chấp nhận khi gửi tệp có định dạng jpg, png, webp', (done) => {

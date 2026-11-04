@@ -976,25 +976,34 @@ describe('BE-20: Duyệt / từ chối yêu cầu mượn (transaction)', () => 
         save: jest.fn().mockResolvedValue(true),
       };
 
-      // Giả sử sách chỉ còn đúng 1 cuốn cuối cùng (availableCopies = 1).
-      // Request 1 khớp $gte: 1 -> thành công; Request 2 nhận null -> ném 422
       jest
         .spyOn(Loan, 'findById')
         .mockReturnValueOnce({ session: jest.fn().mockResolvedValue(mockLoan1) })
         .mockReturnValueOnce({ session: jest.fn().mockResolvedValue(mockLoan2) });
 
-      jest
+      let availableCopies = 1;
+      const atomicStockUpdate = jest
         .spyOn(Book, 'findOneAndUpdate')
-        .mockResolvedValueOnce({ _id: bookId1, availableCopies: 0 })
-        .mockResolvedValueOnce(null);
+        .mockImplementation(async (filter) => {
+          expect(filter).toEqual({ _id: bookId1, availableCopies: { $gte: 1 } });
+          if (availableCopies < 1) return null;
+          availableCopies -= 1;
+          return { _id: bookId1, availableCopies };
+        });
 
-      const res1 = await loanService.approveLoan(mockLoan1._id, staffId);
-      expect(res1.status).toBe('approved');
+      const results = await Promise.allSettled([
+        loanService.approveLoan(mockLoan1._id, staffId),
+        loanService.approveLoan(mockLoan2._id, staffId),
+      ]);
 
-      await expect(loanService.approveLoan(mockLoan2._id, staffId)).rejects.toMatchObject({
+      expect(results.filter((result) => result.status === 'fulfilled')).toHaveLength(1);
+      expect(results.filter((result) => result.status === 'rejected')).toHaveLength(1);
+      expect(results.find((result) => result.status === 'rejected').reason).toMatchObject({
         statusCode: 422,
         message: expect.stringContaining('đã hết bản sao'),
       });
+      expect(atomicStockUpdate).toHaveBeenCalledTimes(2);
+      expect(availableCopies).toBe(0);
     });
   });
 
