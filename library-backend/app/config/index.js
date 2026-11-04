@@ -3,10 +3,21 @@ const dotenv = require('dotenv');
 dotenv.config();
 
 if (process.env.NODE_ENV === 'production') {
-  const requiredProductionValues = ['MONGODB_URI', 'CLIENT_URL', 'JWT_ACCESS_SECRET', 'JWT_REFRESH_SECRET', 'JOBS_SECRET'];
+  const requiredProductionValues = ['MONGODB_URI', 'CLIENT_URL', 'JWT_ACCESS_SECRET', 'JWT_REFRESH_SECRET', 'JOBS_SECRET', 'COOKIE_SAMESITE'];
   const missingValues = requiredProductionValues.filter((key) => !process.env[key]?.trim());
   if (missingValues.length) {
     throw new Error(`Thiếu cấu hình production bắt buộc: ${missingValues.join(', ')}`);
+  }
+  const invalidClientUrls = process.env.CLIENT_URL.split(',').map((value) => value.trim()).filter((value) => {
+    try {
+      const parsed = new URL(value);
+      return parsed.protocol !== 'https:' || parsed.origin !== value;
+    } catch {
+      return true;
+    }
+  });
+  if (invalidClientUrls.length) {
+    throw new Error('CLIENT_URL production phải là danh sách origin HTTPS chính xác, không có path hoặc dấu / cuối');
   }
   const productionSecrets = ['JWT_ACCESS_SECRET', 'JWT_REFRESH_SECRET', 'JOBS_SECRET'];
   const weakSecrets = productionSecrets.filter((key) => (
@@ -17,6 +28,13 @@ if (process.env.NODE_ENV === 'production') {
   }
   if (process.env.JWT_ACCESS_SECRET === process.env.JWT_REFRESH_SECRET) {
     throw new Error('JWT_ACCESS_SECRET và JWT_REFRESH_SECRET phải khác nhau trong production');
+  }
+  if (process.env.COOKIE_SECURE !== 'true') {
+    throw new Error('COOKIE_SECURE phải là true trong production (yêu cầu HTTPS)');
+  }
+  const cookieSameSite = (process.env.COOKIE_SAMESITE || 'lax').toLowerCase();
+  if (!['strict', 'lax', 'none'].includes(cookieSameSite)) {
+    throw new Error('COOKIE_SAMESITE phải là strict, lax hoặc none');
   }
 }
 
@@ -40,7 +58,7 @@ const config = {
   },
   cookie: {
     secure: process.env.COOKIE_SECURE === 'true',
-    sameSite: process.env.COOKIE_SAMESITE || 'lax',
+    sameSite: (process.env.COOKIE_SAMESITE || 'lax').toLowerCase(),
   },
   cloudinary: {
     cloudName: process.env.CLOUDINARY_CLOUD_NAME || '',
