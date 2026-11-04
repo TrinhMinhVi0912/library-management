@@ -5,10 +5,10 @@ const dashboardChartsQuerySchema = Joi.object({
 });
 
 const reportDateRangeSchema = Joi.object({
-  from: Joi.date().iso(),
-  to: Joi.date().iso(),
+  from: Joi.string().isoDate().raw(),
+  to: Joi.string().isoDate().raw(),
 }).custom((value, helpers) => {
-  if (value.from && value.to && value.from > value.to) {
+  if (value.from && value.to && new Date(value.from) > new Date(value.to)) {
     return helpers.message('Ngày bắt đầu phải trước hoặc bằng ngày kết thúc');
   }
   return value;

@@ -28,6 +28,10 @@ async function authMiddleware(socket, next) {
     if (!userId) {
       return next(new Error('Payload mã xác thực không hợp lệ'));
     }
+    if (decoded.exp) {
+      socket.data = socket.data || {};
+      socket.data.accessTokenExpiresAt = decoded.exp * 1000;
+    }
 
     const user = await User.findById(userId);
     if (!user) {
@@ -54,6 +58,13 @@ async function authMiddleware(socket, next) {
 function handleConnection(socket) {
   const user = socket.user;
   const userId = user._id.toString();
+  const expiresAt = socket.data?.accessTokenExpiresAt;
+  let expiryTimer;
+
+  if (expiresAt) {
+    expiryTimer = setTimeout(() => socket.disconnect(true), Math.max(0, expiresAt - Date.now()));
+    expiryTimer.unref?.();
+  }
 
   // Tham gia phòng chung và phòng cá nhân
   socket.join('all');
@@ -69,7 +80,7 @@ function handleConnection(socket) {
 
   // Client không phát sự kiện nghiệp vụ lên server
   socket.on('disconnect', () => {
-    // Ngắt kết nối socket
+    if (expiryTimer) clearTimeout(expiryTimer);
   });
 }
 

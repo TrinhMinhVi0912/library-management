@@ -186,6 +186,23 @@ describe('BE-18: Socket.IO & Counters Service', () => {
       expect(joinedRooms).not.toContain('role:staff');
     });
 
+    test('disconnects the socket when its access token expires', () => {
+      jest.useFakeTimers();
+      const socket = {
+        data: { accessTokenExpiresAt: Date.now() + 1000 },
+        user: { _id: mockUserId, role: 'reader' },
+        join: jest.fn(),
+        on: jest.fn(),
+        disconnect: jest.fn(),
+      };
+
+      handleConnection(socket);
+      jest.advanceTimersByTime(1000);
+
+      expect(socket.disconnect).toHaveBeenCalledWith(true);
+      jest.useRealTimers();
+    });
+
     test('handleConnection: staff/admin tham gia all, user:<id>, role:staff', () => {
       const joinedRooms = [];
       const socket = {

@@ -76,6 +76,25 @@ describe('BE-26: Reviews', () => {
       expect(result).toBe(review);
     });
 
+    it('strips HTML and executable attributes from review comments before saving', async () => {
+      jest.spyOn(Loan, 'exists').mockResolvedValue({ _id: 'loan-id' });
+      jest.spyOn(Book, 'exists').mockResolvedValue({ _id: bookId });
+      jest.spyOn(Review, 'findOneAndUpdate').mockResolvedValue({ _id: reviewId });
+      jest.spyOn(Review, 'aggregate').mockResolvedValue([{ ratingAvg: 4, ratingCount: 1 }]);
+      jest.spyOn(Book, 'findByIdAndUpdate').mockResolvedValue({ ratingAvg: 4, ratingCount: 1 });
+
+      await reviewService.createOrUpdate(readerId, bookId, {
+        rating: 4,
+        comment: '<img src=x onerror="alert(1)">Ổn<script>alert(1)</script>',
+      });
+
+      expect(Review.findOneAndUpdate).toHaveBeenCalledWith(
+        { book: bookId, reader: readerId },
+        expect.objectContaining({ $set: { rating: 4, comment: 'Ổn' } }),
+        expect.objectContaining({ upsert: true, runValidators: true, new: true })
+      );
+    });
+
     it('uses visible reviews only and resets rating to zero when no visible reviews remain', async () => {
       jest.spyOn(Review, 'aggregate').mockResolvedValue([]);
       jest.spyOn(Book, 'findByIdAndUpdate').mockResolvedValue({ ratingAvg: 0, ratingCount: 0 });

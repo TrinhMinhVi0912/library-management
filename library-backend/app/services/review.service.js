@@ -1,8 +1,13 @@
 const mongoose = require('mongoose');
+const sanitizeHtml = require('sanitize-html');
 const ApiError = require('../api-error');
 const { Book, Loan, Review } = require('../models');
 const { parsePagination, buildPaginationMeta } = require('../utils/pagination.util');
 const auditService = require('./audit.service');
+
+function cleanComment(comment) {
+  return sanitizeHtml(comment || '', { allowedTags: [], allowedAttributes: {} }).trim();
+}
 
 async function canReview(userId, bookId) {
   return Boolean(await Loan.exists({
@@ -30,7 +35,7 @@ async function createOrUpdate(userId, bookId, data) {
     throw ApiError.forbidden('Bạn cần mượn sách này trước khi đánh giá');
   }
   if (!(await Book.exists({ _id: bookId }))) throw ApiError.notFound('Sách không tồn tại');
-  const update = { $set: { rating: data.rating, comment: data.comment || '' }, $setOnInsert: { book: bookId, reader: userId, hidden: false } };
+  const update = { $set: { rating: data.rating, comment: cleanComment(data.comment) }, $setOnInsert: { book: bookId, reader: userId, hidden: false } };
   let review;
   try {
     review = await Review.findOneAndUpdate({ book: bookId, reader: userId }, update, {
@@ -69,7 +74,7 @@ async function updateOwnReview(reviewId, userId, data) {
   const review = await Review.findOne({ _id: reviewId, reader: userId });
   if (!review) throw ApiError.notFound('Đánh giá không tồn tại hoặc không thuộc về bạn');
   if (data.rating !== undefined) review.rating = data.rating;
-  if (data.comment !== undefined) review.comment = data.comment;
+  if (data.comment !== undefined) review.comment = cleanComment(data.comment);
   await review.save();
   await recalcRating(review.book);
   return review;

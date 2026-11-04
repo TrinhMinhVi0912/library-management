@@ -194,7 +194,7 @@ describe('BE-30: Admin notifications', () => {
       expect(detail.statusCode).toBe(200);
       expect(update.statusCode).toBe(200);
       expect(deleted.statusCode).toBe(200);
-      expect(notifyService.getAdminNotifications).toHaveBeenCalledWith({ type: 'system' });
+      expect(notifyService.getAdminNotifications).toHaveBeenCalledWith({ type: 'system', page: 1, limit: 10 });
       expect(notifyService.updateAdminNotification).toHaveBeenCalledWith(notificationId, { title: 'Mới' }, expect.any(Object), expect.any(Object));
       expect(notifyService.deleteAdminNotification).toHaveBeenCalledWith(notificationId, expect.any(Object), expect.any(Object));
     });

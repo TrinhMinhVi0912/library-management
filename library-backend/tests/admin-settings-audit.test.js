@@ -104,11 +104,16 @@ describe('BE-29: Settings and audit logs', () => {
     it('serves paginated audit logs to admin only', async () => {
       jest.spyOn(auditService, 'getAuditLogs').mockResolvedValue({ items: [], meta: { page: 1, limit: 10, total: 0, totalPages: 0 } });
       const staffResponse = await request(app).get('/api/v1/admin/audit-logs').set('Authorization', `Bearer ${staffToken}`);
-      const adminResponse = await request(app).get('/api/v1/admin/audit-logs?action=loan.return').set('Authorization', `Bearer ${adminToken}`);
+      const adminResponse = await request(app)
+        .get('/api/v1/admin/audit-logs?action=loan.return&%24where=this.passwordHash')
+        .set('Authorization', `Bearer ${adminToken}`);
 
       expect(staffResponse.statusCode).toBe(403);
       expect(adminResponse.statusCode).toBe(200);
-      expect(auditService.getAuditLogs).toHaveBeenCalledWith({ action: 'loan.return' });
+      expect(auditService.getAuditLogs).toHaveBeenCalledWith(expect.objectContaining({ action: 'loan.return' }));
+      const queryPassedToService = auditService.getAuditLogs.mock.calls[0][0];
+      expect(queryPassedToService).not.toHaveProperty('$where');
+      expect(queryPassedToService).not.toHaveProperty('_where');
     });
   });
 });

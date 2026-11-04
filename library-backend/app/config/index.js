@@ -2,6 +2,24 @@ const dotenv = require('dotenv');
 
 dotenv.config();
 
+if (process.env.NODE_ENV === 'production') {
+  const requiredProductionValues = ['MONGODB_URI', 'CLIENT_URL', 'JWT_ACCESS_SECRET', 'JWT_REFRESH_SECRET', 'JOBS_SECRET'];
+  const missingValues = requiredProductionValues.filter((key) => !process.env[key]?.trim());
+  if (missingValues.length) {
+    throw new Error(`Thiếu cấu hình production bắt buộc: ${missingValues.join(', ')}`);
+  }
+  const productionSecrets = ['JWT_ACCESS_SECRET', 'JWT_REFRESH_SECRET', 'JOBS_SECRET'];
+  const weakSecrets = productionSecrets.filter((key) => (
+    process.env[key].length < 32 || /^(your_|local_|default_|change_me)/i.test(process.env[key])
+  ));
+  if (weakSecrets.length) {
+    throw new Error(`Cấu hình secret production không an toàn: ${weakSecrets.join(', ')} (cần secret ngẫu nhiên tối thiểu 32 ký tự)`);
+  }
+  if (process.env.JWT_ACCESS_SECRET === process.env.JWT_REFRESH_SECRET) {
+    throw new Error('JWT_ACCESS_SECRET và JWT_REFRESH_SECRET phải khác nhau trong production');
+  }
+}
+
 const clientUrlRaw = process.env.CLIENT_URL || 'http://localhost:5173';
 const clientUrls = clientUrlRaw
   .split(',')

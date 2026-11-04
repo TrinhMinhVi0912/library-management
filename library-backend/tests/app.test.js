@@ -24,6 +24,13 @@ describe('Khung Express & Endpoints Cơ Bản', () => {
     expect(res.body.success).toBe(true);
   });
 
+  it('GET /api/docs hiển thị Swagger UI khi ENABLE_DOCS=true', async () => {
+    const res = await request(app).get('/api/docs/');
+    expect(res.statusCode).toBe(200);
+    expect(res.text).toContain('Swagger UI');
+    expect(res.headers['content-security-policy']).toMatch(/unsafe-inline/);
+  });
+
   it('Route không tồn tại phải trả về 404 với định dạng lỗi chuẩn', async () => {
     const res = await request(app).get('/route-khong-ton-tai-12345');
     expect(res.statusCode).toBe(404);

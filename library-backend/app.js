@@ -7,6 +7,8 @@ const morgan = require('morgan');
 const config = require('./app/config');
 const apiV1Router = require('./app/routes');
 const systemRouter = require('./app/routes/system.route');
+const swaggerUi = require('swagger-ui-express');
+const swaggerSpec = require('./app/docs/swagger');
 const {
   ok,
   notFoundHandler,
@@ -51,7 +53,13 @@ app.use((req, _res, next) => {
     mongoSanitize.sanitize(req.params, { replaceWith: '_' });
   }
   if (req.query) {
-    mongoSanitize.sanitize(req.query, { replaceWith: '_' });
+    const sanitizedQuery = mongoSanitize.sanitize(req.query, { replaceWith: '_' });
+    Object.defineProperty(req, 'query', {
+      configurable: true,
+      enumerable: true,
+      writable: true,
+      value: sanitizedQuery,
+    });
   }
   next();
 });
@@ -79,6 +87,13 @@ app.get('/', (_req, res) => {
     documentation: config.enableDocs ? '/api/docs' : 'disabled',
   });
 });
+
+if (config.enableDocs) {
+  app.use('/api/docs', (_req, res, next) => {
+    res.setHeader('Content-Security-Policy', 'default-src \'self\'; script-src \'self\' \'unsafe-inline\'; style-src \'self\' \'unsafe-inline\'; img-src \'self\' data:');
+    next();
+  }, swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+}
 
 // 9. Mount API v1
 app.use('/api/v1', apiV1Router);
