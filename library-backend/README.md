@@ -85,7 +85,7 @@ Hai domain ví dụ trên là hai site khác nhau. Cookie refresh khi admin fron
 1. Chạy `npm run create-admin` trong Shell của service (nếu có) sau khi đã cấu hình `MONGODB_URI`; nhập `ADMIN_EMAIL` và `ADMIN_PASSWORD` tạm thời qua secret/environment của lần chạy. Có thể chạy từ máy local đã kết nối Atlas production, nhưng tránh ghi mật khẩu vào lịch sử shell. Gỡ bỏ credential tạm sau khi tạo admin. **Không chạy `npm run seed` production.**
 2. Trên frontend độc giả và frontend quản trị, đặt `VITE_API_URL=https://<api-domain>/api/v1` và `VITE_SOCKET_URL=https://<api-domain>`, cùng `withCredentials` cho các request cần refresh cookie; build lại sau khi đổi `VITE_*`.
 3. Frontend cần gửi credentials và API phải cho phép đúng hai origin qua `CLIENT_URL`; backend CORS và Socket.IO đọc cùng danh sách origin.
-4. Với frontend Vite, cấu hình SPA fallback trên hosting tương ứng để reload route con không trả 404. Source frontend chưa có trong repository hiện tại nên fallback và `withCredentials` phải được xác nhận khi frontend được bổ sung/deploy.
+4. Với mỗi frontend Vite (`library-frontend-user/`, `library-frontend-admin/`), cấu hình SPA fallback trên hosting tương ứng để reload route con không trả 404. Source frontend chưa có trong repository hiện tại nên fallback và `withCredentials` phải được xác nhận khi frontend được bổ sung/deploy.
 
 ### 4. Kiểm tra sau deploy
 
