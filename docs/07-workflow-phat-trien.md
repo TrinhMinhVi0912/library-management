@@ -47,7 +47,7 @@ Ghi chú: Antigravity đọc workflow trong `.agent/workflows/`. Nếu bản b�
 
 ## 4. Cách làm việc hằng ngày
 
-1. Mở Antigravity ở **thư mục gốc dự án** (chứa `library-backend/`, `library-frontend/`, `docs/`, `tasks/`…).
+1. Mở Antigravity ở **thư mục gốc dự án** (chứa `library-backend/`, `library-frontend-user/`, `library-frontend-admin/`, `docs/`, `tasks/`…).
 2. Cuộc trò chuyện mới → gõ `/resume`. (Lần đầu: `/next`.)
 3. Đọc kế hoạch agent nêu; sửa nếu cần; để agent làm.
 4. Tự chạy thử (hoặc yêu cầu agent chạy lint/test) và kiểm tra tay theo "Xong khi" trong file task.
@@ -72,13 +72,15 @@ Mẹo tiết kiệm thêm:
 | Backend – quản trị, báo cáo, job | BE-28…BE-32 |
 | Backend – diễn đàn, đặt trước | BE-33…BE-35 |
 | Backend – kiểm thử, tài liệu, deploy | BE-36…BE-38 |
-| Frontend – khởi tạo, khách, auth | FE-01…FE-10 |
+| Frontend – quản trị (khởi tạo app admin + các trang) | FE-19…FE-31, FE-34 |
+| Frontend – user (khởi tạo app + trang công khai/auth) | FE-01…FE-10 |
 | Frontend – độc giả | FE-11…FE-18 |
-| Frontend – quản trị | FE-19…FE-31 |
-| Frontend – diễn đàn, đặt trước | FE-32…FE-35 |
-| Frontend – hoàn thiện, deploy | FE-36…FE-38 |
+| Frontend – diễn đàn, đặt trước của user | FE-32, FE-33, FE-35 |
+| Frontend – hoàn thiện, deploy cả hai app | FE-36…FE-38 |
 
-Frontend có thể bắt đầu sớm (FE-01…FE-05 không cần API) nếu bạn muốn làm xen kẽ; mỗi task FE ghi rõ API backend cần có.
+Thứ tự làm frontend là hoàn thành app admin trước: FE-19 khởi tạo admin app, tiếp theo FE-20…FE-31 và FE-34. Sau đó mới khởi tạo user app ở FE-01 và làm FE-02…FE-18, FE-32, FE-33, FE-35. FE-36…FE-38 rà/build/deploy cả hai ứng dụng. Các task FE-19…FE-31 và FE-34 thuộc `library-frontend-admin/`; FE-01…FE-18, FE-32, FE-33, FE-35 thuộc `library-frontend-user/`. Mỗi task ghi rõ app đích. Hai ứng dụng dùng chung API backend nhưng có router, auth state, package và deploy riêng.
+
+Task của một app không được phụ thuộc vào việc hoàn thành UI của app còn lại nếu chỉ cần cùng API/backend; đặc biệt FE-19 và FE-34 chạy độc lập với các màn hình user. `/next` chọn các task admin trước task user theo thứ tự trong `tasks/INDEX.md`; không đổi ID hoặc tạo phụ thuộc chéo chỉ để điều khiển thứ tự. Quy tắc thống nhất UI bắt buộc theo `docs/03-thiet-ke-giao-dien.md` §2.1, `.agent/rules/20-frontend.md` và docs/06 §3.4.
 
 ## 6. Định nghĩa hoàn thành (Definition of Done)
 - [ ] Chạy đúng luồng chính và các trường hợp lỗi chính (đủ/sai quyền, dữ liệu sai, hết tồn kho…)

@@ -178,7 +178,7 @@ Index: `{reader:1,status:1}`, `{loan:1}`.
   notifiedAt: Date, holdUntil: Date
 }
 ```
-Index: `{book:1,status:1,createdAt:1}` (hàng chờ FIFO), unique `{reader,book}` khi `status in (waiting,available)` (partial index).
+  Index: `{book:1,status:1,createdAt:1}` (hàng chờ FIFO), unique `{reader,book}` khi `status in (waiting,available)` (partial index). Trạng thái `available` đại diện một bản đã được giữ riêng: `availableCopies` đã giảm; `fulfilled` không trừ kho lần hai, còn `expired|cancelled` chuyển bản cho người kế hoặc trả lại kho.
 
 ### 4.10 `reviews`
 ```js
@@ -212,9 +212,11 @@ Index: `{user:1}`; unique `{user:1,name:1}`.
   title: String, content: String,
   link: String,                // route trong app
   createdBy: ObjectId,         // null nếu hệ thống
-  expiresAt: Date
+  expiresAt: Date,
+  jobKey: String                // khóa idempotency tùy chọn của job, unique sparse
 }
 ```
+`jobKey` dùng cho thông báo do job sinh (ví dụ nhắc hạn theo độc giả/ngày Việt Nam), tránh gửi trùng khi cron và endpoint thủ công chạy đồng thời.
 Vì thông báo chung gửi cho nhiều người, trạng thái đọc lưu riêng:
 
 ### 4.13 `notificationReads`

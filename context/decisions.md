@@ -22,5 +22,17 @@
 | D-016 | Hỗ trợ song song `.eslintrc.js` và `eslint.config.js` cùng devDependencies `@eslint/js`, `globals` | Node 24 / ESLint 10 mặc định dùng flat config format, cần thiết để `npm run lint` chạy trơn tru |
 | D-017 | Đặt `language_override: 'none'` trong text index của `bookSchema` | Tránh MongoDB tự động đọc trường dữ liệu `language` (có giá trị 'Tiếng Việt') làm text analyzer gây lỗi `language override unsupported: Tiếng Việt` |
 | D-018 | Sinh slug sách duy nhất tự tăng hậu tố `-1`, `-2`; chặn giảm `totalCopies` dưới số sách đang mượn (400); chặn xóa sách đã có lịch sử trong `loans` (409) | Đảm bảo tính toàn vẹn tồn kho, tránh trùng lặp URL và bảo toàn lịch sử giao dịch mượn trả |
+| D-019 | Thu/miễn phạt và cập nhật `unpaidFineTotal` cùng transaction; cung cấp hàm đối soát tổng unpaid fines (endpoint chỉ admin) | Tránh lệch khoản nợ khi cập nhật đồng thời và hỗ trợ sửa sai dữ liệu |
+| D-020 | Admin/staff yêu cầu reset mật khẩu qua email bằng link reset một lần hiện có (`POST /admin/users/:id/password-reset`); staff chỉ được áp dụng với độc giả, tài khoản phải active | Tái sử dụng cơ chế token reset đã có và giữ nguyên giới hạn quyền quản lý người dùng |
+| D-021 | Thông báo `all/readers/staff` dùng một document notifications và trạng thái đọc riêng qua `notificationReads`; realtime emit tới room tương ứng | Theo mô hình DB docs/02 §4.13 và tránh tạo bản sao thông báo cho từng người |
+| D-022 | Dashboard charts hỗ trợ `7d`, `30d` (gom theo ngày) và `12m` (gom theo tháng), theo múi giờ Asia/Ho_Chi_Minh | Người dùng chốt bộ khoảng thời gian; mốc ngày/tháng khớp lịch địa phương |
+| D-023 | Jobs thủ công hỗ trợ `POST /jobs/:name` và `/api/v1/system/jobs/:name`, xác thực bằng `x-jobs-secret`; mỗi job phải idempotent, nhắc hạn dùng `jobKey` duy nhất theo người dùng/ngày Việt Nam | Cho phép cron ngoài gọi endpoint an toàn và ngăn gửi nhắc trùng khi chạy đồng thời |
+| D-024 | Giới hạn bài diễn đàn: tiêu đề 150, nội dung chủ đề 10.000, trả lời 5.000 ký tự | Người dùng chốt mức giới hạn trong BE-33 |
+| D-025 | Reservation `available` giữ riêng một bản bằng cách giảm `availableCopies`; duyệt mượn cho đúng độc giả chuyển reservation sang `fulfilled` mà không trừ kho lần nữa; khi hết hạn/hủy thì chuyển người kế hoặc trả bản về kho | Người dùng xác nhận trong BE-35 để bảo đảm bản giữ không bị yêu cầu khác chiếm |
+| D-026 | Tách frontend thành hai ứng dụng/thư mục riêng `library-frontend-user/` và `library-frontend-admin/`, mỗi app deploy thành site riêng nhưng dùng chung một backend; `CLIENT_URL` liệt kê cả hai origin | Người dùng yêu cầu user và admin có hai frontend/server riêng; cần kiểm tra refresh cookie trên domain production thật |
+| D-027 | Hai frontend dùng chung design tokens và quy tắc bố cục trong docs/03; task UI không tự thêm theme, hiệu ứng trang trí hoặc phụ thuộc chéo source giữa hai app | Giữ giao diện nhất quán, tránh mỗi trang/app tự phát sinh một phong cách |
+| D-028 | Thứ tự frontend: hoàn thành admin trước, sau đó user, cuối cùng rà soát/build/deploy cả hai; giữ nguyên ID và không tạo phụ thuộc chéo giả | Người dùng muốn hoàn thiện giao diện quản trị trước giao diện độc giả |
+| D-029 | Frontend dùng ESLint flat config với `eslint-plugin-vue`, `@eslint/js` và `globals` để lint cả Vue SFC lẫn JavaScript | ESLint không phân tích cú pháp/template `.vue` nếu thiếu parser/plugin Vue; lint đầy đủ cần bộ tooling này |
+| D-030 | Dashboard quản trị coi phiếu mượn có `pickupDeadline` trong 3 ngày tới là “sắp đến hạn nhận” | Người dùng chốt ngưỡng 3 ngày cho FE-20 |
 
 

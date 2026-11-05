@@ -28,29 +28,45 @@ Mỗi task = 1 cuộc trò chuyện (~45–90 phút). Chi tiết: `tasks/backend
 | [BE-18](backend/BE-18.md) | Socket.IO: xác thực, rooms, đẩy thông báo & số đếm | B4 Mượn trả | BE-17 | ✅ | |
 | [BE-19](backend/BE-19.md) | Gửi yêu cầu mượn & phiếu của tôi | B4 Mượn trả | BE-16, BE-18 | ✅ | |
 | [BE-20](backend/BE-20.md) | Duyệt / từ chối yêu cầu mượn (transaction) | B4 Mượn trả | BE-19 | ✅ | |
-| [BE-21](backend/BE-21.md) | Xác nhận giao sách | B4 Mượn trả | BE-20 | ⬜ | |
-| [BE-22](backend/BE-22.md) | Trả sách & phạt tự động (transaction) | B4 Mượn trả | BE-21 | ⬜ | |
-| [BE-23](backend/BE-23.md) | Quản lý phạt: xem, ghi nhận, thu, miễn | B4 Mượn trả | BE-22 | ⬜ | |
-| [BE-24](backend/BE-24.md) | Gia hạn (1/2): độc giả gửi yêu cầu | B5 Gia hạn & tương tác | BE-22, BE-18 | ⬜ | |
-| [BE-25](backend/BE-25.md) | Gia hạn (2/2): nhân viên duyệt / từ chối | B5 Gia hạn & tương tác | BE-24 | ⬜ | |
-| [BE-26](backend/BE-26.md) | Đánh giá (chỉ người đã mượn) | B5 Gia hạn & tương tác | BE-22 | ⬜ | |
-| [BE-27](backend/BE-27.md) | Kệ sách của tôi | B5 Gia hạn & tương tác | BE-14 | ⬜ | |
-| [BE-28](backend/BE-28.md) | Quản lý người dùng (admin/staff) | B6 Quản trị | BE-23 | ⬜ | |
-| [BE-29](backend/BE-29.md) | Settings & nhật ký hệ thống | B6 Quản trị | BE-28 | ⬜ | |
-| [BE-30](backend/BE-30.md) | Quản lý thông báo (soạn, gửi nhóm) | B6 Quản trị | BE-18 | ⬜ | |
-| [BE-31](backend/BE-31.md) | Dashboard & báo cáo Excel | B6 Quản trị | BE-23, BE-25 | ⬜ | |
-| [BE-32](backend/BE-32.md) | Jobs định kỳ & endpoint chạy tay | B6 Quản trị | BE-25, BE-29 | ⬜ | |
-| [BE-33](backend/BE-33.md) | Diễn đàn: chủ đề, trả lời, thích | B7 Diễn đàn & đặt trước | BE-08 | ⬜ | |
-| [BE-34](backend/BE-34.md) | Diễn đàn: báo cáo & kiểm duyệt | B7 Diễn đàn & đặt trước | BE-33 | ⬜ | |
-| [BE-35](backend/BE-35.md) | Đặt trước (hàng chờ FIFO) | B7 Diễn đàn & đặt trước | BE-22, BE-32 | ⬜ | |
-| [BE-36](backend/BE-36.md) | Kiểm thử tự động cho nghiệp vụ trọng yếu | B8 Hoàn thiện | BE-35 | ⬜ | |
-| [BE-37](backend/BE-37.md) | Swagger, README backend, rà soát bảo mật | B8 Hoàn thiện | BE-36 | ⬜ | |
-| [BE-38](backend/BE-38.md) | Chuẩn bị & kiểm tra deploy backend | B8 Hoàn thiện | BE-37 | ⬜ | |
+| [BE-21](backend/BE-21.md) | Xác nhận giao sách | B4 Mượn trả | BE-20 | ✅ | |
+| [BE-22](backend/BE-22.md) | Trả sách & phạt tự động (transaction) | B4 Mượn trả | BE-21 | ✅ | Lint sạch; người dùng xác nhận 14 suites / 297 tests pass |
+| [BE-23](backend/BE-23.md) | Quản lý phạt: xem, ghi nhận, thu, miễn | B4 Mượn trả | BE-22 | ✅ | Lint pass; người dùng xác nhận 14 suites / 297 tests pass |
+| [BE-24](backend/BE-24.md) | Gia hạn (1/2): độc giả gửi yêu cầu | B5 Gia hạn & tương tác | BE-22, BE-18 | ✅ | Lint pass; 15 suites / 305 tests pass |
+| [BE-25](backend/BE-25.md) | Gia hạn (2/2): nhân viên duyệt / từ chối | B5 Gia hạn & tương tác | BE-24 | ✅ | Lint pass; 16 suites / 320 tests pass |
+| [BE-26](backend/BE-26.md) | Đánh giá (chỉ người đã mượn) | B5 Gia hạn & tương tác | BE-22 | ✅ | Lint pass; 17 suites / 337 tests pass |
+| [BE-27](backend/BE-27.md) | Kệ sách của tôi | B5 Gia hạn & tương tác | BE-14 | ✅ | Lint pass; 18 suites / 349 tests pass |
+| [BE-28](backend/BE-28.md) | Quản lý người dùng (admin/staff) | B6 Quản trị | BE-23 | ✅ | Lint pass; 19 suites / 362 tests pass |
+| [BE-29](backend/BE-29.md) | Settings & nhật ký hệ thống | B6 Quản trị | BE-28 | ✅ | Lint pass; 20 suites / 368 tests pass |
+| [BE-30](backend/BE-30.md) | Quản lý thông báo (soạn, gửi nhóm) | B6 Quản trị | BE-18 | ✅ | Lint pass; 21 suites / 378 tests pass |
+| [BE-31](backend/BE-31.md) | Dashboard & báo cáo Excel | B6 Quản trị | BE-23, BE-25 | ✅ | Lint pass; 22 suites / 387 tests pass |
+| [BE-32](backend/BE-32.md) | Jobs định kỳ & endpoint chạy tay | B6 Quản trị | BE-25, BE-29 | ✅ | Lint pass; người dùng xác nhận 23 suites / 393 tests pass |
+| [BE-33](backend/BE-33.md) | Diễn đàn: chủ đề, trả lời, thích | B7 Diễn đàn & đặt trước | BE-08 | ✅ | Lint pass; người dùng xác nhận 24 suites / 408 tests pass |
+| [BE-34](backend/BE-34.md) | Diễn đàn: báo cáo & kiểm duyệt | B7 Diễn đàn & đặt trước | BE-33 | ✅ | Lint pass; người dùng xác nhận 24 suites / 413 tests pass |
+| [BE-35](backend/BE-35.md) | Đặt trước (hàng chờ FIFO) | B7 Diễn đàn & đặt trước | BE-22, BE-32 | ✅ | Lint pass; người dùng xác nhận 25 suites / 422 tests pass |
+| [BE-36](backend/BE-36.md) | Kiểm thử tự động cho nghiệp vụ trọng yếu | B8 Hoàn thiện | BE-35 | ✅ | Lint pass; người dùng xác nhận 27 suites / 432 tests pass; chưa có MongoDB replica set integration |
+| [BE-37](backend/BE-37.md) | Swagger, README backend, rà soát bảo mật | B8 Hoàn thiện | BE-36 | ✅ | 29 suites / 441 tests pass; Cloudinary bundle chưa thể quét do frontend chưa có source/build |
+| [BE-38](backend/BE-38.md) | Chuẩn bị & kiểm tra deploy backend | B8 Hoàn thiện | BE-37 | ✅ | Render + Atlas; health/auth và Socket.IO `notification:new` đã xác nhận |
 
-## TRACK FRONTEND (FE-01 → FE-38): khởi tạo đến hoàn thành frontend (làm sau khi BE xong)
+## TRACK FRONTEND (FE-01 → FE-38): admin trước, user sau; hai app dùng chung backend
+
+Thứ tự triển khai: hoàn thành app admin (`library-frontend-admin/`, FE-19…FE-31 và FE-34), sau đó khởi tạo và hoàn thành app user (`library-frontend-user/`, FE-01…FE-18, FE-32, FE-33, FE-35). Cuối cùng FE-36…FE-38 rà soát, kiểm thử và deploy cả hai app. Chi tiết trong `docs/07-workflow-phat-trien.md`.
 
 | ID | Tiêu đề | Giai đoạn | Phụ thuộc | Trạng thái | Ghi chú |
 |---|---|---|---|:-:|---|
+| [FE-19](frontend/FE-19.md) | Khởi tạo app admin, auth, layout, badge realtime, DataTable | F3 Quản trị | – | ✅ | Code/lint/build xong; browser QA còn trong `frontend/qa/FE-19.md` |
+| [FE-20](frontend/FE-20.md) | Dashboard quản trị | F3 Quản trị | FE-19 | ✅ | Code/lint/build xong; browser QA còn trong `frontend/qa/FE-20.md` |
+| [FE-21](frontend/FE-21.md) | Duyệt yêu cầu mượn | F3 Quản trị | FE-19 | ⬜ | |
+| [FE-22](frontend/FE-22.md) | Xác nhận giao sách | F3 Quản trị | FE-21 | ⬜ | |
+| [FE-23](frontend/FE-23.md) | Xác nhận trả sách | F3 Quản trị | FE-22 | ⬜ | |
+| [FE-24](frontend/FE-24.md) | Duyệt yêu cầu gia hạn | F3 Quản trị | FE-19 | ⬜ | |
+| [FE-25](frontend/FE-25.md) | Tất cả phiếu mượn | F3 Quản trị | FE-19 | ⬜ | |
+| [FE-26](frontend/FE-26.md) | Quản lý phạt | F3 Quản trị | FE-19 | ⬜ | |
+| [FE-27](frontend/FE-27.md) | Quản lý sách | F3 Quản trị | FE-19 | ⬜ | |
+| [FE-28](frontend/FE-28.md) | Quản lý danh mục | F3 Quản trị | FE-19 | ⬜ | |
+| [FE-29](frontend/FE-29.md) | Quản lý người dùng | F3 Quản trị | FE-19 | ⬜ | |
+| [FE-30](frontend/FE-30.md) | Quản lý thông báo | F3 Quản trị | FE-19 | ⬜ | |
+| [FE-31](frontend/FE-31.md) | Cài đặt & nhật ký hệ thống | F3 Quản trị | FE-19 | ⬜ | |
+| [FE-34](frontend/FE-34.md) | Kiểm duyệt diễn đàn (admin) | F4 Diễn đàn & đặt trước | FE-19 | ⬜ | |
 | [FE-01](frontend/FE-01.md) | Khởi tạo project frontend | F0 Khởi tạo | – | ⬜ | |
 | [FE-02](frontend/FE-02.md) | Styles, design tokens, App shell | F0 Khởi tạo | FE-01 | ⬜ | |
 | [FE-03](frontend/FE-03.md) | api.service (axios), auth store khung, ui store | F0 Khởi tạo | FE-02 | ⬜ | |
@@ -69,22 +85,8 @@ Mỗi task = 1 cuộc trò chuyện (~45–90 phút). Chi tiết: `tasks/backend
 | [FE-16](frontend/FE-16.md) | Thông báo realtime (Socket.IO) | F2 Độc giả | FE-06 | ⬜ | |
 | [FE-17](frontend/FE-17.md) | Đánh giá sách | F2 Độc giả | FE-10, FE-06 | ⬜ | |
 | [FE-18](frontend/FE-18.md) | Kệ sách của tôi | F2 Độc giả | FE-10 | ⬜ | |
-| [FE-19](frontend/FE-19.md) | Layout quản trị, sidebar, badge realtime, DataTable | F3 Quản trị | FE-16 | ⬜ | |
-| [FE-20](frontend/FE-20.md) | Dashboard quản trị | F3 Quản trị | FE-19 | ⬜ | |
-| [FE-21](frontend/FE-21.md) | Duyệt yêu cầu mượn | F3 Quản trị | FE-19 | ⬜ | |
-| [FE-22](frontend/FE-22.md) | Xác nhận giao sách | F3 Quản trị | FE-21 | ⬜ | |
-| [FE-23](frontend/FE-23.md) | Xác nhận trả sách | F3 Quản trị | FE-22 | ⬜ | |
-| [FE-24](frontend/FE-24.md) | Duyệt yêu cầu gia hạn | F3 Quản trị | FE-19 | ⬜ | |
-| [FE-25](frontend/FE-25.md) | Tất cả phiếu mượn | F3 Quản trị | FE-19 | ⬜ | |
-| [FE-26](frontend/FE-26.md) | Quản lý phạt | F3 Quản trị | FE-19 | ⬜ | |
-| [FE-27](frontend/FE-27.md) | Quản lý sách | F3 Quản trị | FE-19, FE-15 | ⬜ | |
-| [FE-28](frontend/FE-28.md) | Quản lý danh mục | F3 Quản trị | FE-19 | ⬜ | |
-| [FE-29](frontend/FE-29.md) | Quản lý người dùng | F3 Quản trị | FE-19 | ⬜ | |
-| [FE-30](frontend/FE-30.md) | Quản lý thông báo | F3 Quản trị | FE-19 | ⬜ | |
-| [FE-31](frontend/FE-31.md) | Cài đặt & nhật ký hệ thống | F3 Quản trị | FE-19 | ⬜ | |
 | [FE-32](frontend/FE-32.md) | Diễn đàn (1/2): trang chủ, chuyên mục | F4 Diễn đàn & đặt trước | FE-06 | ⬜ | |
 | [FE-33](frontend/FE-33.md) | Diễn đàn (2/2): chi tiết, soạn bài, báo cáo | F4 Diễn đàn & đặt trước | FE-32 | ⬜ | |
-| [FE-34](frontend/FE-34.md) | Kiểm duyệt diễn đàn (admin) | F4 Diễn đàn & đặt trước | FE-33, FE-19 | ⬜ | |
 | [FE-35](frontend/FE-35.md) | Đặt trước sách | F4 Diễn đàn & đặt trước | FE-12 | ⬜ | |
 | [FE-36](frontend/FE-36.md) | Trang giới thiệu, 403, rà soát giao diện | F5 Hoàn thiện | FE-35, FE-34 | ⬜ | |
 | [FE-37](frontend/FE-37.md) | Kiểm thử chấp nhận theo vai trò & sửa lỗi | F5 Hoàn thiện | FE-36 | ⬜ | |
@@ -98,4 +100,4 @@ Mỗi task = 1 cuộc trò chuyện (~45–90 phút). Chi tiết: `tasks/backend
 - **M5** sau BE-32: quản trị, báo cáo, job
 - **M6** sau BE-35: diễn đàn + đặt trước (có thể cắt nếu thiếu thời gian)
 - **M7** sau BE-38: backend hoàn tất & deploy
-- **M8** sau FE-18: toàn bộ phía độc giả; **M9** sau FE-31: quản trị; **M10** sau FE-38: đồ án hoàn tất
+- **M8** sau FE-31 và FE-34: giao diện admin; **M9** sau FE-18, FE-33 và FE-35: giao diện user; **M10** sau FE-38: đồ án hoàn tất

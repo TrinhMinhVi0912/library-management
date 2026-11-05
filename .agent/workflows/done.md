@@ -9,6 +9,7 @@ description: Kết thúc task/phiên - kiểm tra, cập nhật INDEX và SESSIO
    - Frontend: `npm run lint`, `npm run build`, kiểm tra tay các trạng thái giao diện.
    Báo rõ mục nào đạt/chưa đạt. Không đánh dấu hoàn thành nếu lint/build lỗi.
 2. **Task file**: tick các ô đã đạt trong `tasks/.../ID.md`; thêm mục "Ghi chú" nếu có điều quan trọng cho task sau (ví dụ tên hàm/đường dẫn đã chốt).
+   - Với task frontend, tạo/cập nhật `tasks/frontend/qa/FE-<ID>.md` theo `tasks/frontend/qa/README.md`: ghi các tình huống cần kiểm tra trên giao diện, bước tái hiện, kết quả mong đợi, trạng thái (Chờ test/Đạt/Lỗi/Bỏ qua) và thông tin setup. Chưa test tay thì ghi Chờ test; không cần dừng tiến độ code để chờ người dùng test.
 3. **INDEX.md**: đổi trạng thái `🟦 → ✅` (hoặc giữ `🟦` nếu chưa xong, kèm ghi chú ngắn ở cột Ghi chú).
 4. **Ghi đè `context/SESSION.md`** theo đúng mẫu trong file đó (≤ 40 dòng, không tích lũy lịch sử dài):
    - Task vừa xong / đang dở, trạng thái.

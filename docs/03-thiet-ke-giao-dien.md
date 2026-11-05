@@ -2,6 +2,8 @@
 
 Tham khảo bố cục của **Open Library** nhưng đơn giản hơn: nền trắng, nhiều khoảng trống, chữ rõ, thao tác chính luôn thấy ngay.
 
+Triển khai thành hai ứng dụng frontend độc lập: `library-frontend-user/` sở hữu mục 3.1 và trang 4.1–4.4 (public/reader/forum người dùng); `library-frontend-admin/` sở hữu mục 3.2 và trang 4.5 (admin, gồm kiểm duyệt forum). Hai app có router/build/deploy riêng, dùng chung backend API. Admin có màn hình login riêng; backend vẫn kiểm tra role.
+
 ## 1. Nguyên tắc thiết kế
 1. **Nền trắng**, vùng phụ dùng xám rất nhạt (`#f8f9fa`), viền mảnh `#e5e7eb`.
 2. **Một màu nhấn** (xanh dương) cho nút chính, liên kết, trạng thái đang chọn.
@@ -38,6 +40,15 @@ Ghi đè biến Bootstrap bằng SCSS (`$primary`, `$border-radius`, `$font-fami
 | returned | xanh lá | Đã trả |
 | rejected / cancelled / expired | xám/đỏ nhạt | Từ chối / Đã hủy / Hết hạn |
 | Sách còn / hết | xanh lá / xám đỏ | Còn X quyển / Hết sách |
+
+### 2.1 Ràng buộc nhất quán khi triển khai
+- Mục này là chuẩn bắt buộc cho cả `library-frontend-user/` và `library-frontend-admin/`; tham khảo Open Library chỉ để định hướng bố cục, không phải lý do để tự sáng tạo lại style mỗi trang.
+- Chỉ dùng tokens ở §2 và Bootstrap 5 + SCSS. Không tự thêm font, bảng màu, kích thước bo góc, kiểu bóng/viền, thư viện UI hoặc biến thể nút/badge mới.
+- Không tự thêm gradient, glassmorphism, hiệu ứng chuyển động trang trí, nền hình ảnh, hero, biểu đồ hoặc thẻ số liệu nếu mô tả trang không yêu cầu.
+- Trong mỗi app, dùng layout và component dùng chung đã định nghĩa ở §3 và §5. Trang mới giữ nhịp bố cục quen thuộc: tiêu đề/breadcrumb và hành động chính; thanh tìm/lọc khi cần; nội dung; phân trang khi có danh sách; loading/empty/error/success theo cùng mẫu.
+- Public navbar/footer chỉ thuộc user app; sidebar/topbar quản trị chỉ thuộc admin app. Không tạo liên kết hoặc điều hướng sang route nội bộ của app còn lại; dùng URL cấu hình của app tương ứng.
+- Giữ cùng cách trình bày trạng thái, form, xác nhận, toast, bảng và responsive giữa các trang cùng nhóm. Mỗi trang phải phù hợp mobile mà không thay đổi ngôn ngữ thiết kế.
+- Nếu task bắt buộc ngoại lệ, cập nhật mô tả trang này và `context/decisions.md` trong cùng task. Không tự mở rộng thiết kế ngoài yêu cầu.
 
 ## 3. Bố cục chung
 
@@ -146,6 +157,10 @@ Mỗi trang chi tiết sách có khối "Thảo luận về cuốn sách này" l
 - **Tìm kiếm**: gợi ý (autocomplete) sau 300 ms (debounce); lưu bộ lọc trên URL query để chia sẻ/quay lại.
 - **Yêu cầu gia hạn**: nút bị vô hiệu kèm tooltip giải thích lý do (đã quá hạn / có người đặt trước / hết lượt / đang chờ duyệt). Khi nhân viên duyệt hoặc từ chối, độc giả thấy toast và trạng thái đổi ngay, không cần tải lại.
 - **Thông báo realtime**: toast góc phải màn hình, số trên chuông tăng ngay; bấm toast chuyển đến trang liên quan.
+
+## 7. Kiểm tra tuân thủ thiết kế
+- Trước khi hoàn tất task UI, so sánh trang mới với trang cùng nhóm trong đúng app đích; xác nhận token, layout, component, trạng thái và responsive nhất quán.
+- Không chấp nhận trang chỉ “đẹp riêng lẻ” nhưng lệch khỏi hệ thống ở tài liệu này. Nếu phát hiện lệch, sửa trang theo chuẩn hoặc ghi rõ ngoại lệ vào tài liệu/decisions theo quy tắc §2.1.
 - **LoanTimeline** trong lịch sử mượn giúp độc giả hiểu đang ở bước nào.
 - **Trang trả sách**: bàn phím nhanh – quét/nhập mã phiếu rồi Enter.
 - **Hộp xác nhận** cho: từ chối, xóa, khóa người dùng, miễn phạt.

@@ -9,7 +9,7 @@ Trình duyệt ──► Frontend (static: Vite build)  ──► Backend (Expre
                                                           └──────────────────────► Cloudinary
                                                           └──────────────────────► SMTP (email)
 ```
-- Frontend và backend là **hai dịch vụ riêng**, deploy độc lập.
+- Có ba ứng dụng deploy độc lập: frontend user (`library-frontend-user/`), frontend admin (`library-frontend-admin/`) và backend (`library-backend/`). Hai frontend build thành hai static site/domain riêng, cùng gọi một API và Socket.IO backend.
 - Dữ liệu: MongoDB Atlas (dùng cho cả dev lẫn production, chỉ khác cluster/DB).
 - Ảnh: Cloudinary (backend không lưu file lên đĩa).
 
@@ -17,7 +17,7 @@ Trình duyệt ──► Frontend (static: Vite build)  ──► Backend (Expre
 
 | Thành phần | Lựa chọn dễ | Ghi chú |
 |---|---|---|
-| Frontend | Vercel / Netlify / Cloudflare Pages | Build `npm run build`, thư mục `dist`, cần SPA fallback |
+| Frontend user + admin | Vercel / Netlify / Cloudflare Pages | Tạo 2 static site; mỗi site build từ đúng thư mục, output `dist`, cấu hình SPA fallback riêng |
 | Backend | Render / Railway / Fly.io / VPS (PM2 + Nginx) | Cần hỗ trợ WebSocket; bản free có thể "ngủ" → xem mục 7 |
 | Database | MongoDB Atlas (M0 free) | Có replica set → dùng được transaction |
 
@@ -33,17 +33,21 @@ Xem mẫu đầy đủ ở file 04 mục 7. Quy tắc:
 | `MONGODB_URI` | cluster dev | cluster production |
 | `CLIENT_URL` | `http://localhost:5173` | URL frontend thật (nhiều origin: ngăn cách bằng dấu phẩy) |
 | `COOKIE_SECURE` | false | true |
-| `COOKIE_SAMESITE` | lax | `none` nếu frontend và backend **khác domain**, `lax` nếu cùng site |
+| `COOKIE_SAMESITE` | lax | `none` nếu frontend và API khác site; `lax` nếu các subdomain cùng domain gốc |
 | `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET` | chuỗi bất kỳ | chuỗi ngẫu nhiên dài ≥ 32 ký tự, **khác** local |
 | `CLOUDINARY_*` | tài khoản dev | tài khoản production |
 | `JOBS_SECRET` | tùy ý | chuỗi ngẫu nhiên |
 
-### 3.2 Frontend (`library-frontend/.env`)
+### 3.2 Cả hai frontend (`library-frontend-user/.env`, `library-frontend-admin/.env`)
+
+Mỗi app có file `.env` và environment variables riêng; giá trị API/Socket giống nhau nhưng không chia sẻ build artifact:
 ```
 VITE_API_URL=https://api.example.com/api/v1
 VITE_SOCKET_URL=https://api.example.com
 ```
 Lưu ý: biến `VITE_*` được **nhúng vào bundle lúc build**. Đổi giá trị thì phải build lại. Tuyệt đối không đặt bí mật (secret) vào biến `VITE_*`.
+
+Có thể deploy frontend độc giả và frontend quản trị thành hai dịch vụ, dùng chung một backend. Khi đó `CLIENT_URL` gồm đủ hai origin (không có dấu `/` cuối); đặt origin độc giả đầu tiên vì link đặt lại mật khẩu dùng origin đầu tiên. Nếu dùng hai domain gốc khác nhau như `thuvienonline.com` và `quantrithuvien.com`, admin phải gọi refresh cookie cross-site; đặt `COOKIE_SAMESITE=none` và `COOKIE_SECURE=true`, đồng thời kiểm thử trên trình duyệt mục tiêu vì chính sách chặn third-party cookie có thể ảnh hưởng đăng nhập. Các URL mặc định `*.onrender.com` cũng là site riêng do `onrender.com` thuộc Public Suffix List; chỉ dùng chúng cho smoke test ban đầu. Cấu hình ổn định hơn là đặt cả hai frontend và API trên các subdomain của một domain gốc riêng.
 
 ## 4. Chuẩn bị trước khi deploy
 
@@ -82,13 +86,13 @@ Thực hiện trong `app.js` / `server.js`:
 5. Tạo admin đầu tiên: chạy `npm run create-admin` (qua Shell của nền tảng hoặc chạy ở máy local với `MONGODB_URI` production). **Không** chạy `seed` trên production thật.
 
 ### 6.2 Frontend (ví dụ Vercel/Netlify)
-1. Đẩy repo `library-frontend` lên GitHub.
-2. Build `npm run build`, output `dist`.
-3. Khai báo `VITE_API_URL`, `VITE_SOCKET_URL` ở phần Environment của nền tảng.
-4. SPA fallback:
+1. Tạo **hai static site** trên hosting, mỗi site trỏ vào một repo/ứng dụng `library-frontend-user` và `library-frontend-admin` (hoặc cùng monorepo nhưng cấu hình root directory tương ứng).
+2. Cho từng site chạy Build Command `npm ci && npm run build`, output `dist`.
+3. Khai báo `VITE_API_URL`, `VITE_SOCKET_URL` cho cả hai site ở phần Environment; build lại mỗi site sau khi đổi biến.
+4. Cấu hình SPA fallback độc lập trong cả hai app:
    - Netlify: file `public/_redirects` với dòng `/*  /index.html  200`.
    - Vercel: `vercel.json` với rewrite mọi đường dẫn về `/index.html`.
-5. Cập nhật `CLIENT_URL` ở backend thành URL frontend vừa có, rồi redeploy backend.
+5. Sau khi có cả hai URL, cập nhật backend `CLIENT_URL` thành hai origin đầy đủ, phân tách bằng dấu phẩy (không có dấu `/` cuối), user đứng trước; rồi redeploy backend.
 
 ### 6.3 VPS (tùy chọn)
 - Node 20 LTS + PM2 (`pm2 start server.js --name library-api`).

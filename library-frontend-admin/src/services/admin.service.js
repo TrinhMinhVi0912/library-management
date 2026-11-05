@@ -1,0 +1,34 @@
+import api from '@/services/api.service';
+
+export async function getCounters() {
+  const response = await api.get('/admin/counters');
+  return response.data?.data || { pendingLoans: 0, pendingRenewals: 0 };
+}
+
+export async function getUnreadCount() {
+  const response = await api.get('/me/notifications/unread-count');
+  return Number(response.data?.data?.unreadCount) || 0;
+}
+
+export async function getDashboardSummary() {
+  const response = await api.get('/admin/dashboard/summary');
+  return response.data?.data || {};
+}
+
+export async function getDashboardCharts(range = '30d') {
+  const response = await api.get('/admin/dashboard/charts', { params: { range } });
+  return response.data?.data || {};
+}
+
+export async function getAdminLoans(params = {}) {
+  const response = await api.get('/admin/loans', { params });
+  return response.data || {};
+}
+
+export async function exportLoansReport(params = {}) {
+  const response = await api.get('/admin/reports/loans.xlsx', {
+    params,
+    responseType: 'blob',
+  });
+  return response.data;
+}

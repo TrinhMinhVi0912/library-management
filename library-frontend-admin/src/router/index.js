@@ -1,0 +1,74 @@
+import { createRouter, createWebHistory } from 'vue-router';
+import { useAuthStore } from '@/stores/auth.store';
+import { pinia } from '@/stores/pinia';
+import AdminLayout from '@/layouts/AdminLayout.vue';
+import AdminLogin from '@/views/auth/AdminLogin.vue';
+import AdminPlaceholder from '@/views/admin/AdminPlaceholder.vue';
+import AdminDashboard from '@/views/admin/Dashboard.vue';
+import Forbidden from '@/views/Forbidden.vue';
+import NotFound from '@/views/NotFound.vue';
+
+const section = (path, name, title, roles = ['staff', 'admin']) => ({
+  path,
+  name,
+  component: AdminPlaceholder,
+  meta: { title, roles },
+});
+
+const router = createRouter({
+  history: createWebHistory(import.meta.env.BASE_URL),
+  routes: [
+    { path: '/', redirect: '/admin' },
+    { path: '/login', name: 'admin-login', component: AdminLogin, meta: { guestOnly: true, title: 'Đăng nhập quản trị' } },
+    { path: '/403', name: 'admin-forbidden', component: Forbidden, meta: { title: 'Không có quyền truy cập' } },
+    {
+      path: '/admin',
+      component: AdminLayout,
+      meta: { requiresAuth: true, roles: ['staff', 'admin'] },
+      children: [
+        { path: '', name: 'admin-dashboard', component: AdminDashboard, meta: { title: 'Tổng quan', roles: ['staff', 'admin'] } },
+        section('requests', 'admin-requests', 'Duyệt yêu cầu mượn'),
+        section('handover', 'admin-handover', 'Giao sách'),
+        section('returns', 'admin-returns', 'Nhận trả sách'),
+        section('renewals', 'admin-renewals', 'Duyệt gia hạn'),
+        section('loans', 'admin-loans', 'Phiếu mượn'),
+        section('fines', 'admin-fines', 'Quản lý phạt'),
+        section('books', 'admin-books', 'Quản lý sách'),
+        section('catalog', 'admin-catalog', 'Danh mục'),
+        section('users', 'admin-users', 'Người dùng'),
+        section('notifications', 'admin-notifications', 'Thông báo'),
+        section('forum', 'admin-forum', 'Kiểm duyệt diễn đàn'),
+        section('staff', 'admin-staff', 'Quản lý nhân viên', ['admin']),
+        section('settings', 'admin-settings', 'Cài đặt', ['admin']),
+        section('audit-logs', 'admin-audit-logs', 'Nhật ký hệ thống', ['admin']),
+      ],
+    },
+    { path: '/:pathMatch(.*)*', name: 'not-found', component: NotFound, meta: { title: 'Không tìm thấy trang' } },
+  ],
+  scrollBehavior: () => ({ top: 0 }),
+});
+
+router.beforeEach(async (to) => {
+  const auth = useAuthStore(pinia);
+  if (to.meta.requiresAuth && !auth.initialized) {
+    await auth.restoreSession();
+  }
+
+  if (to.meta.requiresAuth && !auth.isAuthenticated) {
+    if (auth.rejectedReader) return { name: 'admin-forbidden' };
+    return { name: 'admin-login', query: { redirect: to.fullPath } };
+  }
+
+  if (to.meta.roles?.length && !to.meta.roles.includes(auth.user?.role)) {
+    return { name: 'admin-forbidden' };
+  }
+
+  if (to.meta.guestOnly && auth.isAuthenticated) return { name: 'admin-dashboard' };
+  return true;
+});
+
+router.afterEach((to) => {
+  document.title = to.meta.title ? `${to.meta.title} | Quản trị thư viện` : 'Quản trị thư viện';
+});
+
+export default router;

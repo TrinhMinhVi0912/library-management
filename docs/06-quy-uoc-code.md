@@ -49,6 +49,7 @@ Dùng `session.withTransaction` cho: duyệt, giao, trả, hủy/hết hạn, du
 Chỉ đọc biến môi trường qua `app/config/index.js`. Không dùng `process.env` rải rác.
 
 ## 3. Frontend
+Có hai ứng dụng riêng: `library-frontend-user/` và `library-frontend-admin/`. Mỗi ứng dụng có `package.json`, router, services, stores, `.env.example`, README và pipeline build riêng; không đặt view của cả hai vai trò vào chung một app. Cả hai dùng chung API contract/backend, còn quyền luôn được backend xác thực.
 ### 3.1 Cấu trúc & luồng
 - View chỉ ghép giao diện và gọi **service** hoặc **store**; **không gọi axios trực tiếp trong view/component**.
 - Mọi lời gọi API đi qua `src/services/*.service.js`, dùng chung instance ở `api.service.js`.
@@ -69,7 +70,9 @@ Chỉ đọc biến môi trường qua `app/config/index.js`. Không dùng `proc
 - Trạng thái hiển thị bằng `StatusBadge` với bảng màu ở file 03 mục 2.
 
 ### 3.4 Giao diện
-- Bootstrap 5 + SCSS ghi đè biến; token màu/bo góc theo file 03 mục 2. Không thêm màu mới tùy tiện.
+- Bootstrap 5 + SCSS ghi đè biến; token màu/bo góc theo `docs/03-thiet-ke-giao-dien.md` §2. Đây là chuẩn chung bắt buộc cho cả hai app.
+- Không tự ý thêm font, màu, kiểu bóng/viền, biến thể nút/badge, thư viện UI hoặc hiệu ứng trang trí; không dựng một phong cách riêng cho từng màn hình. Theo layout/component chung của đúng app.
+- Không dùng gradient, glassmorphism, animation trang trí, hero hoặc thẻ số liệu ngoài mô tả trang. Nếu yêu cầu cần ngoại lệ, cập nhật docs/03 và `context/decisions.md` trong cùng task.
 - Mobile-first; bảng quản trị cuộn ngang trên màn hình nhỏ.
 - Icon `bootstrap-icons`, có `aria-label` cho nút chỉ có icon.
 - Debounce 300 ms cho ô tìm kiếm; lưu bộ lọc trên URL query.
@@ -81,7 +84,7 @@ Chỉ đọc biến môi trường qua `app/config/index.js`. Không dùng `proc
 - Nhánh: `main` (ổn định), `develop` (tích hợp), `feature/<tên-ngắn>`, `fix/<tên-ngắn>`.
 - Commit theo Conventional Commits, tiếng Anh hoặc Việt đều được, nhất quán: `feat(loan): duyệt gia hạn`, `fix(auth): refresh token hết hạn`, `docs: cập nhật file 04`.
 - Pull request nhỏ, mô tả: làm gì, liên quan mục nào ở tài liệu, cách kiểm thử.
-- Hai repo riêng: `library-backend`, `library-frontend`. Tài liệu (thư mục `docs/`, `context/`) để ở repo riêng hoặc nhân bản vào cả hai.
+- Ba ứng dụng/repo: `library-backend`, `library-frontend-user`, `library-frontend-admin`. Tài liệu (thư mục `docs/`, `context/`) đặt ở repo gốc hoặc nhân bản vào các repo khi cần.
 
 ## 5. Xử lý ngày giờ & tiền
 - Lưu ngày giờ dạng UTC (`Date`); hiển thị theo múi giờ `Asia/Ho_Chi_Minh` bằng `dayjs`.

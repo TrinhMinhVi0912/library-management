@@ -2,6 +2,7 @@
 
 ## 1. Công cụ
 - Backend: Jest + Supertest, MongoDB test riêng (DB `library_test` hoặc `mongodb-memory-server` dạng replica set để thử transaction).
+- Bộ test tự động hiện tại chạy không kết nối MongoDB: nghiệp vụ được test bằng model/session mocks; `jest.setup.js` đặt URI riêng `mongodb://127.0.0.1:1/library_test` để chặn nhầm DB dev/production. Test Supertest dùng Express app trực tiếp; không khởi động `server.js`.
 - Frontend: kiểm thử tay theo checklist vai trò; tùy chọn Vitest cho store/service.
 - Lệnh: `npm test` (backend). Test **không** dùng DB dev/production.
 
@@ -65,6 +66,8 @@
 - [ ] Token hết hạn → socket bị ngắt, client kết nối lại bằng token mới
 - [ ] `API_SECRET` Cloudinary không xuất hiện trong bundle frontend
 - [ ] Độc giả không sửa được `rating` của người khác, không đổi `role` qua `PATCH /me`
+
+Backend automation liên quan: `security.test.js`, `config.security.test.js`, `review.test.js`, `forum.test.js`, `auth.test.js`, `middlewares.test.js`, `socket-and-counters.test.js`. Kiểm tra Cloudinary secret trong frontend bundle chỉ thực hiện được khi frontend có mã nguồn/build artifact.
 
 ## 6. Mẫu báo lỗi
 ```

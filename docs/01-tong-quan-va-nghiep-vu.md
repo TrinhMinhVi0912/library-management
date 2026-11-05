@@ -20,10 +20,12 @@ Xây dựng website thư viện cho phép độc giả tìm sách, đăng ký m�
 
 | Tầng | Công nghệ chính | Thư viện bổ trợ |
 |---|---|---|
-| Frontend | Vue 3 (Vite) + Bootstrap 5 | vue-router, pinia, axios, **socket.io-client**, bootstrap-icons, chart.js + vue-chartjs, vee-validate + yup, vue-toastification, dayjs, sweetalert2 |
+| Frontend | Vue 3 (Vite) + Bootstrap 5 | vue-router, pinia, axios, **socket.io-client**, bootstrap-icons, chart.js + vue-chartjs, vee-validate + yup, vue-toastification, dayjs, sweetalert2; lint: eslint + eslint-plugin-vue + @eslint/js + globals |
 | Backend | Node.js + Express.js | mongoose, jsonwebtoken, bcryptjs, joi, **socket.io**, **cloudinary**, multer (memoryStorage), cors, helmet, express-rate-limit, express-mongo-sanitize, morgan, node-cron, dotenv, nodemailer, swagger-ui-express, exceljs (xuất báo cáo) |
 | Database | MongoDB | Mongoose ODM; MongoDB Atlas (cả dev lẫn production) hoặc local replica set |
 | Lưu trữ ảnh | Cloudinary | Upload từ backend, trả về `url` + `publicId` |
+
+Lint frontend Vue dùng ESLint flat config cùng `eslint-plugin-vue`, `@eslint/js` và `globals` để kiểm tra JavaScript và Vue Single File Components.
 
 ## 3. Vai trò & phân quyền
 
@@ -139,11 +141,14 @@ rejected              ▼                      overdue ──trả──► retu
 ### 7.4b Ghi nhận phạt
 - Phạt tự động từ trả trễ; nhân viên có thể **ghi nhận phạt thủ công** (hư hỏng, mất, vi phạm khác) với lý do + số tiền.
 - Khi độc giả nộp tiền tại quầy → nhân viên bấm **Xác nhận đã thu tiền** → `paid` (ghi nhân viên thu + thời gian). Hệ thống không có thanh toán online.
+- Chỉ admin được miễn phạt, bắt buộc ghi lý do; thông báo độc giả khi tạo khoản phạt, thu tiền hoặc miễn phạt.
+- `users.unpaidFineTotal` phải đồng bộ với tổng các khoản `fines` trạng thái `unpaid`; admin có thể chạy đối soát khi cần.
 - Tổng nợ phạt > 0 ⇒ khóa mượn mới.
 
 ### 7.5 Đặt trước
 1. Sách `availableCopies = 0` → nút **Đặt trước** thay cho **Thêm vào giỏ**.
-2. Khi có bản trả về → người đầu hàng chờ nhận thông báo, được giữ sách 3 ngày (có thể thêm vào giỏ & gửi yêu cầu ưu tiên); quá hạn → chuyển người kế.
+  2. Khi có bản trả về → người đầu hàng chờ nhận thông báo; hệ thống giữ riêng bản đó bằng cách giảm `availableCopies`, trong 3 ngày (theo `reservationHoldDays`) người này có thể gửi yêu cầu mượn. Người khác không thể lấy bản đang giữ.
+  3. Khi duyệt yêu cầu của đúng độc giả đang được giữ sách, reservation chuyển `fulfilled` và kho không giảm lần nữa. Hủy lượt giữ hoặc quá hạn sẽ chuyển bản giữ cho người kế tiếp; nếu hàng chờ trống thì trả bản về kho công khai.
 
 ### 7.6 Đánh giá
 - Chỉ độc giả **đã nhận sách đó** mới được đánh giá; chưa mượn thì form đánh giá được thay bằng gợi ý "Mượn sách để đánh giá" và API trả 403.
@@ -152,7 +157,7 @@ rejected              ▼                      overdue ──trả──► retu
 - Nhân viên có thể ẩn đánh giá vi phạm.
 
 ### 7.7 Kệ sách của tôi
-- Mặc định 3 kệ: *Muốn đọc*, *Đang đọc*, *Đã đọc*; tạo thêm kệ tùy ý.
+- Khi đăng ký tạo mặc định 3 kệ: *Muốn đọc*, *Đang đọc*, *Đã đọc*; khi tải danh sách sẽ tự bù kệ mặc định còn thiếu. Có thể tạo thêm kệ tùy ý; không đổi tên/xóa kệ mặc định.
 - Thêm/xóa/chuyển sách giữa các kệ ngay từ trang chi tiết sách.
 
 ### 7.8 Thông báo
@@ -165,7 +170,10 @@ rejected              ▼                      overdue ──trả──► retu
 - Thành viên tạo **chủ đề (thread)** trong một **chuyên mục**, có thể gắn với một cuốn sách; người khác **trả lời (post)**, thích, báo cáo.
 - Hỗ trợ trả lời lồng 1 cấp (`parentId`).
 - Nhân viên/admin: ghim, khóa, xóa, xử lý báo cáo.
-- Chống spam: rate-limit, giới hạn độ dài, tài khoản bị khóa không đăng được.
+- Chủ bài hoặc staff/admin được sửa/xóa; staff/admin quản lý chuyên mục, ghim và khóa chủ đề.
+- Giới hạn nội dung: tiêu đề tối đa 150 ký tự, nội dung chủ đề 10.000, trả lời 5.000; làm sạch HTML trước khi lưu.
+- Chống spam: tối đa 5 bài/chủ đề hoặc trả lời mỗi phút/IP; tài khoản bị khóa không đăng được.
+- Thành viên có thể báo cáo chủ đề/bài trả lời; staff/admin xử lý báo cáo thành `resolved` hoặc `dismissed`, ghi nhận người xử lý và audit mọi thao tác kiểm duyệt.
 
 ### 7.10 Dashboard (nhân viên/admin)
 - Thẻ số liệu: tổng sách, độc giả, đang mượn, quá hạn, yêu cầu mượn chờ duyệt, yêu cầu gia hạn chờ duyệt, phạt chưa thu.

@@ -1,6 +1,6 @@
 # AGENTS.md – Website Quản lý Mượn Sách (đọc đầu tiên, luôn bật)
 
-Đồ án: Vue 3 + Express + MongoDB (Mongoose), Socket.IO, Cloudinary. Hai repo: `library-backend/`, `library-frontend/`, mở rộng từ cấu trúc mẫu contactbook (đơn giản). Trả lời, comment, thông báo UI bằng **tiếng Việt**; tên code bằng **tiếng Anh**.
+Đồ án: Vue 3 + Express + MongoDB (Mongoose), Socket.IO, Cloudinary. Ba ứng dụng riêng: `library-backend/`, `library-frontend-user/` (độc giả/khách), `library-frontend-admin/` (nhân viên/quản trị); hai frontend deploy thành hai server/site riêng và dùng chung backend. Trả lời, comment, thông báo UI bằng **tiếng Việt**; tên code bằng **tiếng Anh**.
 
 ## Bắt đầu phiên (tiết kiệm token)
 1. Người dùng gõ `/resume` → làm đúng `.agent/workflows/resume.md`. **Không** tự đọc toàn bộ `docs/`.
