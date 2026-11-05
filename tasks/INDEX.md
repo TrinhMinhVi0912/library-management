@@ -55,7 +55,7 @@ Thứ tự triển khai: hoàn thành app admin (`library-frontend-admin/`, FE-1
 |---|---|---|---|:-:|---|
 | [FE-19](frontend/FE-19.md) | Khởi tạo app admin, auth, layout, badge realtime, DataTable | F3 Quản trị | – | ✅ | Code/lint/build xong; browser QA còn trong `frontend/qa/FE-19.md` |
 | [FE-20](frontend/FE-20.md) | Dashboard quản trị | F3 Quản trị | FE-19 | ✅ | Code/lint/build xong; browser QA còn trong `frontend/qa/FE-20.md` |
-| [FE-21](frontend/FE-21.md) | Duyệt yêu cầu mượn | F3 Quản trị | FE-19 | ⬜ | |
+| [FE-21](frontend/FE-21.md) | Duyệt yêu cầu mượn | F3 Quản trị | FE-19 | ✅ | Code/lint/build xong; browser QA còn trong `frontend/qa/FE-21.md` |
 | [FE-22](frontend/FE-22.md) | Xác nhận giao sách | F3 Quản trị | FE-21 | ⬜ | |
 | [FE-23](frontend/FE-23.md) | Xác nhận trả sách | F3 Quản trị | FE-22 | ⬜ | |
 | [FE-24](frontend/FE-24.md) | Duyệt yêu cầu gia hạn | F3 Quản trị | FE-19 | ⬜ | |

@@ -25,6 +25,21 @@ export async function getAdminLoans(params = {}) {
   return response.data || {};
 }
 
+export async function getAdminLoan(id) {
+  const response = await api.get(`/admin/loans/${id}`);
+  return response.data?.data || null;
+}
+
+export async function approveLoan(id) {
+  const response = await api.post(`/admin/loans/${id}/approve`);
+  return response.data?.data || null;
+}
+
+export async function rejectLoan(id, reason) {
+  const response = await api.post(`/admin/loans/${id}/reject`, { reason });
+  return response.data?.data || null;
+}
+
 export async function exportLoansReport(params = {}) {
   const response = await api.get('/admin/reports/loans.xlsx', {
     params,
