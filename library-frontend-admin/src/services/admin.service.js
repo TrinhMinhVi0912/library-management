@@ -82,3 +82,28 @@ export async function exportLoansReport(params = {}) {
   });
   return response.data;
 }
+
+export async function getAdminFines(params = {}) {
+  const response = await api.get('/admin/fines', { params });
+  return response.data || {};
+}
+
+export async function createManualFine(data) {
+  const response = await api.post('/admin/fines', data);
+  return response.data?.data || null;
+}
+
+export async function payFine(id) {
+  const response = await api.patch(`/admin/fines/${id}/pay`);
+  return response.data?.data || null;
+}
+
+export async function waiveFine(id, reason) {
+  const response = await api.patch(`/admin/fines/${id}/waive`, { reason });
+  return response.data?.data || null;
+}
+
+export async function searchAdminReaders(q) {
+  const response = await api.get('/admin/users', { params: { role: 'reader', q, limit: 10 } });
+  return Array.isArray(response.data?.data) ? response.data.data : [];
+}
