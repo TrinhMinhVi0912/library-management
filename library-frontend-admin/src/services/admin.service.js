@@ -45,6 +45,21 @@ export async function handoverLoan(id) {
   return response.data?.data || null;
 }
 
+export async function getLoanReturnPolicy() {
+  const response = await api.get('/admin/loan-return-policy');
+  return response.data?.data || null;
+}
+
+export async function returnLoan(id, items) {
+  const response = await api.post(`/admin/loans/${id}/return`, { items });
+  return response.data?.data || null;
+}
+
+export async function getAdminBook(id) {
+  const response = await api.get(`/admin/books/${id}`);
+  return response.data?.data || null;
+}
+
 export async function exportLoansReport(params = {}) {
   const response = await api.get('/admin/reports/loans.xlsx', {
     params,
