@@ -156,6 +156,32 @@ export async function createAdminCategory(data) {
   return response.data?.data || null;
 }
 
+const catalogEndpoints = {
+  publishers: '/admin/publishers',
+  authors: '/admin/authors',
+  categories: '/admin/categories',
+};
+
+export async function getAdminCatalogItems(type, params = {}) {
+  const response = await api.get(catalogEndpoints[type], { params });
+  return response.data || {};
+}
+
+export async function createAdminCatalogItem(type, data) {
+  const response = await api.post(catalogEndpoints[type], data);
+  return response.data?.data || null;
+}
+
+export async function updateAdminCatalogItem(type, id, data) {
+  const response = await api.patch(`${catalogEndpoints[type]}/${id}`, data);
+  return response.data?.data || null;
+}
+
+export async function deleteAdminCatalogItem(type, id) {
+  const response = await api.delete(`${catalogEndpoints[type]}/${id}`);
+  return response.data?.data || null;
+}
+
 export async function uploadAdminImage(file, folder = 'books') {
   const formData = new FormData();
   formData.append('file', file);
