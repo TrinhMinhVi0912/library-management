@@ -6,6 +6,7 @@ import AdminLogin from '@/views/auth/AdminLogin.vue';
 import AdminPlaceholder from '@/views/admin/AdminPlaceholder.vue';
 import AdminDashboard from '@/views/admin/Dashboard.vue';
 import AdminRequests from '@/views/admin/Requests.vue';
+import AdminHandover from '@/views/admin/Handover.vue';
 import Forbidden from '@/views/Forbidden.vue';
 import NotFound from '@/views/NotFound.vue';
 
@@ -29,7 +30,7 @@ const router = createRouter({
       children: [
         { path: '', name: 'admin-dashboard', component: AdminDashboard, meta: { title: 'Tổng quan', roles: ['staff', 'admin'] } },
         { path: 'requests', name: 'admin-requests', component: AdminRequests, meta: { title: 'Duyệt yêu cầu mượn', roles: ['staff', 'admin'] } },
-        section('handover', 'admin-handover', 'Giao sách'),
+        { path: 'handover', name: 'admin-handover', component: AdminHandover, meta: { title: 'Giao sách', roles: ['staff', 'admin'] } },
         section('returns', 'admin-returns', 'Nhận trả sách'),
         section('renewals', 'admin-renewals', 'Duyệt gia hạn'),
         section('loans', 'admin-loans', 'Phiếu mượn'),
