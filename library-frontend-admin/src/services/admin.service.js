@@ -60,6 +60,21 @@ export async function getAdminBook(id) {
   return response.data?.data || null;
 }
 
+export async function getAdminRenewals(params = {}) {
+  const response = await api.get('/admin/renewals', { params });
+  return response.data || {};
+}
+
+export async function approveRenewal(id) {
+  const response = await api.post(`/admin/renewals/${id}/approve`);
+  return response.data?.data || null;
+}
+
+export async function rejectRenewal(id, reason) {
+  const response = await api.post(`/admin/renewals/${id}/reject`, { reason });
+  return response.data?.data || null;
+}
+
 export async function exportLoansReport(params = {}) {
   const response = await api.get('/admin/reports/loans.xlsx', {
     params,

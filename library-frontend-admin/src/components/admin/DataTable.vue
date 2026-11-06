@@ -13,6 +13,7 @@ const props = defineProps({
   query: { type: String, default: '' },
   sortBy: { type: String, default: '' },
   sortOrder: { type: String, default: 'asc' },
+  searchable: { type: Boolean, default: true },
 });
 
 const emit = defineEmits(['update:query', 'sort', 'page', 'retry']);
@@ -48,8 +49,14 @@ function sort(column) {
     class="surface-card data-table"
     aria-label="Bảng dữ liệu"
   >
-    <div class="table-toolbar">
-      <label class="search-field">
+    <div
+      v-if="searchable || $slots.toolbar"
+      class="table-toolbar"
+    >
+      <label
+        v-if="searchable"
+        class="search-field"
+      >
         <i
           class="bi bi-search"
           aria-hidden="true"
@@ -143,18 +150,26 @@ function sort(column) {
               v-for="row in rows"
               :key="row[rowKey]"
             >
-              <td
-                v-for="column in columns"
-                :key="column.key"
-              >
+              <template v-if="$slots['row-main']">
                 <slot
-                  :name="`cell-${column.key}`"
+                  name="row-main"
                   :row="row"
-                  :value="row[column.key]"
+                />
+              </template>
+              <template v-else>
+                <td
+                  v-for="column in columns"
+                  :key="column.key"
                 >
-                  {{ row[column.key] ?? '—' }}
-                </slot>
-              </td>
+                  <slot
+                    :name="`cell-${column.key}`"
+                    :row="row"
+                    :value="row[column.key]"
+                  >
+                    {{ row[column.key] ?? '—' }}
+                  </slot>
+                </td>
+              </template>
               <td v-if="$slots.row">
                 <slot
                   name="row"
