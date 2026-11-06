@@ -11,6 +11,7 @@ import AdminReturns from '@/views/admin/Returns.vue';
 import AdminRenewals from '@/views/admin/Renewals.vue';
 import AdminLoans from '@/views/admin/Loans.vue';
 import AdminFines from '@/views/admin/Fines.vue';
+import AdminBooks from '@/views/admin/Books.vue';
 import Forbidden from '@/views/Forbidden.vue';
 import NotFound from '@/views/NotFound.vue';
 
@@ -39,7 +40,7 @@ const router = createRouter({
         { path: 'renewals', name: 'admin-renewals', component: AdminRenewals, meta: { title: 'Duyệt gia hạn', roles: ['staff', 'admin'] } },
         { path: 'loans', name: 'admin-loans', component: AdminLoans, meta: { title: 'Phiếu mượn', roles: ['staff', 'admin'] } },
         { path: 'fines', name: 'admin-fines', component: AdminFines, meta: { title: 'Quản lý phạt', roles: ['staff', 'admin'] } },
-        section('books', 'admin-books', 'Quản lý sách'),
+        { path: 'books', name: 'admin-books', component: AdminBooks, meta: { title: 'Quản lý sách', roles: ['staff', 'admin'] } },
         section('catalog', 'admin-catalog', 'Danh mục'),
         section('users', 'admin-users', 'Người dùng'),
         section('notifications', 'admin-notifications', 'Thông báo'),

@@ -107,3 +107,61 @@ export async function searchAdminReaders(q) {
   const response = await api.get('/admin/users', { params: { role: 'reader', q, limit: 10 } });
   return Array.isArray(response.data?.data) ? response.data.data : [];
 }
+
+export async function getAdminBooks(params = {}) {
+  const response = await api.get('/admin/books', { params });
+  return response.data || {};
+}
+
+export async function createAdminBook(data) {
+  const response = await api.post('/admin/books', data);
+  return response.data?.data || null;
+}
+
+export async function updateAdminBook(id, data) {
+  const response = await api.patch(`/admin/books/${id}`, data);
+  return response.data?.data || null;
+}
+
+export async function updateAdminBookStatus(id, status) {
+  const response = await api.patch(`/admin/books/${id}/status`, { status });
+  return response.data?.data || null;
+}
+
+export async function deleteAdminBook(id) {
+  const response = await api.delete(`/admin/books/${id}`);
+  return response.data?.data || null;
+}
+
+export async function getCatalogOptions() {
+  const [categories, authors, publishers] = await Promise.all([
+    api.get('/categories', { params: { all: true } }),
+    api.get('/authors', { params: { all: true } }),
+    api.get('/publishers', { params: { all: true } }),
+  ]);
+  return {
+    categories: categories.data?.data || [],
+    authors: authors.data?.data || [],
+    publishers: publishers.data?.data || [],
+  };
+}
+
+export async function createAdminAuthor(data) {
+  const response = await api.post('/admin/authors', data);
+  return response.data?.data || null;
+}
+
+export async function createAdminCategory(data) {
+  const response = await api.post('/admin/categories', data);
+  return response.data?.data || null;
+}
+
+export async function uploadAdminImage(file, folder = 'books') {
+  const formData = new FormData();
+  formData.append('file', file);
+  const response = await api.post('/admin/uploads', formData, {
+    params: { folder },
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+  return response.data?.data || null;
+}
