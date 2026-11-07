@@ -161,6 +161,7 @@ Toàn bộ `/admin/*` yêu cầu access token và role staff/admin trừ route g
 | POST | `/admin/loans/:id/reject` | `{reason}` | Phiếu đã từ chối |
 | POST | `/admin/loans/:id/handover` | — | Phiếu đã giao |
 | POST | `/admin/loans/:id/return` | `{items:[{bookId|book,condition,fineAmount?}]}` | Kết quả trả/phạt |
+| GET | `/admin/loan-return-policy` | — | Chỉ các trường `lateFeePerDay`, `lostBookFeeRate`, `lostBookProcessingFee`; staff/admin dùng để preview phạt trả sách |
 | GET | `/admin/renewals` | `status,page,limit,sort` | Mảng yêu cầu + `meta` |
 | POST | `/admin/renewals/:id/approve` | — | Renewal sau duyệt |
 | POST | `/admin/renewals/:id/reject` | `{reason}` | Renewal sau từ chối |

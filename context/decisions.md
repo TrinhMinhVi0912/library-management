@@ -34,5 +34,6 @@
 | D-028 | Thứ tự frontend: hoàn thành admin trước, sau đó user, cuối cùng rà soát/build/deploy cả hai; giữ nguyên ID và không tạo phụ thuộc chéo giả | Người dùng muốn hoàn thiện giao diện quản trị trước giao diện độc giả |
 | D-029 | Frontend dùng ESLint flat config với `eslint-plugin-vue`, `@eslint/js` và `globals` để lint cả Vue SFC lẫn JavaScript | ESLint không phân tích cú pháp/template `.vue` nếu thiếu parser/plugin Vue; lint đầy đủ cần bộ tooling này |
 | D-030 | Dashboard quản trị coi phiếu mượn có `pickupDeadline` trong 3 ngày tới là “sắp đến hạn nhận” | Người dùng chốt ngưỡng 3 ngày cho FE-20 |
+| D-031 | Staff/admin được đọc riêng `lateFeePerDay`, `lostBookFeeRate`, `lostBookProcessingFee` qua `GET /api/v1/admin/loan-return-policy` để tính preview tiền phạt; API không trả hoặc cho sửa settings khác | Người dùng đồng ý mở rộng BE nhỏ trong FE-23 để staff có cùng preview chính xác với backend |
 
 

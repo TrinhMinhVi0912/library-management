@@ -56,14 +56,14 @@ Thứ tự triển khai: hoàn thành app admin (`library-frontend-admin/`, FE-1
 | [FE-19](frontend/FE-19.md) | Khởi tạo app admin, auth, layout, badge realtime, DataTable | F3 Quản trị | – | ✅ | Code/lint/build xong; browser QA còn trong `frontend/qa/FE-19.md` |
 | [FE-20](frontend/FE-20.md) | Dashboard quản trị | F3 Quản trị | FE-19 | ✅ | Code/lint/build xong; browser QA còn trong `frontend/qa/FE-20.md` |
 | [FE-21](frontend/FE-21.md) | Duyệt yêu cầu mượn | F3 Quản trị | FE-19 | ✅ | Code/lint/build xong; browser QA còn trong `frontend/qa/FE-21.md` |
-| [FE-22](frontend/FE-22.md) | Xác nhận giao sách | F3 Quản trị | FE-21 | ⬜ | |
-| [FE-23](frontend/FE-23.md) | Xác nhận trả sách | F3 Quản trị | FE-22 | ⬜ | |
-| [FE-24](frontend/FE-24.md) | Duyệt yêu cầu gia hạn | F3 Quản trị | FE-19 | ⬜ | |
-| [FE-25](frontend/FE-25.md) | Tất cả phiếu mượn | F3 Quản trị | FE-19 | ⬜ | |
-| [FE-26](frontend/FE-26.md) | Quản lý phạt | F3 Quản trị | FE-19 | ⬜ | |
-| [FE-27](frontend/FE-27.md) | Quản lý sách | F3 Quản trị | FE-19 | ⬜ | |
-| [FE-28](frontend/FE-28.md) | Quản lý danh mục | F3 Quản trị | FE-19 | ⬜ | |
-| [FE-29](frontend/FE-29.md) | Quản lý người dùng | F3 Quản trị | FE-19 | ⬜ | |
+| [FE-22](frontend/FE-22.md) | Xác nhận giao sách | F3 Quản trị | FE-21 | ✅ | Code/lint/build xong; browser QA còn trong `frontend/qa/FE-22.md` |
+| [FE-23](frontend/FE-23.md) | Xác nhận trả sách | F3 Quản trị | FE-22 | ✅ | Code/lint/build xong; browser QA còn trong `frontend/qa/FE-23.md`; thêm API policy staff read-only |
+| [FE-24](frontend/FE-24.md) | Duyệt yêu cầu gia hạn | F3 Quản trị | FE-19 | ✅ | Code/lint/build xong; browser QA còn trong `frontend/qa/FE-24.md` |
+| [FE-25](frontend/FE-25.md) | Tất cả phiếu mượn | F3 Quản trị | FE-19 | ✅ | Code/lint/build xong; browser QA còn trong `frontend/qa/FE-25.md` |
+| [FE-26](frontend/FE-26.md) | Quản lý phạt | F3 Quản trị | FE-19 | ✅ | Code/lint/build xong; browser QA còn trong `frontend/qa/FE-26.md`; tổng unpaid hiển thị theo trang hiện tại |
+| [FE-27](frontend/FE-27.md) | Quản lý sách | F3 Quản trị | FE-19 | ✅ | Code/lint/build xong; browser QA còn trong `frontend/qa/FE-27.md`; upload thật chờ QA Cloudinary |
+| [FE-28](frontend/FE-28.md) | Quản lý danh mục | F3 Quản trị | FE-19 | ✅ | Code/lint/build xong; browser QA còn trong `frontend/qa/FE-28.md` |
+| [FE-29](frontend/FE-29.md) | Quản lý người dùng | F3 Quản trị | FE-19 | ✅ | Code/lint/build xong; browser QA còn trong `frontend/qa/FE-29.md`; email reset cần SMTP hoạt động |
 | [FE-30](frontend/FE-30.md) | Quản lý thông báo | F3 Quản trị | FE-19 | ⬜ | |
 | [FE-31](frontend/FE-31.md) | Cài đặt & nhật ký hệ thống | F3 Quản trị | FE-19 | ⬜ | |
 | [FE-34](frontend/FE-34.md) | Kiểm duyệt diễn đàn (admin) | F4 Diễn đàn & đặt trước | FE-19 | ⬜ | |

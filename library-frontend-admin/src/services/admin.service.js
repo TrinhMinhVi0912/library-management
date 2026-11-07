@@ -182,6 +182,41 @@ export async function deleteAdminCatalogItem(type, id) {
   return response.data?.data || null;
 }
 
+export async function getAdminUsers(params = {}) {
+  const response = await api.get('/admin/users', { params });
+  return response.data || {};
+}
+
+export async function getAdminUser(id) {
+  const response = await api.get(`/admin/users/${id}`);
+  return response.data?.data || null;
+}
+
+export async function lockAdminUser(id, reason) {
+  const response = await api.patch(`/admin/users/${id}/lock`, { reason });
+  return response.data?.data || null;
+}
+
+export async function unlockAdminUser(id) {
+  const response = await api.patch(`/admin/users/${id}/unlock`);
+  return response.data?.data || null;
+}
+
+export async function requestAdminPasswordReset(id) {
+  const response = await api.post(`/admin/users/${id}/password-reset`);
+  return response.data?.data || null;
+}
+
+export async function createAdminStaff(data) {
+  const response = await api.post('/admin/users', data);
+  return response.data?.data || null;
+}
+
+export async function updateAdminUserRole(id, role) {
+  const response = await api.patch(`/admin/users/${id}/role`, { role });
+  return response.data?.data || null;
+}
+
 export async function uploadAdminImage(file, folder = 'books') {
   const formData = new FormData();
   formData.append('file', file);

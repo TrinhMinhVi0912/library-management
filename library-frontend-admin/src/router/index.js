@@ -13,6 +13,7 @@ import AdminLoans from '@/views/admin/Loans.vue';
 import AdminFines from '@/views/admin/Fines.vue';
 import AdminBooks from '@/views/admin/Books.vue';
 import AdminCatalog from '@/views/admin/Catalog.vue';
+import AdminUsers from '@/views/admin/Users.vue';
 import Forbidden from '@/views/Forbidden.vue';
 import NotFound from '@/views/NotFound.vue';
 
@@ -43,7 +44,7 @@ const router = createRouter({
         { path: 'fines', name: 'admin-fines', component: AdminFines, meta: { title: 'Quản lý phạt', roles: ['staff', 'admin'] } },
         { path: 'books', name: 'admin-books', component: AdminBooks, meta: { title: 'Quản lý sách', roles: ['staff', 'admin'] } },
         { path: 'catalog', name: 'admin-catalog', component: AdminCatalog, meta: { title: 'Danh mục', roles: ['staff', 'admin'] } },
-        section('users', 'admin-users', 'Người dùng'),
+        { path: 'users', name: 'admin-users', component: AdminUsers, meta: { title: 'Người dùng', roles: ['staff', 'admin'] } },
         section('notifications', 'admin-notifications', 'Thông báo'),
         section('forum', 'admin-forum', 'Kiểm duyệt diễn đàn'),
         section('staff', 'admin-staff', 'Quản lý nhân viên', ['admin']),

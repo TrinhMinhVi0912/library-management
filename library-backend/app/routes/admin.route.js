@@ -71,6 +71,7 @@ router.use(requireRole('staff', 'admin'));
 
 router.get('/dashboard/summary', dashboardController.getSummary);
 router.get('/dashboard/charts', validate(dashboardChartsQuerySchema, 'query'), dashboardController.getCharts);
+router.get('/loan-return-policy', settingController.getLoanReturnPolicy);
 router.get('/reports/loans.xlsx', validate(reportDateRangeSchema, 'query'), reportController.exportLoans);
 router.get('/reports/fines.xlsx', validate(reportDateRangeSchema, 'query'), reportController.exportFines);
 
