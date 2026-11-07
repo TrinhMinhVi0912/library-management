@@ -14,6 +14,7 @@ import BookList from '@/views/public/BookList.vue';
 import BookDetail from '@/views/public/BookDetail.vue';
 import Author from '@/views/public/Author.vue';
 import Cart from '@/views/reader/Cart.vue';
+import MyLoans from '@/views/reader/MyLoans.vue';
 
 const placeholderRoute = (path, name, title, meta = {}) => ({
   path,
@@ -44,7 +45,7 @@ const router = createRouter({
         { path: '404', name: 'not-found', component: NotFound, meta: { title: 'Không tìm thấy trang' } },
         { path: '403', name: 'forbidden', component: Forbidden, meta: { title: 'Không có quyền truy cập' } },
         { path: 'cart', name: 'cart', component: Cart, meta: { title: 'Giỏ mượn sách', requiresAuth: true, roles: ['reader'] } },
-        placeholderRoute('my/loans', 'my-loans', 'Lịch sử mượn', { requiresAuth: true, roles: ['reader'] }),
+        { path: 'my/loans', name: 'my-loans', component: MyLoans, meta: { title: 'Lịch sử mượn', requiresAuth: true, roles: ['reader'] } },
         placeholderRoute('my/fines', 'my-fines', 'Phạt của tôi', { requiresAuth: true, roles: ['reader'] }),
         placeholderRoute('my/shelves', 'my-shelves', 'Kệ sách của tôi', { requiresAuth: true, roles: ['reader'] }),
         placeholderRoute('my/reviews', 'my-reviews', 'Đánh giá của tôi', { requiresAuth: true, roles: ['reader'] }),
