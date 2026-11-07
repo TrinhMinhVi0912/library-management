@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia';
 import api from '@/services/api.service';
 import authService from '@/services/auth.service';
+import socketService from '@/services/socket.service';
 
 const getData = (response) => response.data?.data;
 let restorePromise = null;
@@ -20,11 +21,15 @@ export const useAuthStore = defineStore('auth', {
       this.user = user || null;
       this.accessToken = accessToken || null;
       this.initialized = true;
+      if (this.accessToken && this.user?.role === 'reader') {
+        socketService.updateToken(this.accessToken);
+      }
     },
     clearSession() {
       this.user = null;
       this.accessToken = null;
       this.initialized = true;
+      socketService.disconnect();
     },
     updateUser(userData) {
       if (!userData) return;

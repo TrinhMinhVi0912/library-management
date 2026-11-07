@@ -24,6 +24,12 @@ export function formatDate(value, format = DATE_FORMAT) {
   return date.isValid() ? date.locale('vi').format(format) : '—';
 }
 
+export function formatRelativeTime(value) {
+  if (value == null || value === '') return '—';
+  const date = dayjs(value);
+  return date.isValid() ? date.locale('vi').fromNow() : '—';
+}
+
 export function formatMoney(value) {
   if (value == null || value === '') return '—';
   const amount = Number(value);

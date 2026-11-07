@@ -16,6 +16,7 @@ import Author from '@/views/public/Author.vue';
 import Cart from '@/views/reader/Cart.vue';
 import MyLoans from '@/views/reader/MyLoans.vue';
 import MyFines from '@/views/reader/MyFines.vue';
+import Notifications from '@/views/reader/Notifications.vue';
 import Profile from '@/views/reader/Profile.vue';
 
 const placeholderRoute = (path, name, title, meta = {}) => ({
@@ -52,7 +53,7 @@ const router = createRouter({
         placeholderRoute('my/shelves', 'my-shelves', 'Kệ sách của tôi', { requiresAuth: true, roles: ['reader'] }),
         placeholderRoute('my/reviews', 'my-reviews', 'Đánh giá của tôi', { requiresAuth: true, roles: ['reader'] }),
         placeholderRoute('my/reservations', 'my-reservations', 'Sách đặt trước', { requiresAuth: true, roles: ['reader'] }),
-        placeholderRoute('notifications', 'notifications', 'Thông báo', { requiresAuth: true, roles: ['reader'] }),
+        { path: 'notifications', name: 'notifications', component: Notifications, meta: { title: 'Thông báo', requiresAuth: true, roles: ['reader'] } },
         { path: 'profile', name: 'profile', component: Profile, meta: { title: 'Hồ sơ', requiresAuth: true, roles: ['reader'] } },
         placeholderRoute('forum/new', 'forum-new', 'Tạo chủ đề', { requiresAuth: true, roles: ['reader'] }),
       ],

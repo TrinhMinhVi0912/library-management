@@ -2,11 +2,14 @@
 import { onMounted, watch } from 'vue';
 import AppFooter from '@/components/common/AppFooter.vue';
 import AppNavbar from '@/components/common/AppNavbar.vue';
+import RealtimeToast from '@/components/common/RealtimeToast.vue';
 import { useAuthStore } from '@/stores/auth.store';
 import { useCartStore } from '@/stores/cart.store';
+import { useNotificationStore } from '@/stores/notification.store';
 
 const auth = useAuthStore();
 const cartStore = useCartStore();
+const notificationStore = useNotificationStore();
 
 onMounted(async () => {
   if (!auth.initialized) {
@@ -14,6 +17,8 @@ onMounted(async () => {
   }
   if (auth.isAuthenticated && auth.role === 'reader') {
     cartStore.fetchCart();
+    notificationStore.initSocket(auth.accessToken, () => auth.refresh());
+    notificationStore.sync();
   }
 });
 
@@ -22,8 +27,11 @@ watch(
   (isAuth) => {
     if (isAuth && auth.role === 'reader') {
       cartStore.fetchCart();
+      notificationStore.initSocket(auth.accessToken, () => auth.refresh());
+      notificationStore.sync();
     } else {
       cartStore.clearCart();
+      notificationStore.disconnectSocket();
     }
   }
 );
@@ -39,6 +47,7 @@ watch(
       <RouterView />
     </main>
     <AppFooter />
+    <RealtimeToast />
   </div>
 </template>
 

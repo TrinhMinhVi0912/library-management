@@ -9,6 +9,8 @@ import SearchBar from '@/components/common/SearchBar.vue';
 import SkeletonCard from '@/components/common/SkeletonCard.vue';
 import StatusBadge from '@/components/common/StatusBadge.vue';
 import ImageUploader from '@/components/common/ImageUploader.vue';
+import NotificationItem from '@/components/common/NotificationItem.vue';
+import NotificationBell from '@/components/common/NotificationBell.vue';
 
 const toast = useToast();
 const search = ref('');
@@ -18,6 +20,15 @@ const confirmOpen = ref(false);
 const formOpen = ref(false);
 const demoName = ref('');
 const demoImage = ref(null);
+const demoNotification = ref({
+  _id: 'demo-notif-1',
+  type: 'loan',
+  title: 'Yêu cầu mượn sách đã được duyệt',
+  content: 'Phiếu mượn PM12345 đã được duyệt. Vui lòng đến thư viện nhận sách trong vòng 2 ngày.',
+  link: '/my/loans',
+  isRead: false,
+  createdAt: new Date(Date.now() - 1000 * 60 * 15).toISOString(),
+});
 
 const statusGroups = [
   { type: 'loan', label: 'Phiếu mượn', statuses: ['pending', 'approved', 'borrowing', 'overdue', 'returned', 'rejected', 'cancelled', 'expired'] },
@@ -227,6 +238,33 @@ function submitForm() {
             button-text="Chọn ảnh"
           />
         </div>
+      </div>
+    </section>
+
+    <section class="surface-card p-4 mb-4">
+      <h2 class="h5 mb-3">
+        NotificationItem & NotificationBell
+      </h2>
+      <div class="d-flex align-items-center gap-3 mb-3">
+        <span>Thử chuông thông báo:</span>
+        <NotificationBell />
+      </div>
+      <div class="border rounded overflow-hidden">
+        <NotificationItem
+          :notification="demoNotification"
+          @read="demoNotification.isRead = true"
+        />
+        <NotificationItem
+          :notification="{
+            _id: 'demo-notif-2',
+            type: 'due',
+            title: 'Sách sắp đến hạn trả',
+            content: 'Cuốn sách Lập trình JavaScript sắp hết hạn vào ngày mai.',
+            link: '/my/loans',
+            isRead: true,
+            createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
+          }"
+        />
       </div>
     </section>
 

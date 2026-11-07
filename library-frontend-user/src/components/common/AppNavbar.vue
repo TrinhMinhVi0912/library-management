@@ -3,6 +3,7 @@ import { computed, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useToast } from 'vue-toastification';
 import SearchBar from '@/components/common/SearchBar.vue';
+import NotificationBell from '@/components/common/NotificationBell.vue';
 import { useAuthStore } from '@/stores/auth.store';
 import { formatMoney } from '@/utils/format';
 
@@ -169,22 +170,7 @@ async function logout() {
                 <i class="bi bi-lock-fill" />
               </span>
             </RouterLink>
-            <RouterLink
-              class="nav-action notification-action"
-              :to="{ name: 'notifications' }"
-              :aria-label="`Thông báo, ${Math.max(0, props.unreadCount)} chưa đọc`"
-              @click="closeNavigation"
-            >
-              <i
-                class="bi bi-bell"
-                aria-hidden="true"
-              />
-              <span class="action-label">Thông báo</span>
-              <span
-                v-if="props.unreadCount > 0"
-                class="count-badge"
-              >{{ props.unreadCount }}</span>
-            </RouterLink>
+            <NotificationBell v-if="auth.isAuthenticated && auth.role === 'reader'" />
 
             <details
               ref="accountMenu"

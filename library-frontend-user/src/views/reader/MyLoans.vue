@@ -2,6 +2,7 @@
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import loanService from '@/services/loan.service';
+import { useNotificationStore } from '@/stores/notification.store';
 import LoanCard from '@/components/loan/LoanCard.vue';
 import Pagination from '@/components/common/Pagination.vue';
 import EmptyState from '@/components/common/EmptyState.vue';
@@ -9,6 +10,7 @@ import SkeletonCard from '@/components/common/SkeletonCard.vue';
 
 const route = useRoute();
 const router = useRouter();
+const notificationStore = useNotificationStore();
 
 // --- Tabs ---
 const tabs = [
@@ -130,6 +132,15 @@ onMounted(() => {
   }
   fetchLoans();
 });
+
+watch(
+  () => [notificationStore.lastLoanEvent, notificationStore.lastRenewalEvent],
+  ([loanEvent, renewalEvent]) => {
+    if (loanEvent || renewalEvent) {
+      fetchLoans();
+    }
+  }
+);
 
 // Theo dõi thay đổi tab hoặc page → fetch lại
 watch([activeTab, page], () => {
