@@ -8,6 +8,7 @@ import Pagination from '@/components/common/Pagination.vue';
 import SearchBar from '@/components/common/SearchBar.vue';
 import SkeletonCard from '@/components/common/SkeletonCard.vue';
 import StatusBadge from '@/components/common/StatusBadge.vue';
+import ImageUploader from '@/components/common/ImageUploader.vue';
 
 const toast = useToast();
 const search = ref('');
@@ -16,6 +17,7 @@ const page = ref(2);
 const confirmOpen = ref(false);
 const formOpen = ref(false);
 const demoName = ref('');
+const demoImage = ref(null);
 
 const statusGroups = [
   { type: 'loan', label: 'Phiếu mượn', statuses: ['pending', 'approved', 'borrowing', 'overdue', 'returned', 'rejected', 'cancelled', 'expired'] },
@@ -188,6 +190,43 @@ function submitForm() {
         >
           Thử thông báo lỗi
         </button>
+      </div>
+    </section>
+
+    <section
+      class="surface-card p-3 mb-3"
+      aria-labelledby="heading-uploader"
+    >
+      <h2
+        id="heading-uploader"
+        class="h5 mb-3"
+      >
+        ImageUploader (dùng chung)
+      </h2>
+      <div class="d-flex flex-wrap gap-4 align-items-center">
+        <div>
+          <div class="small text-muted mb-2 text-center">
+            Tròn (Avatar)
+          </div>
+          <ImageUploader
+            v-model="demoImage"
+            shape="circle"
+            size="110px"
+            :auto-upload="false"
+            button-text="Chọn ảnh"
+          />
+        </div>
+        <div>
+          <div class="small text-muted mb-2 text-center">
+            Bo góc (Sách / Thẻ)
+          </div>
+          <ImageUploader
+            shape="rounded"
+            size="110px"
+            :auto-upload="false"
+            button-text="Chọn ảnh"
+          />
+        </div>
       </div>
     </section>
 

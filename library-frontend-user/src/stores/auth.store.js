@@ -26,6 +26,10 @@ export const useAuthStore = defineStore('auth', {
       this.accessToken = null;
       this.initialized = true;
     },
+    updateUser(userData) {
+      if (!userData) return;
+      this.user = this.user ? { ...this.user, ...userData } : userData;
+    },
     async login(credentials) {
       const result = await authService.login(credentials);
       this.setSession(result?.user, result?.accessToken);

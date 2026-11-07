@@ -194,7 +194,15 @@ async function logout() {
                 <span
                   class="account-avatar"
                   aria-hidden="true"
-                >{{ initials }}</span>
+                >
+                  <img
+                    v-if="auth.user?.avatar?.url"
+                    :src="auth.user.avatar.url"
+                    :alt="fullName"
+                    class="avatar-img"
+                  >
+                  <span v-else>{{ initials }}</span>
+                </span>
                 <span class="account-name">{{ auth.isAuthenticated ? fullName : 'Tài khoản' }}</span>
                 <i
                   class="bi bi-chevron-down"
@@ -452,6 +460,15 @@ async function logout() {
   color: #1d4ed8;
   font-size: 0.8rem;
   font-weight: 700;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
 }
 
 .account-name {
