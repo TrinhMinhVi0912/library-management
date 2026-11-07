@@ -12,4 +12,12 @@ const router = createRouter({
   scrollBehavior: () => ({ top: 0 }),
 });
 
+if (import.meta.env.DEV) {
+  router.addRoute({
+    path: '/dev/components',
+    name: 'dev-components',
+    component: () => import('@/views/dev/ComponentPlayground.vue'),
+  });
+}
+
 export default router;

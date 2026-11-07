@@ -51,7 +51,9 @@ textarea {
   white-space: nowrap;
 }
 
-.status-pending {
+.status-pending,
+.status-unpaid,
+.status-waiting {
   background: var(--bs-warning-bg-subtle);
   color: var(--bs-warning-text-emphasis);
 }
@@ -72,7 +74,9 @@ textarea {
 }
 
 .status-returned,
-.status-available {
+.status-available,
+.status-paid,
+.status-fulfilled {
   background: var(--bs-success-bg-subtle);
   color: var(--bs-success-text-emphasis);
 }
@@ -82,9 +86,19 @@ textarea {
   color: var(--bs-secondary-text-emphasis);
 }
 
+.status-waived {
+  background: var(--bs-secondary-bg-subtle);
+  color: var(--bs-secondary-text-emphasis);
+}
+
 .status-cancelled,
 .status-expired,
 .status-unavailable {
   background: var(--bs-danger-bg-subtle);
   color: var(--bs-danger-text-emphasis);
+}
+
+.status-lost {
+  background: $danger;
+  color: #ffffff;
 }
