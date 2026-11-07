@@ -140,7 +140,7 @@ onMounted(() => {
       <section class="forum-hero p-4 p-md-5 rounded-4 mb-4 text-white position-relative overflow-hidden shadow-sm">
         <div class="row align-items-center g-3 position-relative z-1">
           <div class="col-lg-8">
-            <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill bg-white bg-opacity-20 text-white mb-2 fs-xs">
+            <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill hero-pill mb-2 fs-xs">
               <i
                 class="bi bi-chat-quote-fill"
                 aria-hidden="true"
@@ -390,15 +390,15 @@ onMounted(() => {
         <!-- Right Sidebar -->
         <aside class="col-lg-4">
           <!-- Community Guidelines Card -->
-          <div class="card border rounded-3 p-3.5 bg-white shadow-sm mb-3">
-            <h3 class="h6 fw-bold text-dark d-flex align-items-center gap-2 mb-2.5">
+          <div class="card border rounded-3 p-3 p-lg-4 bg-white shadow-sm mb-3">
+            <h3 class="h6 fw-bold text-dark d-flex align-items-center gap-2 mb-3">
               <i
                 class="bi bi-shield-check text-success"
                 aria-hidden="true"
               />
               <span>Văn hóa thảo luận</span>
             </h3>
-            <ul class="list-unstyled mb-0 fs-xs text-secondary d-flex flex-column gap-2">
+            <ul class="list-unstyled mb-0 small text-secondary d-flex flex-column gap-2">
               <li class="d-flex align-items-start gap-2">
                 <i
                   class="bi bi-check2 text-primary mt-0.5 flex-shrink-0"
@@ -424,7 +424,7 @@ onMounted(() => {
           </div>
 
           <!-- Quick Navigation to Library Books -->
-          <div class="card border rounded-3 p-3.5 bg-white shadow-sm">
+          <div class="card border rounded-3 p-3 p-lg-4 bg-white shadow-sm">
             <h3 class="h6 fw-bold text-dark d-flex align-items-center gap-2 mb-2">
               <i
                 class="bi bi-book text-primary"
@@ -432,7 +432,7 @@ onMounted(() => {
               />
               <span>Khám phá kho sách</span>
             </h3>
-            <p class="fs-xs text-muted mb-3">
+            <p class="small text-muted mb-3">
               Mượn sách miễn phí tại thư viện để chia sẻ cảm nhận cùng cộng đồng bạn đọc.
             </p>
             <RouterLink
@@ -455,6 +455,22 @@ onMounted(() => {
 <style scoped>
 .forum-hero {
   background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+}
+
+.forum-hero .hero-pill {
+  background-color: rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 500;
+  backdrop-filter: blur(4px);
+}
+
+.forum-hero h1,
+.forum-hero .lead {
+  color: #ffffff;
+}
+
+.forum-hero .text-white-50 {
+  color: rgba(255, 255, 255, 0.7) !important;
 }
 
 .fs-xs {

@@ -215,6 +215,12 @@ async function logout() {
                       Lịch sử mượn
                     </RouterLink>
                     <RouterLink
+                      :to="{ name: 'my-reservations' }"
+                      @click="closeAccountMenu"
+                    >
+                      Sách đặt trước
+                    </RouterLink>
+                    <RouterLink
                       :to="{ name: 'my-fines' }"
                       class="fine-menu-link d-flex align-items-center justify-content-between"
                       @click="closeAccountMenu"

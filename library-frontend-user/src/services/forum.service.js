@@ -70,6 +70,53 @@ export const forumService = {
     const response = await api.post(`/forum/threads/${encodeURIComponent(threadId)}/like`);
     return getData(response);
   },
+
+  /**
+   * Tạo bài viết / phản hồi trong một chủ đề (yêu cầu đăng nhập)
+   * @param {string} threadId
+   * @param {Object} payload { content, parentPost? }
+   */
+  async createPost(threadId, payload) {
+    const response = await api.post(`/forum/threads/${encodeURIComponent(threadId)}/posts`, payload);
+    return getData(response);
+  },
+
+  /**
+   * Cập nhật nội dung bài viết (yêu cầu đăng nhập)
+   * @param {string} postId
+   * @param {Object} payload { content }
+   */
+  async updatePost(postId, payload) {
+    const response = await api.patch(`/forum/posts/${encodeURIComponent(postId)}`, payload);
+    return getData(response);
+  },
+
+  /**
+   * Xoá bài viết (yêu cầu đăng nhập)
+   * @param {string} postId
+   */
+  async deletePost(postId) {
+    const response = await api.delete(`/forum/posts/${encodeURIComponent(postId)}`);
+    return getData(response);
+  },
+
+  /**
+   * Thích hoặc bỏ thích bài viết (yêu cầu đăng nhập)
+   * @param {string} postId
+   */
+  async togglePostLike(postId) {
+    const response = await api.post(`/forum/posts/${encodeURIComponent(postId)}/like`);
+    return getData(response);
+  },
+
+  /**
+   * Báo cáo chủ đề hoặc bài viết vi phạm (yêu cầu đăng nhập)
+   * @param {Object} payload { targetType: 'thread'|'post', targetId, reason, details? }
+   */
+  async createReport(payload) {
+    const response = await api.post('/forum/reports', payload);
+    return getData(response);
+  },
 };
 
 export default forumService;

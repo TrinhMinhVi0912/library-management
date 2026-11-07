@@ -5,6 +5,8 @@ import { useToast } from 'vue-toastification';
 import { useAuthStore } from '@/stores/auth.store';
 import { useCartStore } from '@/stores/cart.store';
 import bookService from '@/services/book.service';
+import reservationService from '@/services/reservation.service';
+import forumService from '@/services/forum.service';
 import BookAvailability from '@/components/book/BookAvailability.vue';
 import RatingStars from '@/components/book/RatingStars.vue';
 import RatingSummary from '@/components/book/RatingSummary.vue';
@@ -12,7 +14,9 @@ import ReviewItem from '@/components/book/ReviewItem.vue';
 import ReviewForm from '@/components/book/ReviewForm.vue';
 import ShelfDropdown from '@/components/book/ShelfDropdown.vue';
 import BookCarousel from '@/components/book/BookCarousel.vue';
+import ReserveButton from '@/components/book/ReserveButton.vue';
 import EmptyState from '@/components/common/EmptyState.vue';
+import ThreadItem from '@/components/forum/ThreadItem.vue';
 import { formatMoney } from '@/utils/format';
 import { cloudinaryThumb } from '@/utils/image';
 
@@ -27,6 +31,9 @@ const book = ref(null);
 const relatedBooks = ref([]);
 const reviews = ref([]);
 const reviewMeta = ref(null);
+const bookThreads = ref([]);
+const isHeldForCurrentReader = ref(false);
+const loadingBookThreads = ref(false);
 const loading = ref(true);
 const error = ref(null);
 
@@ -43,6 +50,8 @@ const coverUrl = computed(() => {
 const isAvailable = computed(() => {
   return Number(book.value?.availableCopies || 0) > 0;
 });
+
+const canBorrowCurrentBook = computed(() => isAvailable.value || isHeldForCurrentReader.value);
 
 const isLongDescription = computed(() => {
   return (book.value?.description || '').length > 320;
@@ -67,6 +76,7 @@ async function loadBookData(slugOrId) {
   error.value = null;
   imageFailed.value = false;
   isExpandedDesc.value = false;
+  isHeldForCurrentReader.value = false;
 
   try {
     const bookData = await bookService.getBookByIdOrSlug(slugOrId);
@@ -82,10 +92,12 @@ async function loadBookData(slugOrId) {
       document.title = `${bookData.title} | Thư viện`;
     }
 
-    // Tải dữ liệu sách tương tự và đánh giá song song
+    // Tải dữ liệu sách tương tự, đánh giá và chủ đề thảo luận song song
     await Promise.allSettled([
       fetchRelated(bookData._id),
       fetchReviews(bookData._id),
+      fetchBookThreads(bookData._id),
+      fetchHeldReservation(bookData._id),
     ]);
   } catch (err) {
     // Nếu lỗi 404 (Không tìm thấy sách) -> chuyển hướng Not Found
@@ -96,6 +108,19 @@ async function loadBookData(slugOrId) {
     error.value = err?.response?.data?.message || err?.message || 'Không thể tải thông tin sách';
   } finally {
     loading.value = false;
+  }
+}
+
+async function fetchHeldReservation(bookId) {
+  if (!authStore.isAuthenticated || authStore.role !== 'reader') return;
+  try {
+    const result = await reservationService.getMyReservations({ status: 'available', limit: 100 });
+    isHeldForCurrentReader.value = result.reservations.some((reservation) => {
+      const reservationBookId = typeof reservation.book === 'object' ? reservation.book?._id : reservation.book;
+      return String(reservationBookId) === String(bookId) && reservation.status === 'available';
+    });
+  } catch {
+    isHeldForCurrentReader.value = false;
   }
 }
 
@@ -116,6 +141,18 @@ async function fetchReviews(bookId) {
   } catch {
     reviews.value = [];
     reviewMeta.value = null;
+  }
+}
+
+async function fetchBookThreads(bookId) {
+  loadingBookThreads.value = true;
+  try {
+    const res = await forumService.getThreads({ book: bookId, limit: 10 });
+    bookThreads.value = res.threads || [];
+  } catch {
+    bookThreads.value = [];
+  } finally {
+    loadingBookThreads.value = false;
   }
 }
 
@@ -178,17 +215,8 @@ function handleBorrowAction() {
 }
 
 // Xử lý hành động đặt trước
-function handleReserveAction() {
-  if (!authStore.isAuthenticated) {
-    toast.info('Vui lòng đăng nhập để đặt trước sách.');
-    router.push({
-      name: 'login',
-      query: { redirect: route.fullPath },
-    });
-    return;
-  }
-
-  toast.info('Tính năng Đặt trước sách (hàng chờ FIFO) sẽ được kết nối trong FE-35.');
+function handleReserved() {
+  router.push({ name: 'my-reservations' });
 }
 
 function handleQuickAction(action) {
@@ -214,6 +242,13 @@ watch(
       loadBookData(newSlug);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
+  }
+);
+
+watch(
+  () => [authStore.user?._id, book.value?._id],
+  ([userId, bookId]) => {
+    if (userId && bookId) fetchHeldReservation(bookId);
   }
 );
 
@@ -531,7 +566,10 @@ onMounted(() => {
               <div class="mb-3">
                 <div class="d-flex align-items-center justify-content-between mb-2">
                   <span class="text-muted small">Tình trạng:</span>
-                  <BookAvailability :available-copies="book.availableCopies" />
+                  <BookAvailability
+                    :available-copies="book.availableCopies"
+                    :held-for-reader="isHeldForCurrentReader"
+                  />
                 </div>
                 <div class="d-flex align-items-center justify-content-between small text-muted">
                   <span>Số bản khả dụng:</span>
@@ -547,7 +585,7 @@ onMounted(() => {
               <div class="action-buttons mb-3">
                 <!-- Trường hợp CÒN SÁCH: Nút Thêm vào giỏ mượn -->
                 <button
-                  v-if="isAvailable"
+                  v-if="canBorrowCurrentBook"
                   type="button"
                   class="btn btn-primary w-100 py-2.5 fw-semibold d-flex align-items-center justify-content-center gap-2 mb-2"
                   @click="handleBorrowAction"
@@ -556,22 +594,17 @@ onMounted(() => {
                     class="bi bi-bag-plus fs-5"
                     aria-hidden="true"
                   />
-                  <span>Thêm vào giỏ mượn</span>
+                  <span>{{ isHeldForCurrentReader ? 'Thêm sách đang giữ vào giỏ' : 'Thêm vào giỏ mượn' }}</span>
                 </button>
 
                 <!-- Trường hợp HẾT SÁCH: Nút Đặt trước -->
-                <button
+                <ReserveButton
                   v-else
-                  type="button"
-                  class="btn btn-warning w-100 py-2.5 fw-semibold text-dark d-flex align-items-center justify-content-center gap-2 mb-2"
-                  @click="handleReserveAction"
-                >
-                  <i
-                    class="bi bi-clock-history fs-5"
-                    aria-hidden="true"
-                  />
-                  <span>Đặt trước sách</span>
-                </button>
+                  :book-id="book._id"
+                  :book-title="book.title"
+                  class="mb-2"
+                  @reserved="handleReserved"
+                />
 
                 <!-- Nút phụ: Thêm vào kệ sách -->
                 <ShelfDropdown
@@ -702,34 +735,69 @@ onMounted(() => {
                 v-else-if="activeTab === 'discussion'"
                 class="tab-pane-discussion"
               >
-                <div class="card border p-4 text-center rounded-3 bg-light">
-                  <div class="mb-3">
+                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+                  <div>
+                    <h3 class="h5 fw-bold text-dark mb-1">
+                      Thảo luận về cuốn sách này
+                    </h3>
+                    <p class="text-secondary small mb-0">
+                      Trao đổi cảm nghĩ, bài phân tích hoặc đặt câu hỏi cùng cộng đồng độc giả.
+                    </p>
+                  </div>
+                  <RouterLink
+                    :to="`/forum/new?bookId=${book._id}&bookTitle=${encodeURIComponent(book.title)}`"
+                    class="btn btn-sm btn-primary rounded-pill px-3 d-inline-flex align-items-center gap-1.5"
+                  >
                     <i
-                      class="bi bi-chat-square-quote text-primary display-5"
+                      class="bi bi-pencil-square"
                       aria-hidden="true"
                     />
-                  </div>
-                  <h3 class="h5 fw-bold text-dark mb-2">
-                    Diễn đàn thảo luận về sách
-                  </h3>
-                  <p
-                    class="text-muted small mx-auto mb-3"
-                    style="max-width: 480px;"
-                  >
-                    Trao đổi cảm nghĩ, đặt câu hỏi hoặc cùng thảo luận các tình tiết thú vị trong cuốn sách này cùng cộng đồng bạn đọc thư viện.
-                  </p>
-                  <div>
+                    <span>Tạo chủ đề thảo luận</span>
+                  </RouterLink>
+                </div>
+
+                <div
+                  v-if="loadingBookThreads"
+                  class="py-4 text-center text-muted"
+                >
+                  <div
+                    class="spinner-border spinner-border-sm text-primary me-2"
+                    role="status"
+                  />
+                  <span>Đang tải các chủ đề thảo luận...</span>
+                </div>
+
+                <div
+                  v-else-if="bookThreads.length > 0"
+                  class="d-flex flex-column gap-2.5"
+                >
+                  <ThreadItem
+                    v-for="th in bookThreads"
+                    :key="th._id"
+                    :thread="th"
+                    compact
+                  />
+                </div>
+
+                <EmptyState
+                  v-else
+                  title="Chưa có chủ đề thảo luận nào"
+                  message="Cuốn sách này chưa có bài thảo luận nào trên diễn đàn. Hãy mở đầu cuộc trò chuyện nhé!"
+                  icon="bi-chat-square-quote"
+                >
+                  <template #action>
                     <RouterLink
-                      :to="{ name: 'forum' }"
-                      class="btn btn-outline-primary btn-sm px-3"
+                      :to="`/forum/new?bookId=${book._id}&bookTitle=${encodeURIComponent(book.title)}`"
+                      class="btn btn-sm btn-primary rounded-pill px-4 mt-2"
                     >
                       <i
-                        class="bi bi-box-arrow-up-right me-1"
+                        class="bi bi-plus-lg me-1"
                         aria-hidden="true"
-                      />Xem Diễn đàn thư viện (FE-33)
+                      />
+                      Bắt đầu thảo luận đầu tiên
                     </RouterLink>
-                  </div>
-                </div>
+                  </template>
+                </EmptyState>
               </div>
             </div>
           </div>

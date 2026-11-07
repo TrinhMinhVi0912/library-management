@@ -215,8 +215,8 @@ async function handleToggleLike() {
         </div>
 
         <!-- Author Name, Role & Relative Time -->
-        <div class="d-flex flex-wrap align-items-center gap-2 text-muted fs-xs thread-meta mt-1">
-          <span class="fw-medium text-dark d-inline-flex align-items-center gap-1.5">
+        <div class="d-flex flex-wrap align-items-center gap-2 fs-xs thread-meta mt-1">
+          <span class="fw-medium d-inline-flex align-items-center gap-1.5 thread-author-name">
             <span>{{ authorName }}</span>
             <span
               v-if="isStaffOrAdmin"
@@ -293,6 +293,7 @@ async function handleToggleLike() {
 .thread-item {
   transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;
   border-color: #e5e7eb;
+  color: #111827;
 }
 
 .thread-item:hover {
@@ -321,10 +322,12 @@ async function handleToggleLike() {
 .thread-title {
   font-size: 1.0625rem;
   line-height: 1.45;
+  color: #111827;
 }
 
 .thread-link {
   transition: color 140ms ease;
+  color: #111827;
 }
 
 .thread-link:hover {
@@ -364,6 +367,14 @@ async function handleToggleLike() {
 
 .hover-primary:hover {
   color: #2563eb !important;
+}
+
+.thread-meta {
+  color: #6b7280;
+}
+
+.thread-author-name {
+  color: #111827;
 }
 
 /* Các nút và badge tương tác to rõ, bắt mắt */

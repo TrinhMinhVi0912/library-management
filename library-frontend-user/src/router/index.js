@@ -18,10 +18,13 @@ import MyLoans from '@/views/reader/MyLoans.vue';
 import MyFines from '@/views/reader/MyFines.vue';
 import MyShelves from '@/views/reader/MyShelves.vue';
 import MyReviews from '@/views/reader/MyReviews.vue';
+import MyReservations from '@/views/reader/MyReservations.vue';
 import Notifications from '@/views/reader/Notifications.vue';
 import Profile from '@/views/reader/Profile.vue';
 import ForumHome from '@/views/forum/ForumHome.vue';
 import ForumCategory from '@/views/forum/ForumCategory.vue';
+import ThreadDetail from '@/views/forum/ThreadDetail.vue';
+import ThreadNew from '@/views/forum/ThreadNew.vue';
 
 const placeholderRoute = (path, name, title, meta = {}) => ({
   path,
@@ -47,7 +50,7 @@ const router = createRouter({
         { path: 'reset-password/:token', name: 'reset-password', component: ResetPassword, meta: { title: 'Đặt lại mật khẩu', guestOnly: true } },
         { path: 'forum', name: 'forum', component: ForumHome, meta: { title: 'Diễn đàn thư viện' } },
         { path: 'forum/c/:slug', name: 'forum-category', component: ForumCategory, meta: { title: 'Chuyên mục diễn đàn' } },
-        placeholderRoute('forum/t/:slug', 'forum-thread', 'Chủ đề diễn đàn'),
+        { path: 'forum/t/:slug', name: 'forum-thread', component: ThreadDetail, meta: { title: 'Chủ đề diễn đàn' } },
         placeholderRoute('about', 'about', 'Giới thiệu'),
         { path: '404', name: 'not-found', component: NotFound, meta: { title: 'Không tìm thấy trang' } },
         { path: '403', name: 'forbidden', component: Forbidden, meta: { title: 'Không có quyền truy cập' } },
@@ -56,10 +59,10 @@ const router = createRouter({
         { path: 'my/fines', name: 'my-fines', component: MyFines, meta: { title: 'Phạt của tôi', requiresAuth: true, roles: ['reader'] } },
         { path: 'my/shelves', name: 'my-shelves', component: MyShelves, meta: { title: 'Kệ sách của tôi', requiresAuth: true, roles: ['reader'] } },
         { path: 'my/reviews', name: 'my-reviews', component: MyReviews, meta: { title: 'Đánh giá của tôi', requiresAuth: true, roles: ['reader'] } },
-        placeholderRoute('my/reservations', 'my-reservations', 'Sách đặt trước', { requiresAuth: true, roles: ['reader'] }),
+        { path: 'my/reservations', name: 'my-reservations', component: MyReservations, meta: { title: 'Sách đặt trước', requiresAuth: true, roles: ['reader'] } },
         { path: 'notifications', name: 'notifications', component: Notifications, meta: { title: 'Thông báo', requiresAuth: true, roles: ['reader'] } },
         { path: 'profile', name: 'profile', component: Profile, meta: { title: 'Hồ sơ', requiresAuth: true, roles: ['reader'] } },
-        placeholderRoute('forum/new', 'forum-new', 'Tạo chủ đề', { requiresAuth: true, roles: ['reader'] }),
+        { path: 'forum/new', name: 'forum-new', component: ThreadNew, meta: { title: 'Tạo chủ đề', requiresAuth: true, roles: ['reader'] } },
       ],
     },
     { path: '/:pathMatch(.*)*', redirect: { name: 'not-found' } },

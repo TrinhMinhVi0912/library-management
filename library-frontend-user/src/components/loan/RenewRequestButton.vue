@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useToast } from 'vue-toastification';
 import { dayjs, TIMEZONE } from '@/utils/format';
 import loanService from '@/services/loan.service';
@@ -21,6 +21,7 @@ const toast = useToast();
 const showModal = ref(false);
 const reason = ref('');
 const submitting = ref(false);
+const reservationBlock = ref(false);
 
 // --- Tính lý do vô hiệu ---
 const disabledReason = computed(() => {
@@ -29,6 +30,8 @@ const disabledReason = computed(() => {
 
   // Sách không đang mượn
   if (item.status !== 'borrowing') return null; // ẩn hẳn, không hiện nút
+
+  if (reservationBlock.value) return 'Sách đang có người đặt trước, không thể gia hạn';
 
   // Đã quá hạn
   if (item.dueDate) {
@@ -50,6 +53,11 @@ const disabledReason = computed(() => {
 const shouldShow = computed(() => props.item?.status === 'borrowing');
 
 const isDisabled = computed(() => !!disabledReason.value);
+
+watch(
+  () => [props.item?.book?._id || props.item?.book, props.item?.renewCount, props.pendingRenewal?._id],
+  () => { reservationBlock.value = false; }
+);
 
 // --- Map mã lỗi API → thông báo tooltip-friendly ---
 const ERROR_MESSAGES = {
@@ -88,6 +96,10 @@ async function handleSubmit() {
       ERROR_MESSAGES[code] ||
       error?.response?.data?.message ||
       'Không thể gửi yêu cầu gia hạn. Vui lòng thử lại.';
+    if (code === 'RENEW_RESERVED') {
+      reservationBlock.value = true;
+      closeModal();
+    }
     toast.error(msg);
   } finally {
     submitting.value = false;
