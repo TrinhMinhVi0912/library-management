@@ -454,14 +454,13 @@ onMounted(() => {
 
 <style scoped>
 .forum-hero {
-  background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+  background: #2563eb;
 }
 
 .forum-hero .hero-pill {
-  background-color: rgba(255, 255, 255, 0.15);
-  color: rgba(255, 255, 255, 0.9);
+  background-color: #1e40af;
+  color: #ffffff;
   font-weight: 500;
-  backdrop-filter: blur(4px);
 }
 
 .forum-hero h1,
@@ -482,13 +481,11 @@ onMounted(() => {
 }
 
 .category-card {
-  transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+  transition: border-color 160ms ease;
 }
 
 .category-card:hover {
-  transform: translateY(-2px);
-  border-color: #93c5fd;
-  box-shadow: 0 6px 16px rgb(37 99 235 / 10%) !important;
+  border-color: #2563eb;
 }
 
 .category-card:hover .category-title {

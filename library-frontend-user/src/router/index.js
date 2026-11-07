@@ -2,7 +2,6 @@ import { createRouter, createWebHistory } from 'vue-router';
 import { useAuthStore } from '@/stores/auth.store';
 import { pinia } from '@/stores/pinia';
 import PublicLayout from '@/layouts/PublicLayout.vue';
-import PlaceholderPage from '@/views/public/PlaceholderPage.vue';
 import Forbidden from '@/views/Forbidden.vue';
 import NotFound from '@/views/NotFound.vue';
 import Login from '@/views/public/Login.vue';
@@ -10,6 +9,7 @@ import Register from '@/views/public/Register.vue';
 import ForgotPassword from '@/views/public/ForgotPassword.vue';
 import ResetPassword from '@/views/public/ResetPassword.vue';
 import Home from '@/views/public/Home.vue';
+import About from '@/views/public/About.vue';
 import BookList from '@/views/public/BookList.vue';
 import BookDetail from '@/views/public/BookDetail.vue';
 import Author from '@/views/public/Author.vue';
@@ -25,13 +25,6 @@ import ForumHome from '@/views/forum/ForumHome.vue';
 import ForumCategory from '@/views/forum/ForumCategory.vue';
 import ThreadDetail from '@/views/forum/ThreadDetail.vue';
 import ThreadNew from '@/views/forum/ThreadNew.vue';
-
-const placeholderRoute = (path, name, title, meta = {}) => ({
-  path,
-  name,
-  component: PlaceholderPage,
-  meta: { title, ...meta },
-});
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -51,7 +44,7 @@ const router = createRouter({
         { path: 'forum', name: 'forum', component: ForumHome, meta: { title: 'Diễn đàn thư viện' } },
         { path: 'forum/c/:slug', name: 'forum-category', component: ForumCategory, meta: { title: 'Chuyên mục diễn đàn' } },
         { path: 'forum/t/:slug', name: 'forum-thread', component: ThreadDetail, meta: { title: 'Chủ đề diễn đàn' } },
-        placeholderRoute('about', 'about', 'Giới thiệu'),
+        { path: 'about', name: 'about', component: About, meta: { title: 'Giới thiệu' } },
         { path: '404', name: 'not-found', component: NotFound, meta: { title: 'Không tìm thấy trang' } },
         { path: '403', name: 'forbidden', component: Forbidden, meta: { title: 'Không có quyền truy cập' } },
         { path: 'cart', name: 'cart', component: Cart, meta: { title: 'Giỏ mượn sách', requiresAuth: true, roles: ['reader'] } },

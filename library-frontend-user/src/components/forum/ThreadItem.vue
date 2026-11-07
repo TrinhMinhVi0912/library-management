@@ -291,19 +291,18 @@ async function handleToggleLike() {
 
 <style scoped>
 .thread-item {
-  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;
+  transition: border-color 140ms ease;
   border-color: #e5e7eb;
   color: #111827;
 }
 
 .thread-item:hover {
-  border-color: #93c5fd;
-  box-shadow: 0 6px 16px rgb(37 99 235 / 8%) !important;
+  border-color: #2563eb;
 }
 
 .thread-item.is-pinned {
   border-left: 4px solid #f59e0b;
-  background-color: #fffdfa;
+  background-color: #ffffff;
 }
 
 .avatar-img,
