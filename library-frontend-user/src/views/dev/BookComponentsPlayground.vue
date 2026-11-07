@@ -7,6 +7,7 @@ import BookRow from '@/components/book/BookRow.vue';
 import EmptyState from '@/components/common/EmptyState.vue';
 import SearchBar from '@/components/common/SearchBar.vue';
 import SkeletonCard from '@/components/common/SkeletonCard.vue';
+import ShelfDropdown from '@/components/book/ShelfDropdown.vue';
 import bookService from '@/services/book.service';
 
 const toast = useToast();
@@ -123,6 +124,41 @@ onMounted(() => loadBooks());
               :book="book"
               @add-to-cart="handleQuickAction('cart')"
               @add-to-shelf="handleQuickAction('shelf')"
+            />
+          </div>
+        </div>
+      </section>
+
+      <section
+        class="mb-5"
+        aria-labelledby="preview-shelf-heading"
+      >
+        <h2
+          id="preview-shelf-heading"
+          class="h4 mb-3"
+        >
+          ShelfDropdown (Thêm vào kệ sách)
+        </h2>
+        <div
+          v-if="books.length > 0"
+          class="d-flex flex-wrap align-items-center gap-3 p-3 bg-light rounded border"
+        >
+          <div>
+            <label class="d-block small text-muted mb-1">Nút chuẩn (Standard):</label>
+            <ShelfDropdown :book="books[0]" />
+          </div>
+          <div>
+            <label class="d-block small text-muted mb-1">Biến thể Primary:</label>
+            <ShelfDropdown
+              :book="books[0]"
+              variant="primary"
+            />
+          </div>
+          <div>
+            <label class="d-block small text-muted mb-1">Icon Only (Thao tác nhanh):</label>
+            <ShelfDropdown
+              :book="books[0]"
+              icon-only
             />
           </div>
         </div>

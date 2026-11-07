@@ -10,6 +10,7 @@ import RatingStars from '@/components/book/RatingStars.vue';
 import RatingSummary from '@/components/book/RatingSummary.vue';
 import ReviewItem from '@/components/book/ReviewItem.vue';
 import ReviewForm from '@/components/book/ReviewForm.vue';
+import ShelfDropdown from '@/components/book/ShelfDropdown.vue';
 import BookCarousel from '@/components/book/BookCarousel.vue';
 import EmptyState from '@/components/common/EmptyState.vue';
 import { formatMoney } from '@/utils/format';
@@ -188,20 +189,6 @@ function handleReserveAction() {
   }
 
   toast.info('Tính năng Đặt trước sách (hàng chờ FIFO) sẽ được kết nối trong FE-35.');
-}
-
-// Xử lý hành động thêm vào kệ
-function handleShelfAction() {
-  if (!authStore.isAuthenticated) {
-    toast.info('Vui lòng đăng nhập để thêm sách vào kệ.');
-    router.push({
-      name: 'login',
-      query: { redirect: route.fullPath },
-    });
-    return;
-  }
-
-  toast.info('Tính năng Kệ sách của tôi sẽ được kết nối trong FE-18.');
 }
 
 function handleQuickAction(action) {
@@ -587,17 +574,12 @@ onMounted(() => {
                 </button>
 
                 <!-- Nút phụ: Thêm vào kệ sách -->
-                <button
-                  type="button"
-                  class="btn btn-outline-secondary w-100 py-2 d-flex align-items-center justify-content-center gap-2"
-                  @click="handleShelfAction"
-                >
-                  <i
-                    class="bi bi-bookmark-plus"
-                    aria-hidden="true"
-                  />
-                  <span>Thêm vào kệ sách</span>
-                </button>
+                <ShelfDropdown
+                  :book="book"
+                  class="w-100"
+                  button-class="w-100 py-2 d-flex align-items-center justify-content-center gap-2"
+                  label="Thêm vào kệ sách"
+                />
               </div>
 
               <!-- Ghi chú quy định mượn sách -->

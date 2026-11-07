@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue';
 import BookAvailability from '@/components/book/BookAvailability.vue';
 import RatingStars from '@/components/book/RatingStars.vue';
+import ShelfDropdown from '@/components/book/ShelfDropdown.vue';
 import { cloudinaryThumb } from '@/utils/image';
 
 const props = defineProps({
@@ -61,18 +62,11 @@ const bookLink = computed(() => ({
             aria-hidden="true"
           />
         </button>
-        <button
-          class="book-card-action"
-          type="button"
-          :aria-label="`Thêm ${book.title} vào kệ sách`"
-          title="Thêm vào kệ sách"
-          @click="emit('add-to-shelf', book)"
-        >
-          <i
-            class="bi bi-bookmark-plus"
-            aria-hidden="true"
-          />
-        </button>
+        <ShelfDropdown
+          :book="book"
+          icon-only
+          @changed="(payload) => emit('add-to-shelf', payload)"
+        />
       </div>
     </div>
 
