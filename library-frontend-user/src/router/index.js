@@ -11,6 +11,8 @@ import ForgotPassword from '@/views/public/ForgotPassword.vue';
 import ResetPassword from '@/views/public/ResetPassword.vue';
 import Home from '@/views/public/Home.vue';
 import BookList from '@/views/public/BookList.vue';
+import BookDetail from '@/views/public/BookDetail.vue';
+import Author from '@/views/public/Author.vue';
 
 const placeholderRoute = (path, name, title, meta = {}) => ({
   path,
@@ -28,8 +30,8 @@ const router = createRouter({
       children: [
         { path: '', name: 'home', component: Home, meta: { title: 'Trang chủ' } },
         { path: 'books', name: 'books', component: BookList, meta: { title: 'Danh mục sách' } },
-        placeholderRoute('books/:slug', 'book-detail', 'Chi tiết sách'),
-        placeholderRoute('authors/:id', 'author-detail', 'Tác giả'),
+        { path: 'books/:slug', name: 'book-detail', component: BookDetail, meta: { title: 'Chi tiết sách' } },
+        { path: 'authors/:id', name: 'author-detail', component: Author, meta: { title: 'Tác giả' } },
         { path: 'login', name: 'login', component: Login, meta: { title: 'Đăng nhập', guestOnly: true } },
         { path: 'register', name: 'register', component: Register, meta: { title: 'Đăng ký', guestOnly: true } },
         { path: 'forgot-password', name: 'forgot-password', component: ForgotPassword, meta: { title: 'Quên mật khẩu', guestOnly: true } },
