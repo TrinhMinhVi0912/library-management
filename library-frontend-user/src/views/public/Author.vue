@@ -2,6 +2,8 @@
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useToast } from 'vue-toastification';
+import { useAuthStore } from '@/stores/auth.store';
+import { useCartStore } from '@/stores/cart.store';
 import catalogService from '@/services/catalog.service';
 import bookService from '@/services/book.service';
 import BookCard from '@/components/book/BookCard.vue';
@@ -13,6 +15,8 @@ import { cloudinaryThumb } from '@/utils/image';
 const route = useRoute();
 const router = useRouter();
 const toast = useToast();
+const authStore = useAuthStore();
+const cartStore = useCartStore();
 
 const author = ref(null);
 const books = ref([]);
@@ -102,6 +106,31 @@ function handlePageChange(newPage) {
   if (newPage === page.value || newPage < 1 || newPage > totalPages.value) return;
   loadBooks(route.params.id, newPage);
   window.scrollTo({ top: 320, behavior: 'smooth' });
+}
+
+async function handleAddToCart(book) {
+  if (!book?._id) return;
+  if (!authStore.isAuthenticated) {
+    toast.info('Vui lòng đăng nhập để mượn sách.');
+    router.push({ name: 'login', query: { redirect: route.fullPath } });
+    return;
+  }
+  if (authStore.role !== 'reader') {
+    toast.warning('Chỉ tài khoản độc giả mới có thể mượn sách.');
+    return;
+  }
+  if (cartStore.isInCart(book._id)) {
+    toast.info(`"${book.title}" đã có trong giỏ mượn.`);
+    return;
+  }
+  const result = await cartStore.addToCart(book._id);
+  if (result.success) {
+    toast.success(`Đã thêm "${book.title}" vào giỏ mượn!`);
+  } else if (result.requiresAuth) {
+    router.push({ name: 'login', query: { redirect: route.fullPath } });
+  } else {
+    toast.error(result.message || 'Không thể thêm vào giỏ mượn');
+  }
 }
 
 function handleQuickAction(action) {
@@ -312,7 +341,7 @@ onMounted(() => {
           >
             <BookCard
               :book="item"
-              @add-to-cart="handleQuickAction('cart')"
+              @add-to-cart="handleAddToCart"
               @add-to-shelf="handleQuickAction('shelf')"
             />
           </div>

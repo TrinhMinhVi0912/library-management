@@ -1,19 +1,37 @@
 <script setup>
-import { onMounted } from 'vue';
+import { onMounted, watch } from 'vue';
 import AppFooter from '@/components/common/AppFooter.vue';
 import AppNavbar from '@/components/common/AppNavbar.vue';
 import { useAuthStore } from '@/stores/auth.store';
+import { useCartStore } from '@/stores/cart.store';
 
 const auth = useAuthStore();
+const cartStore = useCartStore();
 
-onMounted(() => {
-  if (!auth.initialized) void auth.restoreSession();
+onMounted(async () => {
+  if (!auth.initialized) {
+    await auth.restoreSession();
+  }
+  if (auth.isAuthenticated && auth.role === 'reader') {
+    cartStore.fetchCart();
+  }
 });
+
+watch(
+  () => auth.isAuthenticated,
+  (isAuth) => {
+    if (isAuth && auth.role === 'reader') {
+      cartStore.fetchCart();
+    } else {
+      cartStore.clearCart();
+    }
+  }
+);
 </script>
 
 <template>
   <div class="public-layout">
-    <AppNavbar />
+    <AppNavbar :cart-count="cartStore.count" />
     <main
       id="main-content"
       class="public-main"

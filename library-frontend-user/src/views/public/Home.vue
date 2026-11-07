@@ -2,6 +2,8 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useToast } from 'vue-toastification';
+import { useAuthStore } from '@/stores/auth.store';
+import { useCartStore } from '@/stores/cart.store';
 import BookCarousel from '@/components/book/BookCarousel.vue';
 import EmptyState from '@/components/common/EmptyState.vue';
 import SkeletonCard from '@/components/common/SkeletonCard.vue';
@@ -10,6 +12,8 @@ import catalogService from '@/services/catalog.service';
 
 const router = useRouter();
 const toast = useToast();
+const authStore = useAuthStore();
+const cartStore = useCartStore();
 const homeBooks = ref({ newest: [], popular: [], topRated: [] });
 const categories = ref([]);
 const loading = ref(true);
@@ -132,6 +136,31 @@ function closeSuggestions(event) {
 
 function openCategory(category) {
   router.push({ name: 'books', query: { category: category._id } });
+}
+
+async function handleAddToCart(book) {
+  if (!book?._id) return;
+  if (!authStore.isAuthenticated) {
+    toast.info('Vui lòng đăng nhập để mượn sách.');
+    router.push({ name: 'login', query: { redirect: '/' } });
+    return;
+  }
+  if (authStore.role !== 'reader') {
+    toast.warning('Chỉ tài khoản độc giả mới có thể mượn sách.');
+    return;
+  }
+  if (cartStore.isInCart(book._id)) {
+    toast.info(`"${book.title}" đã có trong giỏ mượn.`);
+    return;
+  }
+  const result = await cartStore.addToCart(book._id);
+  if (result.success) {
+    toast.success(`Đã thêm "${book.title}" vào giỏ mượn!`);
+  } else if (result.requiresAuth) {
+    router.push({ name: 'login', query: { redirect: '/' } });
+  } else {
+    toast.error(result.message || 'Không thể thêm vào giỏ mượn');
+  }
 }
 
 function handleQuickAction(action) {
@@ -317,7 +346,7 @@ onBeforeUnmount(() => clearTimeout(searchTimer));
           class="mb-5"
           title="Sách mới"
           :books="homeBooks.newest"
-          @add-to-cart="handleQuickAction('cart')"
+          @add-to-cart="handleAddToCart"
           @add-to-shelf="handleQuickAction('shelf')"
         />
         <BookCarousel
@@ -325,7 +354,7 @@ onBeforeUnmount(() => clearTimeout(searchTimer));
           class="mb-5"
           title="Mượn nhiều"
           :books="homeBooks.popular"
-          @add-to-cart="handleQuickAction('cart')"
+          @add-to-cart="handleAddToCart"
           @add-to-shelf="handleQuickAction('shelf')"
         />
         <BookCarousel
@@ -333,7 +362,7 @@ onBeforeUnmount(() => clearTimeout(searchTimer));
           class="mb-5"
           title="Đánh giá cao"
           :books="homeBooks.topRated"
-          @add-to-cart="handleQuickAction('cart')"
+          @add-to-cart="handleAddToCart"
           @add-to-shelf="handleQuickAction('shelf')"
         />
 

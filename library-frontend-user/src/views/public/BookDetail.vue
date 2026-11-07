@@ -3,6 +3,7 @@ import { computed, nextTick, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useToast } from 'vue-toastification';
 import { useAuthStore } from '@/stores/auth.store';
+import { useCartStore } from '@/stores/cart.store';
 import bookService from '@/services/book.service';
 import BookAvailability from '@/components/book/BookAvailability.vue';
 import RatingStars from '@/components/book/RatingStars.vue';
@@ -15,6 +16,7 @@ const route = useRoute();
 const router = useRouter();
 const toast = useToast();
 const authStore = useAuthStore();
+const cartStore = useCartStore();
 
 // Trạng thái sách
 const book = ref(null);
@@ -132,8 +134,11 @@ async function fetchReviews(bookId) {
   }
 }
 
-// Xử lý hành động mượn sách
-function handleBorrowAction() {
+// Xử lý hành động thêm sách vào giỏ mượn
+async function handleAddToCart(targetBook) {
+  const item = targetBook || book.value;
+  if (!item || !item._id) return;
+
   if (!authStore.isAuthenticated) {
     toast.info('Vui lòng đăng nhập để mượn sách.');
     router.push({
@@ -143,8 +148,28 @@ function handleBorrowAction() {
     return;
   }
 
-  // Nếu độc giả đã đăng nhập
-  toast.info('Tính năng Giỏ mượn sẽ được kết nối trong FE-11.');
+  if (authStore.role !== 'reader') {
+    toast.warning('Chỉ tài khoản độc giả mới có thể mượn sách.');
+    return;
+  }
+
+  if (cartStore.isInCart(item._id)) {
+    toast.info(`"${item.title}" đã có trong giỏ mượn của bạn.`);
+    return;
+  }
+
+  const result = await cartStore.addToCart(item._id);
+  if (result.success) {
+    toast.success(`Đã thêm "${item.title}" vào giỏ mượn!`);
+  } else if (result.requiresAuth) {
+    router.push({ name: 'login', query: { redirect: route.fullPath } });
+  } else {
+    toast.error(result.message || 'Không thể thêm vào giỏ mượn');
+  }
+}
+
+function handleBorrowAction() {
+  handleAddToCart(book.value);
 }
 
 // Xử lý hành động đặt trước
@@ -811,7 +836,7 @@ onMounted(() => {
               title="Sách tương tự có thể bạn thích"
               :books="relatedBooks"
               aria-label="Danh sách sách tương tự"
-              @add-to-cart="handleQuickAction('cart')"
+              @add-to-cart="handleAddToCart"
               @add-to-shelf="handleQuickAction('shelf')"
             />
           </div>

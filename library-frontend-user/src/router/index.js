@@ -13,6 +13,7 @@ import Home from '@/views/public/Home.vue';
 import BookList from '@/views/public/BookList.vue';
 import BookDetail from '@/views/public/BookDetail.vue';
 import Author from '@/views/public/Author.vue';
+import Cart from '@/views/reader/Cart.vue';
 
 const placeholderRoute = (path, name, title, meta = {}) => ({
   path,
@@ -42,7 +43,7 @@ const router = createRouter({
         placeholderRoute('about', 'about', 'Giới thiệu'),
         { path: '404', name: 'not-found', component: NotFound, meta: { title: 'Không tìm thấy trang' } },
         { path: '403', name: 'forbidden', component: Forbidden, meta: { title: 'Không có quyền truy cập' } },
-        placeholderRoute('cart', 'cart', 'Giỏ mượn', { requiresAuth: true, roles: ['reader'] }),
+        { path: 'cart', name: 'cart', component: Cart, meta: { title: 'Giỏ mượn sách', requiresAuth: true, roles: ['reader'] } },
         placeholderRoute('my/loans', 'my-loans', 'Lịch sử mượn', { requiresAuth: true, roles: ['reader'] }),
         placeholderRoute('my/fines', 'my-fines', 'Phạt của tôi', { requiresAuth: true, roles: ['reader'] }),
         placeholderRoute('my/shelves', 'my-shelves', 'Kệ sách của tôi', { requiresAuth: true, roles: ['reader'] }),
