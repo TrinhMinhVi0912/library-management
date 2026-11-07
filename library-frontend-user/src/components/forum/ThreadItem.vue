@@ -81,6 +81,14 @@ const bookCover = computed(() => {
   return cloudinaryThumb(props.thread.book.cover?.url || props.thread.book.cover, 120);
 });
 
+const contentPreview = computed(() => (props.thread.content || '')
+  .replace(/<[^>]*>/g, ' ')
+  .replace(/[#*_`~>()!]/g, ' ')
+  .replaceAll('[', ' ')
+  .replaceAll(']', ' ')
+  .replace(/\s+/g, ' ')
+  .trim());
+
 async function handleToggleLike() {
   if (!authStore.isAuthenticated) {
     toast.info('Vui lòng đăng nhập để thích bài viết.');
@@ -116,7 +124,7 @@ async function handleToggleLike() {
     class="thread-item p-3 p-md-3.5 rounded-3 border bg-white transition shadow-sm mb-3"
     :class="{ 'is-pinned': thread.pinned, 'is-compact': compact }"
   >
-    <div class="d-flex flex-column flex-sm-row align-items-start gap-3">
+    <div class="thread-item-layout d-flex flex-column flex-sm-row align-items-start gap-3">
       <!-- Author Avatar -->
       <div class="author-avatar-wrap flex-shrink-0 d-none d-sm-block">
         <img
@@ -135,7 +143,7 @@ async function handleToggleLike() {
       </div>
 
       <!-- Main Content Area -->
-      <div class="flex-grow-1 overflow-hidden w-100">
+      <div class="thread-main flex-grow-1 overflow-hidden">
         <!-- Badges & Category Header -->
         <div class="d-flex flex-wrap align-items-center gap-1.5 mb-1.5">
           <span
@@ -187,6 +195,13 @@ async function handleToggleLike() {
             {{ thread.title }}
           </RouterLink>
         </h3>
+
+        <p
+          v-if="compact && contentPreview"
+          class="thread-preview text-secondary mb-2"
+        >
+          {{ contentPreview }}
+        </p>
 
         <!-- Associated Book Snippet (if any) -->
         <div
@@ -240,7 +255,7 @@ async function handleToggleLike() {
       </div>
 
       <!-- Thread Statistics / Interactive Action Controls (To rõ ràng & Hiện đại) -->
-      <div class="thread-interactions d-flex flex-row flex-sm-column align-items-center align-items-sm-end justify-content-between gap-2 flex-shrink-0 w-100 w-sm-auto mt-2 mt-sm-0 pt-2 pt-sm-0 border-top border-top-sm-0">
+      <div class="thread-interactions">
         <!-- Nút phản hồi (Reply button) -->
         <RouterLink
           :to="{ name: 'forum-thread', params: { slug: thread.slug || thread._id } }"
@@ -294,6 +309,26 @@ async function handleToggleLike() {
   transition: border-color 140ms ease;
   border-color: #e5e7eb;
   color: #111827;
+}
+
+.thread-item-layout {
+  width: 100%;
+  min-width: 0;
+}
+
+.thread-main {
+  flex: 1 1 auto;
+  min-width: 0;
+  width: 100%;
+}
+
+.thread-preview {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
 }
 
 .thread-item:hover {
@@ -379,7 +414,14 @@ async function handleToggleLike() {
 /* Các nút và badge tương tác to rõ, bắt mắt */
 .thread-interactions {
   display: flex;
+  flex: 0 0 auto;
+  flex-direction: row;
+  align-items: stretch;
+  width: 100%;
   gap: 0.5rem;
+  border-top: 1px solid #e5e7eb;
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
 }
 
 .interaction-btn,
@@ -467,8 +509,12 @@ async function handleToggleLike() {
   }
 
   .thread-interactions {
+    flex: 0 0 5rem;
     flex-direction: column;
-    align-items: flex-end;
+    width: 5rem;
+    border-top: 0;
+    margin-top: 0;
+    padding-top: 0;
   }
 
   .interaction-btn,
@@ -480,10 +526,18 @@ async function handleToggleLike() {
 }
 
 @media (max-width: 575.98px) {
+  .thread-main {
+    width: 100%;
+  }
+
   .thread-interactions {
     flex-direction: row;
     width: 100%;
+    flex: 0 0 auto;
     justify-content: flex-start;
+    border-top: 1px solid #e5e7eb;
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
   }
 
   .interaction-btn,
