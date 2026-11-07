@@ -7,19 +7,23 @@ import loanService from '@/services/loan.service';
 import StatusBadge from '@/components/common/StatusBadge.vue';
 import ConfirmModal from '@/components/common/ConfirmModal.vue';
 import LoanTimeline from '@/components/loan/LoanTimeline.vue';
+import RenewRequestButton from '@/components/loan/RenewRequestButton.vue';
 
 const FINE_RATE_PER_DAY = 5000; // mức phạt mặc định (đ/ngày)
 
 const props = defineProps({
   loan: { type: Object, required: true },
+  /** Danh sách yêu cầu gia hạn liên quan đến phiếu này */
+  renewals: { type: Array, default: () => [] },
 });
 
-const emit = defineEmits(['cancelled']);
+const emit = defineEmits(['cancelled', 'renewal-changed']);
 const toast = useToast();
 
 const expanded = ref(false);
 const showCancelModal = ref(false);
 const cancelling = ref(false);
+const cancellingRenewalId = ref(null);
 
 // --- Computed ---
 
@@ -63,6 +67,19 @@ const totalEstimatedFine = computed(() =>
   overdueItems.value.reduce((sum, item) => sum + item.estimatedFine, 0),
 );
 
+/** Map bookId → yêu cầu gia hạn gần nhất (để hiển thị trên từng item) */
+const renewalByBook = computed(() => {
+  const map = {};
+  for (const r of props.renewals) {
+    const bookId = typeof r.book === 'object' ? r.book._id : r.book;
+    // Ưu tiên pending > approved/rejected (gần nhất)
+    if (!map[bookId] || r.status === 'pending') {
+      map[bookId] = r;
+    }
+  }
+  return map;
+});
+
 // --- Methods ---
 
 function toggleExpand() {
@@ -92,6 +109,41 @@ function daysRemainingClass(dueDate) {
   return 'text-success';
 }
 
+/** Lấy yêu cầu gia hạn pending cho item */
+function getPendingRenewal(item) {
+  const bookId = item.book?._id || item.book;
+  const r = renewalByBook.value[bookId];
+  return r && r.status === 'pending' ? r : null;
+}
+
+/** Lấy yêu cầu gia hạn gần nhất (bất kỳ trạng thái) cho item */
+function getLatestRenewal(item) {
+  const bookId = item.book?._id || item.book;
+  return renewalByBook.value[bookId] || null;
+}
+
+/** Badge class cho trạng thái renewal */
+function renewalBadgeClass(status) {
+  const map = {
+    pending: 'bg-warning text-dark',
+    approved: 'bg-success',
+    rejected: 'bg-danger',
+    cancelled: 'bg-secondary',
+  };
+  return map[status] || 'bg-secondary';
+}
+
+/** Label cho trạng thái renewal */
+function renewalStatusLabel(status) {
+  const map = {
+    pending: 'Chờ duyệt',
+    approved: 'Đã duyệt',
+    rejected: 'Bị từ chối',
+    cancelled: 'Đã hủy',
+  };
+  return map[status] || status;
+}
+
 async function handleCancel() {
   cancelling.value = true;
   try {
@@ -105,6 +157,24 @@ async function handleCancel() {
   } finally {
     cancelling.value = false;
   }
+}
+
+async function handleCancelRenewal(renewal) {
+  cancellingRenewalId.value = renewal._id;
+  try {
+    await loanService.cancelRenewal(renewal._id);
+    toast.success('Đã hủy yêu cầu gia hạn.');
+    emit('renewal-changed');
+  } catch (error) {
+    const msg = error?.response?.data?.message || 'Không thể hủy yêu cầu gia hạn.';
+    toast.error(msg);
+  } finally {
+    cancellingRenewalId.value = null;
+  }
+}
+
+function handleRenewed() {
+  emit('renewal-changed');
 }
 </script>
 
@@ -260,6 +330,17 @@ async function handleCancel() {
                   >
                     Trả: {{ formatDate(item.returnDate, 'DD/MM/YYYY') }}
                   </span>
+                  <!-- Số lần gia hạn -->
+                  <span
+                    v-if="item.renewCount > 0"
+                    class="extra-small text-info"
+                  >
+                    <i
+                      class="bi bi-arrow-repeat"
+                      aria-hidden="true"
+                    />
+                    Gia hạn {{ item.renewCount }} lần
+                  </span>
                 </div>
                 <!-- Phạt tạm tính cho item quá hạn -->
                 <div
@@ -268,6 +349,114 @@ async function handleCancel() {
                 >
                   Quá hạn {{ overdueItems.find((o) => o._id === item._id).daysOverdue }} ngày
                   · Phạt tạm tính: {{ formatMoney(overdueItems.find((o) => o._id === item._id).estimatedFine) }}
+                </div>
+
+                <!-- Trạng thái gia hạn gần nhất -->
+                <div
+                  v-if="getLatestRenewal(item)"
+                  class="renewal-status mt-2 p-2 rounded small"
+                  :class="{
+                    'bg-warning bg-opacity-10': getLatestRenewal(item).status === 'pending',
+                    'bg-success bg-opacity-10': getLatestRenewal(item).status === 'approved',
+                    'bg-danger bg-opacity-10': getLatestRenewal(item).status === 'rejected',
+                    'bg-secondary bg-opacity-10': getLatestRenewal(item).status === 'cancelled',
+                  }"
+                >
+                  <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <i
+                      class="bi bi-arrow-repeat"
+                      aria-hidden="true"
+                    />
+                    <span class="fw-semibold">Gia hạn:</span>
+                    <span
+                      class="badge"
+                      :class="renewalBadgeClass(getLatestRenewal(item).status)"
+                    >
+                      {{ renewalStatusLabel(getLatestRenewal(item).status) }}
+                    </span>
+                    <!-- Nút hủy cho pending -->
+                    <button
+                      v-if="getLatestRenewal(item).status === 'pending'"
+                      class="btn btn-outline-secondary btn-sm py-0 px-2 ms-auto"
+                      type="button"
+                      :disabled="cancellingRenewalId === getLatestRenewal(item)._id"
+                      @click.stop="handleCancelRenewal(getLatestRenewal(item))"
+                    >
+                      <span
+                        v-if="cancellingRenewalId === getLatestRenewal(item)._id"
+                        class="spinner-border spinner-border-sm me-1"
+                        role="status"
+                      />
+                      Hủy gia hạn
+                    </button>
+                  </div>
+                  <!-- Lý do yêu cầu -->
+                  <div
+                    v-if="getLatestRenewal(item).reason"
+                    class="extra-small text-muted mt-1"
+                  >
+                    Lý do: {{ getLatestRenewal(item).reason }}
+                  </div>
+                  <!-- Ngày dự kiến -->
+                  <div
+                    v-if="getLatestRenewal(item).requestedDueDate"
+                    class="extra-small text-muted mt-1"
+                  >
+                    Hạn mới dự kiến: {{ formatDate(getLatestRenewal(item).requestedDueDate, 'DD/MM/YYYY') }}
+                  </div>
+                  <!-- Lý do từ chối -->
+                  <div
+                    v-if="getLatestRenewal(item).status === 'rejected' && getLatestRenewal(item).rejectReason"
+                    class="extra-small text-danger mt-1"
+                  >
+                    <i
+                      class="bi bi-x-circle me-1"
+                      aria-hidden="true"
+                    />
+                    Lý do từ chối: {{ getLatestRenewal(item).rejectReason }}
+                  </div>
+                </div>
+
+                <!-- Lịch sử gia hạn đã duyệt (từ item.renewals[]) -->
+                <details
+                  v-if="item.renewals && item.renewals.length > 0"
+                  class="mt-2"
+                >
+                  <summary class="extra-small text-muted cursor-pointer">
+                    <i
+                      class="bi bi-clock-history me-1"
+                      aria-hidden="true"
+                    />
+                    Lịch sử gia hạn ({{ item.renewals.length }})
+                  </summary>
+                  <ul class="list-unstyled ps-3 mt-1 mb-0">
+                    <li
+                      v-for="(rh, ri) in item.renewals"
+                      :key="ri"
+                      class="extra-small text-muted py-1"
+                      :class="{ 'border-top': ri > 0 }"
+                    >
+                      Lần {{ ri + 1 }}:
+                      {{ formatDate(rh.oldDue, 'DD/MM/YYYY') }}
+                      → {{ formatDate(rh.newDue, 'DD/MM/YYYY') }}
+                      <span class="text-muted">
+                        ({{ formatDate(rh.at, 'DD/MM HH:mm') }})
+                      </span>
+                    </li>
+                  </ul>
+                </details>
+
+                <!-- Nút gia hạn -->
+                <div
+                  v-if="item.status === 'borrowing'"
+                  class="mt-2"
+                >
+                  <RenewRequestButton
+                    :loan="loan"
+                    :item="item"
+                    :pending-renewal="getPendingRenewal(item)"
+                    @renewed="handleRenewed"
+                  />
                 </div>
               </div>
             </li>
@@ -355,6 +544,14 @@ async function handleCancel() {
   min-width: 0;
 }
 
+.renewal-status {
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
 /* Transition mở rộng */
 .slide-fade-enter-active {
   transition:
@@ -377,4 +574,3 @@ async function handleCancel() {
   overflow: hidden;
 }
 </style>
-

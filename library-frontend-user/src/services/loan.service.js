@@ -41,6 +41,25 @@ const loanService = {
     const response = await api.post(`/me/loans/${encodeURIComponent(id)}/cancel`);
     return getData(response);
   },
+
+  // --- Gia hạn (Renewals) ---
+  async createRenewal(loanId, bookId, payload = {}) {
+    const response = await api.post(
+      `/me/loans/${encodeURIComponent(loanId)}/items/${encodeURIComponent(bookId)}/renewals`,
+      payload,
+    );
+    return getData(response);
+  },
+
+  async getMyRenewals(params = {}) {
+    const response = await api.get('/me/renewals', { params });
+    return { renewals: getData(response) || [], meta: response.data?.meta || null };
+  },
+
+  async cancelRenewal(id) {
+    const response = await api.post(`/me/renewals/${encodeURIComponent(id)}/cancel`);
+    return getData(response);
+  },
 };
 
 export default loanService;

@@ -24,6 +24,7 @@ const tabs = [
 // --- State ---
 const activeTab = ref('all');
 const loans = ref([]);
+const renewals = ref([]);
 const loading = ref(false);
 const page = ref(1);
 const meta = ref({ total: 0, totalPages: 1 });
@@ -46,36 +47,55 @@ const emptyConfig = computed(() => {
 });
 
 // --- Fetch ---
+async function fetchRenewals() {
+  try {
+    const result = await loanService.getMyRenewals({ limit: 100 });
+    renewals.value = result.renewals || [];
+  } catch {
+    renewals.value = [];
+  }
+}
+
 async function fetchLoans() {
   loading.value = true;
   try {
     const tabInfo = currentTab.value;
     const params = { page: page.value, limit: LIMIT };
 
-    if (tabInfo.key === 'other') {
-      // Tab "Khác": lấy tất cả rồi lọc client-side (API chỉ hỗ trợ 1 status)
-      const result = await loanService.getMyLoans({ page: params.page, limit: params.limit });
-      const otherStatuses = ['rejected', 'cancelled', 'expired'];
-      loans.value = (result.loans || []).filter((l) => otherStatuses.includes(l.status));
-      // Tính lại meta cho client-side filter (ước lượng)
-      meta.value = {
-        total: loans.value.length,
-        totalPages: 1,
-      };
-    } else {
-      if (tabInfo.statuses) {
-        params.status = tabInfo.statuses[0];
+    // Fetch song song danh sách phiếu và danh sách gia hạn
+    const fetchLoansPromise = (async () => {
+      if (tabInfo.key === 'other') {
+        const result = await loanService.getMyLoans({ page: params.page, limit: params.limit });
+        const otherStatuses = ['rejected', 'cancelled', 'expired'];
+        loans.value = (result.loans || []).filter((l) => otherStatuses.includes(l.status));
+        meta.value = {
+          total: loans.value.length,
+          totalPages: 1,
+        };
+      } else {
+        if (tabInfo.statuses) {
+          params.status = tabInfo.statuses[0];
+        }
+        const result = await loanService.getMyLoans(params);
+        loans.value = result.loans || [];
+        meta.value = result.meta || { total: 0, totalPages: 1 };
       }
-      const result = await loanService.getMyLoans(params);
-      loans.value = result.loans || [];
-      meta.value = result.meta || { total: 0, totalPages: 1 };
-    }
+    })();
+
+    await Promise.all([fetchLoansPromise, fetchRenewals()]);
   } catch {
     loans.value = [];
     meta.value = { total: 0, totalPages: 1 };
   } finally {
     loading.value = false;
   }
+}
+
+function getRenewalsForLoan(loanId) {
+  return renewals.value.filter((r) => {
+    const rLoanId = typeof r.loan === 'object' ? r.loan?._id : r.loan;
+    return rLoanId === loanId;
+  });
 }
 
 function switchTab(tabKey) {
@@ -90,6 +110,10 @@ function handlePageChange(newPage) {
 }
 
 function handleCancelled() {
+  fetchLoans();
+}
+
+function handleRenewalChanged() {
   fetchLoans();
 }
 
@@ -193,7 +217,9 @@ watch([activeTab, page], () => {
           v-for="loan in loans"
           :key="loan._id"
           :loan="loan"
+          :renewals="getRenewalsForLoan(loan._id)"
           @cancelled="handleCancelled"
+          @renewal-changed="handleRenewalChanged"
         />
 
         <!-- Phân trang -->
