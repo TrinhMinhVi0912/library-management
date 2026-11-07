@@ -71,7 +71,7 @@ Thứ tự triển khai: hoàn thành app admin (`library-frontend-admin/`, FE-1
 | [FE-02](frontend/FE-02.md) | Styles, design tokens, App shell | F0 Khởi tạo | FE-01 | ✅ | Tokens, toast wiring, formatter; lint/build xong; browser QA còn trong `frontend/qa/FE-02.md` |
 | [FE-03](frontend/FE-03.md) | api.service (axios), auth store khung, ui store | F0 Khởi tạo | FE-02 | ✅ | Code/lint/build xong; kiểm tra endpoint/CORS còn chờ tại `frontend/qa/FE-03.md` |
 | [FE-04](frontend/FE-04.md) | Component chung (1/2) | F0 Khởi tạo | FE-02 | ✅ | 7 component + dev preview; lint/build xong; browser QA còn trong `frontend/qa/FE-04.md` |
-| [FE-05](frontend/FE-05.md) | Layout công khai, navbar, footer, router khung | F1 Khách & Auth | FE-03, FE-04 | ⬜ | |
+| [FE-05](frontend/FE-05.md) | Layout công khai, navbar, footer, router khung | F1 Khách & Auth | FE-03, FE-04 | ✅ | Code/lint/build xong; browser QA và kiểm tra F5 sau FE-06 còn trong `frontend/qa/FE-05.md` |
 | [FE-06](frontend/FE-06.md) | Trang đăng nhập, đăng ký, quên/đặt lại mật khẩu | F1 Khách & Auth | FE-05 | ⬜ | |
 | [FE-07](frontend/FE-07.md) | Service sách + component sách | F1 Khách & Auth | FE-04 | ⬜ | |
 | [FE-08](frontend/FE-08.md) | Trang chủ | F1 Khách & Auth | FE-07, FE-05 | ⬜ | |

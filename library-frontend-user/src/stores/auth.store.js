@@ -2,6 +2,7 @@ import { defineStore } from 'pinia';
 import api from '@/services/api.service';
 
 const getData = (response) => response.data?.data;
+let restorePromise = null;
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
@@ -52,6 +53,25 @@ export const useAuthStore = defineStore('auth', {
       }
       this.setSession(result.user, result.accessToken);
       return result.accessToken;
+    },
+    async restoreSession() {
+      if (this.initialized) return this.user;
+      if (restorePromise) return restorePromise;
+
+      restorePromise = (async () => {
+        try {
+          await this.refresh();
+          return this.user;
+        } catch {
+          this.clearSession();
+          return null;
+        } finally {
+          this.initialized = true;
+          restorePromise = null;
+        }
+      })();
+
+      return restorePromise;
     },
     async logout() {
       try {
