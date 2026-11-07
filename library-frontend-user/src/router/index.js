@@ -61,6 +61,12 @@ if (import.meta.env.DEV) {
     component: () => import('@/views/dev/ComponentPlayground.vue'),
     meta: { skipSessionRestore: true },
   });
+  router.addRoute({
+    path: '/dev/books',
+    name: 'dev-book-components',
+    component: () => import('@/views/dev/BookComponentsPlayground.vue'),
+    meta: { title: 'Thử component sách', skipSessionRestore: true },
+  });
 }
 
 router.beforeEach(async (to) => {
