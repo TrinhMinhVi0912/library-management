@@ -186,7 +186,7 @@ const bookLink = computed(() => ({
   overflow: hidden;
   min-height: 2.75rem;
   color: #111827;
-  font-weight: 650;
+  font-weight: 600;
   line-height: 1.35;
   text-decoration: none;
   -webkit-box-orient: vertical;
