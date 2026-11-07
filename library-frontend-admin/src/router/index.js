@@ -15,6 +15,8 @@ import AdminBooks from '@/views/admin/Books.vue';
 import AdminCatalog from '@/views/admin/Catalog.vue';
 import AdminUsers from '@/views/admin/Users.vue';
 import AdminNotifications from '@/views/admin/Notifications.vue';
+import AdminSettings from '@/views/admin/Settings.vue';
+import AdminAuditLogs from '@/views/admin/AuditLogs.vue';
 import Forbidden from '@/views/Forbidden.vue';
 import NotFound from '@/views/NotFound.vue';
 
@@ -49,8 +51,8 @@ const router = createRouter({
         { path: 'notifications', name: 'admin-notifications', component: AdminNotifications, meta: { title: 'Thông báo', roles: ['staff', 'admin'] } },
         section('forum', 'admin-forum', 'Kiểm duyệt diễn đàn'),
         section('staff', 'admin-staff', 'Quản lý nhân viên', ['admin']),
-        section('settings', 'admin-settings', 'Cài đặt', ['admin']),
-        section('audit-logs', 'admin-audit-logs', 'Nhật ký hệ thống', ['admin']),
+        { path: 'settings', name: 'admin-settings', component: AdminSettings, meta: { title: 'Cài đặt', roles: ['admin'] } },
+        { path: 'audit-logs', name: 'admin-audit-logs', component: AdminAuditLogs, meta: { title: 'Nhật ký hệ thống', roles: ['admin'] } },
       ],
     },
     { path: '/:pathMatch(.*)*', name: 'not-found', component: NotFound, meta: { title: 'Không tìm thấy trang' } },

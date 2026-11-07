@@ -65,7 +65,7 @@ Thứ tự triển khai: hoàn thành app admin (`library-frontend-admin/`, FE-1
 | [FE-28](frontend/FE-28.md) | Quản lý danh mục | F3 Quản trị | FE-19 | ✅ | Code/lint/build xong; browser QA còn trong `frontend/qa/FE-28.md` |
 | [FE-29](frontend/FE-29.md) | Quản lý người dùng | F3 Quản trị | FE-19 | ✅ | Code/lint/build xong; browser QA còn trong `frontend/qa/FE-29.md`; email reset cần SMTP hoạt động |
 | [FE-30](frontend/FE-30.md) | Quản lý thông báo | F3 Quản trị | FE-19 | ✅ | Code/lint/build xong; browser QA còn trong `frontend/qa/FE-30.md`; toast phía độc giả chờ FE-16 |
-| [FE-31](frontend/FE-31.md) | Cài đặt & nhật ký hệ thống | F3 Quản trị | FE-19 | ⬜ | |
+| [FE-31](frontend/FE-31.md) | Cài đặt & nhật ký hệ thống | F3 Quản trị | FE-19 | ✅ | Code/lint/build xong; browser QA còn trong `frontend/qa/FE-31.md`; hai route admin-only |
 | [FE-34](frontend/FE-34.md) | Kiểm duyệt diễn đàn (admin) | F4 Diễn đàn & đặt trước | FE-19 | ⬜ | |
 | [FE-01](frontend/FE-01.md) | Khởi tạo project frontend | F0 Khởi tạo | – | ⬜ | |
 | [FE-02](frontend/FE-02.md) | Styles, design tokens, App shell | F0 Khởi tạo | FE-01 | ⬜ | |

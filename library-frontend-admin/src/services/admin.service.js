@@ -242,6 +242,26 @@ export async function findAdminNotificationRecipients(q) {
   return Array.isArray(response.data?.data) ? response.data.data : [];
 }
 
+export async function getAdminSettings() {
+  const response = await api.get('/admin/settings');
+  return response.data?.data || null;
+}
+
+export async function updateAdminSettings(data) {
+  const response = await api.put('/admin/settings', data);
+  return response.data?.data || null;
+}
+
+export async function getAdminAuditLogs(params = {}) {
+  const response = await api.get('/admin/audit-logs', { params });
+  return response.data || {};
+}
+
+export async function searchAdminActors(q) {
+  const response = await api.get('/admin/users', { params: { q, limit: 10 } });
+  return Array.isArray(response.data?.data) ? response.data.data : [];
+}
+
 export async function uploadAdminImage(file, folder = 'books') {
   const formData = new FormData();
   formData.append('file', file);
