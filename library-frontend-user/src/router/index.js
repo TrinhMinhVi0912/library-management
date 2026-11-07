@@ -20,6 +20,8 @@ import MyShelves from '@/views/reader/MyShelves.vue';
 import MyReviews from '@/views/reader/MyReviews.vue';
 import Notifications from '@/views/reader/Notifications.vue';
 import Profile from '@/views/reader/Profile.vue';
+import ForumHome from '@/views/forum/ForumHome.vue';
+import ForumCategory from '@/views/forum/ForumCategory.vue';
 
 const placeholderRoute = (path, name, title, meta = {}) => ({
   path,
@@ -43,8 +45,8 @@ const router = createRouter({
         { path: 'register', name: 'register', component: Register, meta: { title: 'Đăng ký', guestOnly: true } },
         { path: 'forgot-password', name: 'forgot-password', component: ForgotPassword, meta: { title: 'Quên mật khẩu', guestOnly: true } },
         { path: 'reset-password/:token', name: 'reset-password', component: ResetPassword, meta: { title: 'Đặt lại mật khẩu', guestOnly: true } },
-        placeholderRoute('forum', 'forum', 'Diễn đàn'),
-        placeholderRoute('forum/c/:slug', 'forum-category', 'Chuyên mục diễn đàn'),
+        { path: 'forum', name: 'forum', component: ForumHome, meta: { title: 'Diễn đàn thư viện' } },
+        { path: 'forum/c/:slug', name: 'forum-category', component: ForumCategory, meta: { title: 'Chuyên mục diễn đàn' } },
         placeholderRoute('forum/t/:slug', 'forum-thread', 'Chủ đề diễn đàn'),
         placeholderRoute('about', 'about', 'Giới thiệu'),
         { path: '404', name: 'not-found', component: NotFound, meta: { title: 'Không tìm thấy trang' } },

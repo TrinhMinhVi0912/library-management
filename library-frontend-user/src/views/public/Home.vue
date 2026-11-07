@@ -9,6 +9,8 @@ import EmptyState from '@/components/common/EmptyState.vue';
 import SkeletonCard from '@/components/common/SkeletonCard.vue';
 import bookService from '@/services/book.service';
 import catalogService from '@/services/catalog.service';
+import forumService from '@/services/forum.service';
+import ThreadItem from '@/components/forum/ThreadItem.vue';
 
 const router = useRouter();
 const toast = useToast();
@@ -16,6 +18,7 @@ const authStore = useAuthStore();
 const cartStore = useCartStore();
 const homeBooks = ref({ newest: [], popular: [], topRated: [] });
 const categories = ref([]);
+const featuredThreads = ref([]);
 const loading = ref(true);
 const error = ref('');
 const searchQuery = ref('');
@@ -37,9 +40,10 @@ async function loadHome() {
   loading.value = true;
   error.value = '';
   try {
-    const [booksResult, categoriesResult] = await Promise.all([
+    const [booksResult, categoriesResult, forumResult] = await Promise.all([
       bookService.getHomeBooks(),
       catalogService.getCategories({ all: true }),
+      forumService.getThreads({ sort: 'popular', limit: 3 }).catch(() => ({ threads: [] })),
     ]);
     homeBooks.value = {
       newest: booksResult.newest || [],
@@ -47,6 +51,7 @@ async function loadHome() {
       topRated: booksResult.topRated || [],
     };
     categories.value = categoriesResult.categories || [];
+    featuredThreads.value = forumResult?.threads || [];
   } catch (requestError) {
     error.value = requestError.response?.data?.message || 'Không tải được dữ liệu trang chủ. Vui lòng thử lại.';
   } finally {
@@ -416,17 +421,54 @@ onBeforeUnmount(() => clearTimeout(searchTimer));
         <div class="row g-3">
           <div class="col-md-6">
             <section
-              class="home-placeholder-section h-100"
+              class="home-forum-section h-100 p-3 rounded-3 border bg-white shadow-sm"
               aria-labelledby="home-forum-heading"
             >
-              <h2
-                id="home-forum-heading"
-                class="h5"
+              <div class="d-flex align-items-center justify-content-between mb-3">
+                <h2
+                  id="home-forum-heading"
+                  class="h5 fw-bold mb-0 text-dark d-flex align-items-center gap-2"
+                >
+                  <i
+                    class="bi bi-chat-quote-fill text-primary"
+                    aria-hidden="true"
+                  />
+                  <span>Chủ đề diễn đàn nổi bật</span>
+                </h2>
+                <RouterLink
+                  :to="{ name: 'forum' }"
+                  class="text-decoration-none fs-xs text-primary fw-medium d-inline-flex align-items-center gap-1"
+                >
+                  <span>Xem tất cả</span>
+                  <i
+                    class="bi bi-arrow-right"
+                    aria-hidden="true"
+                  />
+                </RouterLink>
+              </div>
+
+              <div
+                v-if="featuredThreads.length > 0"
+                class="featured-threads-list"
               >
-                Chủ đề diễn đàn nổi bật
-              </h2>
-              <p class="text-secondary mb-0">
-                Các chủ đề cộng đồng sẽ được hiển thị tại đây.
+                <ThreadItem
+                  v-for="thread in featuredThreads"
+                  :key="thread._id"
+                  :thread="thread"
+                  compact
+                  :show-category="true"
+                />
+              </div>
+
+              <p
+                v-else
+                class="text-secondary mb-0 fs-sm"
+              >
+                Chưa có chủ đề thảo luận nào. Hãy ghé thăm
+                <RouterLink :to="{ name: 'forum' }">
+                  Diễn đàn
+                </RouterLink>
+                để mở đầu chủ đề đầu tiên!
               </p>
             </section>
           </div>
