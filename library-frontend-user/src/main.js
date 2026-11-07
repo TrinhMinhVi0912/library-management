@@ -1,12 +1,15 @@
 import { createApp } from 'vue';
+import Toast from 'vue-toastification';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import 'vue-toastification/dist/index.css';
-import '@/styles/main.scss';
+import '@/assets/styles/main.scss';
 import App from '@/App.vue';
 import router from '@/router';
 import { pinia } from '@/stores/pinia';
 
-createApp(App)
-  .use(pinia)
-  .use(router)
-  .mount('#app');
+const app = createApp(App);
+
+app.use(pinia);
+app.use(router);
+app.use(Toast, { position: 'top-right', timeout: 4000 });
+app.mount('#app');
