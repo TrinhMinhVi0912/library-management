@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia';
 import api from '@/services/api.service';
+import authService from '@/services/auth.service';
 
 const getData = (response) => response.data?.data;
 let restorePromise = null;
@@ -26,11 +27,12 @@ export const useAuthStore = defineStore('auth', {
       this.initialized = true;
     },
     async login(credentials) {
-      const response = await api.post('/auth/login', credentials, {
-        skipAuthToken: true,
-        skipAuthRefresh: true,
-      });
-      const result = getData(response);
+      const result = await authService.login(credentials);
+      this.setSession(result?.user, result?.accessToken);
+      return result?.user || null;
+    },
+    async register(payload) {
+      const result = await authService.register(payload);
       this.setSession(result?.user, result?.accessToken);
       return result?.user || null;
     },

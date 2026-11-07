@@ -102,3 +102,45 @@ textarea {
   background: $danger;
   color: #ffffff;
 }
+
+.auth-page {
+  display: grid;
+  min-height: calc(100vh - 12rem);
+  place-items: center;
+  padding: 2.5rem 1rem;
+  background: #f8fafc;
+}
+
+.auth-card {
+  width: min(100%, 34rem);
+  border: 1px solid $border-color;
+  border-radius: 0.75rem;
+  background: #ffffff;
+  padding: clamp(1.5rem, 5vw, 2.5rem);
+  box-shadow: 0 0.5rem 1.5rem rgb(17 24 39 / 5%);
+}
+
+.auth-brand-mark {
+  display: grid;
+  width: 3.5rem;
+  height: 3.5rem;
+  place-items: center;
+  border-radius: 0.75rem;
+  background: #eff6ff;
+  color: $primary;
+  font-size: 1.5rem;
+}
+
+.auth-password-meter {
+  height: 0.35rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e5e7eb;
+}
+
+.auth-password-meter > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  transition: width 160ms ease;
+}

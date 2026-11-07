@@ -5,6 +5,10 @@ import PublicLayout from '@/layouts/PublicLayout.vue';
 import PlaceholderPage from '@/views/public/PlaceholderPage.vue';
 import Forbidden from '@/views/Forbidden.vue';
 import NotFound from '@/views/NotFound.vue';
+import Login from '@/views/public/Login.vue';
+import Register from '@/views/public/Register.vue';
+import ForgotPassword from '@/views/public/ForgotPassword.vue';
+import ResetPassword from '@/views/public/ResetPassword.vue';
 
 const placeholderRoute = (path, name, title, meta = {}) => ({
   path,
@@ -24,10 +28,10 @@ const router = createRouter({
         placeholderRoute('books', 'books', 'Danh mục sách'),
         placeholderRoute('books/:slug', 'book-detail', 'Chi tiết sách'),
         placeholderRoute('authors/:id', 'author-detail', 'Tác giả'),
-        placeholderRoute('login', 'login', 'Đăng nhập', { guestOnly: true }),
-        placeholderRoute('register', 'register', 'Đăng ký', { guestOnly: true }),
-        placeholderRoute('forgot-password', 'forgot-password', 'Quên mật khẩu', { guestOnly: true }),
-        placeholderRoute('reset-password/:token', 'reset-password', 'Đặt lại mật khẩu', { guestOnly: true }),
+        { path: 'login', name: 'login', component: Login, meta: { title: 'Đăng nhập', guestOnly: true } },
+        { path: 'register', name: 'register', component: Register, meta: { title: 'Đăng ký', guestOnly: true } },
+        { path: 'forgot-password', name: 'forgot-password', component: ForgotPassword, meta: { title: 'Quên mật khẩu', guestOnly: true } },
+        { path: 'reset-password/:token', name: 'reset-password', component: ResetPassword, meta: { title: 'Đặt lại mật khẩu', guestOnly: true } },
         placeholderRoute('forum', 'forum', 'Diễn đàn'),
         placeholderRoute('forum/c/:slug', 'forum-category', 'Chuyên mục diễn đàn'),
         placeholderRoute('forum/t/:slug', 'forum-thread', 'Chủ đề diễn đàn'),
