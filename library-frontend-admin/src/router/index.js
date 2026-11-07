@@ -14,6 +14,7 @@ import AdminFines from '@/views/admin/Fines.vue';
 import AdminBooks from '@/views/admin/Books.vue';
 import AdminCatalog from '@/views/admin/Catalog.vue';
 import AdminUsers from '@/views/admin/Users.vue';
+import AdminNotifications from '@/views/admin/Notifications.vue';
 import Forbidden from '@/views/Forbidden.vue';
 import NotFound from '@/views/NotFound.vue';
 
@@ -45,7 +46,7 @@ const router = createRouter({
         { path: 'books', name: 'admin-books', component: AdminBooks, meta: { title: 'Quản lý sách', roles: ['staff', 'admin'] } },
         { path: 'catalog', name: 'admin-catalog', component: AdminCatalog, meta: { title: 'Danh mục', roles: ['staff', 'admin'] } },
         { path: 'users', name: 'admin-users', component: AdminUsers, meta: { title: 'Người dùng', roles: ['staff', 'admin'] } },
-        section('notifications', 'admin-notifications', 'Thông báo'),
+        { path: 'notifications', name: 'admin-notifications', component: AdminNotifications, meta: { title: 'Thông báo', roles: ['staff', 'admin'] } },
         section('forum', 'admin-forum', 'Kiểm duyệt diễn đàn'),
         section('staff', 'admin-staff', 'Quản lý nhân viên', ['admin']),
         section('settings', 'admin-settings', 'Cài đặt', ['admin']),

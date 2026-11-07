@@ -217,6 +217,31 @@ export async function updateAdminUserRole(id, role) {
   return response.data?.data || null;
 }
 
+export async function getAdminNotifications(params = {}) {
+  const response = await api.get('/admin/notifications', { params });
+  return response.data || {};
+}
+
+export async function createAdminNotification(data) {
+  const response = await api.post('/admin/notifications', data);
+  return response.data?.data || null;
+}
+
+export async function updateAdminNotification(id, data) {
+  const response = await api.patch(`/admin/notifications/${id}`, data);
+  return response.data?.data || null;
+}
+
+export async function deleteAdminNotification(id) {
+  const response = await api.delete(`/admin/notifications/${id}`);
+  return response.data?.data || null;
+}
+
+export async function findAdminNotificationRecipients(q) {
+  const response = await api.get('/admin/users', { params: { q, limit: 10 } });
+  return Array.isArray(response.data?.data) ? response.data.data : [];
+}
+
 export async function uploadAdminImage(file, folder = 'books') {
   const formData = new FormData();
   formData.append('file', file);
