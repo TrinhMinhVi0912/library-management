@@ -231,11 +231,11 @@ async function handleToggleLike() {
 
         <!-- Author Name, Role & Relative Time -->
         <div class="d-flex flex-wrap align-items-center gap-2 fs-xs thread-meta mt-1">
-          <span class="fw-medium d-inline-flex align-items-center gap-1.5 thread-author-name">
+          <span class="fw-medium d-inline-flex align-items-center thread-author-name">
             <span>{{ authorName }}</span>
             <span
               v-if="isStaffOrAdmin"
-              class="badge bg-primary-subtle text-primary border border-primary-subtle fs-2xs"
+              class="thread-role-badge badge bg-primary-subtle text-primary border border-primary-subtle fs-2xs"
             >
               {{ roleLabel }}
             </span>
@@ -408,7 +408,15 @@ async function handleToggleLike() {
 }
 
 .thread-author-name {
+  flex-wrap: wrap;
+  gap: 0.375rem;
+  min-width: 0;
   color: #111827;
+}
+
+.thread-role-badge {
+  flex: 0 0 auto;
+  white-space: nowrap;
 }
 
 /* Các nút và badge tương tác to rõ, bắt mắt */

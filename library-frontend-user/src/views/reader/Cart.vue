@@ -316,7 +316,7 @@ onMounted(() => {
         v-else-if="cartStore.count > 0"
         class="cart-content-layout"
       >
-        <div class="row g-4">
+        <div class="row g-4 align-items-start">
           <!-- Cột trái: Danh sách các sách trong giỏ mượn -->
           <div class="col-12 col-lg-8">
             <section
@@ -347,7 +347,7 @@ onMounted(() => {
 
             <!-- Phần cấu hình ngày nhận & ghi chú -->
             <section
-              class="cart-pickup-form card border rounded-3 p-3.5 mt-4 shadow-xs"
+              class="cart-pickup-form card border rounded-3 mt-4 shadow-xs"
               aria-labelledby="pickup-settings-heading"
             >
               <h2
@@ -429,7 +429,7 @@ onMounted(() => {
 
           <!-- Cột phải: Bảng tóm tắt & Nút gửi yêu cầu -->
           <div class="col-12 col-lg-4">
-            <aside class="cart-summary-card card border rounded-3 p-3.5 shadow-sm sticky-top-summary">
+            <aside class="cart-summary-card card border rounded-3 shadow-sm sticky-top-summary">
               <h2 class="h5 fw-bold text-dark mb-3 border-bottom pb-2">
                 Tóm tắt yêu cầu mượn
               </h2>
@@ -569,8 +569,24 @@ onMounted(() => {
   min-height: 80vh;
 }
 
+.cart-summary-card {
+  border-color: #e5e7eb;
+  border-radius: 0.75rem;
+  padding: 1rem;
+}
+
+.cart-pickup-form {
+  padding: 1rem;
+}
+
+.cart-pickup-form > .row {
+  --bs-gutter-x: 1rem;
+  margin-right: 0;
+  margin-left: 0;
+}
+
 .sticky-top-summary {
-  top: 90px;
+  align-self: flex-start;
 }
 
 .extra-small {
@@ -579,6 +595,13 @@ onMounted(() => {
 
 .shadow-xs {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+@media (min-width: 992px) {
+  .sticky-top-summary {
+    position: sticky;
+    top: 1.5rem;
+  }
 }
 </style>
 

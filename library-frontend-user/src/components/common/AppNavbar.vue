@@ -97,23 +97,6 @@ async function logout() {
           class="collapse navbar-collapse"
           :class="{ show: navOpen }"
         >
-          <div class="primary-links">
-            <RouterLink
-              class="nav-link"
-              :to="{ name: 'books' }"
-              @click="closeNavigation"
-            >
-              Danh mục
-            </RouterLink>
-            <RouterLink
-              class="nav-link"
-              :to="{ name: 'forum' }"
-              @click="closeNavigation"
-            >
-              Diễn đàn
-            </RouterLink>
-          </div>
-
           <form
             class="navbar-search-form"
             role="search"
@@ -146,6 +129,23 @@ async function logout() {
               @search="runSearch"
             />
           </form>
+
+          <div class="primary-links">
+            <RouterLink
+              class="nav-link"
+              :to="{ name: 'books' }"
+              @click="closeNavigation"
+            >
+              Danh mục
+            </RouterLink>
+            <RouterLink
+              class="nav-link"
+              :to="{ name: 'forum' }"
+              @click="closeNavigation"
+            >
+              Diễn đàn
+            </RouterLink>
+          </div>
 
           <div class="account-actions">
             <RouterLink
@@ -373,12 +373,17 @@ async function logout() {
   color: #1d4ed8;
 }
 
+.nav-link.router-link-active {
+  color: #1d4ed8;
+  font-weight: 600;
+}
+
 .navbar-search-form {
   display: flex;
-  flex: 1 1 22rem;
+  flex: 1 1 26rem;
   align-items: center;
   gap: 0.5rem;
-  max-width: 34rem;
+  max-width: 40rem;
   margin: 0 auto;
 }
 
