@@ -66,10 +66,10 @@ Thứ tự triển khai: hoàn thành app admin (`library-frontend-admin/`, FE-1
 | [FE-29](frontend/FE-29.md) | Quản lý người dùng | F3 Quản trị | FE-19 | ✅ | Code/lint/build xong; browser QA còn trong `frontend/qa/FE-29.md`; email reset cần SMTP hoạt động |
 | [FE-30](frontend/FE-30.md) | Quản lý thông báo | F3 Quản trị | FE-19 | ✅ | Code/lint/build xong; browser QA còn trong `frontend/qa/FE-30.md`; toast phía độc giả chờ FE-16 |
 | [FE-31](frontend/FE-31.md) | Cài đặt & nhật ký hệ thống | F3 Quản trị | FE-19 | ✅ | Code/lint/build xong; browser QA còn trong `frontend/qa/FE-31.md`; hai route admin-only |
-| [FE-34](frontend/FE-34.md) | Kiểm duyệt diễn đàn (admin) | F4 Diễn đàn & đặt trước | FE-19 | ⬜ | |
-| [FE-01](frontend/FE-01.md) | Khởi tạo project frontend | F0 Khởi tạo | – | ⬜ | |
-| [FE-02](frontend/FE-02.md) | Styles, design tokens, App shell | F0 Khởi tạo | FE-01 | ⬜ | |
-| [FE-03](frontend/FE-03.md) | api.service (axios), auth store khung, ui store | F0 Khởi tạo | FE-02 | ⬜ | |
+| [FE-34](frontend/FE-34.md) | Kiểm duyệt diễn đàn (admin) | F4 Diễn đàn & đặt trước | FE-19 | ✅ | Code/lint/build xong; browser QA còn trong `frontend/qa/FE-34.md` |
+| [FE-01](frontend/FE-01.md) | Khởi tạo project frontend | F0 Khởi tạo | – | ✅ | Skeleton, lint/build xong; browser QA còn trong `frontend/qa/FE-01.md` |
+| [FE-02](frontend/FE-02.md) | Styles, design tokens, App shell | F0 Khởi tạo | FE-01 | ✅ | Tokens, toast wiring, formatter; lint/build xong; browser QA còn trong `frontend/qa/FE-02.md` |
+| [FE-03](frontend/FE-03.md) | api.service (axios), auth store khung, ui store | F0 Khởi tạo | FE-02 | ✅ | Code/lint/build xong; kiểm tra endpoint/CORS còn chờ tại `frontend/qa/FE-03.md` |
 | [FE-04](frontend/FE-04.md) | Component chung (1/2) | F0 Khởi tạo | FE-02 | ⬜ | |
 | [FE-05](frontend/FE-05.md) | Layout công khai, navbar, footer, router khung | F1 Khách & Auth | FE-03, FE-04 | ⬜ | |
 | [FE-06](frontend/FE-06.md) | Trang đăng nhập, đăng ký, quên/đặt lại mật khẩu | F1 Khách & Auth | FE-05 | ⬜ | |

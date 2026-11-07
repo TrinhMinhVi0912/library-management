@@ -17,6 +17,7 @@ import AdminUsers from '@/views/admin/Users.vue';
 import AdminNotifications from '@/views/admin/Notifications.vue';
 import AdminSettings from '@/views/admin/Settings.vue';
 import AdminAuditLogs from '@/views/admin/AuditLogs.vue';
+import AdminForum from '@/views/admin/Forum.vue';
 import Forbidden from '@/views/Forbidden.vue';
 import NotFound from '@/views/NotFound.vue';
 
@@ -49,7 +50,7 @@ const router = createRouter({
         { path: 'catalog', name: 'admin-catalog', component: AdminCatalog, meta: { title: 'Danh mục', roles: ['staff', 'admin'] } },
         { path: 'users', name: 'admin-users', component: AdminUsers, meta: { title: 'Người dùng', roles: ['staff', 'admin'] } },
         { path: 'notifications', name: 'admin-notifications', component: AdminNotifications, meta: { title: 'Thông báo', roles: ['staff', 'admin'] } },
-        section('forum', 'admin-forum', 'Kiểm duyệt diễn đàn'),
+        { path: 'forum', name: 'admin-forum', component: AdminForum, meta: { title: 'Kiểm duyệt diễn đàn', roles: ['staff', 'admin'] } },
         section('staff', 'admin-staff', 'Quản lý nhân viên', ['admin']),
         { path: 'settings', name: 'admin-settings', component: AdminSettings, meta: { title: 'Cài đặt', roles: ['admin'] } },
         { path: 'audit-logs', name: 'admin-audit-logs', component: AdminAuditLogs, meta: { title: 'Nhật ký hệ thống', roles: ['admin'] } },

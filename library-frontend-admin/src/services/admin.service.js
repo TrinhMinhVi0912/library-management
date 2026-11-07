@@ -262,6 +262,66 @@ export async function searchAdminActors(q) {
   return Array.isArray(response.data?.data) ? response.data.data : [];
 }
 
+export async function getAdminForumReports(params = {}) {
+  const response = await api.get('/admin/forum/reports', { params });
+  return response.data || {};
+}
+
+export async function updateAdminForumReportStatus(id, status) {
+  const response = await api.patch(`/admin/forum/reports/${id}`, { status });
+  return response.data?.data || null;
+}
+
+export async function getAdminForumThreads(params = {}) {
+  const response = await api.get('/forum/threads', { params: { sort: 'latest', limit: 10, ...params } });
+  return response.data || {};
+}
+
+export async function setAdminForumThreadPinned(id, pinned) {
+  const response = await api.patch(`/admin/forum/threads/${id}/pin`, { pinned });
+  return response.data?.data || null;
+}
+
+export async function setAdminForumThreadLocked(id, locked) {
+  const response = await api.patch(`/admin/forum/threads/${id}/lock`, { locked });
+  return response.data?.data || null;
+}
+
+export async function hideAdminForumThread(id) {
+  const response = await api.patch(`/admin/forum/threads/${id}/hide`, { hidden: true });
+  return response.data?.data || null;
+}
+
+export async function hideAdminForumPost(id) {
+  const response = await api.patch(`/admin/forum/posts/${id}/hide`, { hidden: true });
+  return response.data?.data || null;
+}
+
+export async function deleteAdminForumPost(id) {
+  const response = await api.delete(`/admin/forum/posts/${id}`);
+  return response.data?.data || null;
+}
+
+export async function getAdminForumCategories() {
+  const response = await api.get('/admin/forum/categories');
+  return Array.isArray(response.data?.data) ? response.data.data : [];
+}
+
+export async function createAdminForumCategory(data) {
+  const response = await api.post('/admin/forum/categories', data);
+  return response.data?.data || null;
+}
+
+export async function updateAdminForumCategory(id, data) {
+  const response = await api.patch(`/admin/forum/categories/${id}`, data);
+  return response.data?.data || null;
+}
+
+export async function deleteAdminForumCategory(id) {
+  const response = await api.delete(`/admin/forum/categories/${id}`);
+  return response.data?.data || null;
+}
+
 export async function uploadAdminImage(file, folder = 'books') {
   const formData = new FormData();
   formData.append('file', file);

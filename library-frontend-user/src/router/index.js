@@ -6,6 +6,7 @@ const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     { path: '/', name: 'home', component: EmptyPage },
+    { path: '/login', name: 'login', component: EmptyPage },
     { path: '/:pathMatch(.*)*', redirect: { name: 'home' } },
   ],
   scrollBehavior: () => ({ top: 0 }),
