@@ -11,6 +11,9 @@ import StatusBadge from '@/components/common/StatusBadge.vue';
 import ImageUploader from '@/components/common/ImageUploader.vue';
 import NotificationItem from '@/components/common/NotificationItem.vue';
 import NotificationBell from '@/components/common/NotificationBell.vue';
+import RatingSummary from '@/components/book/RatingSummary.vue';
+import ReviewItem from '@/components/book/ReviewItem.vue';
+import ReviewForm from '@/components/book/ReviewForm.vue';
 
 const toast = useToast();
 const search = ref('');
@@ -29,6 +32,24 @@ const demoNotification = ref({
   isRead: false,
   createdAt: new Date(Date.now() - 1000 * 60 * 15).toISOString(),
 });
+const demoReviews = ref([
+  {
+    _id: 'rev-1',
+    rating: 5,
+    comment: 'Tác phẩm xuất sắc, giải thích rất dễ hiểu các khái niệm phức tạp!',
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
+    reader: { firstName: 'Minh', lastName: 'Nguyễn' },
+    book: { title: 'Lập trình JavaScript nâng cao', code: 'BOOK001', slug: 'lap-trinh-javascript-nang-cao' },
+  },
+  {
+    _id: 'rev-2',
+    rating: 4,
+    comment: 'Sách hay và bổ ích, tuy nhiên giấy in hơi mỏng một chút.',
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString(),
+    reader: { firstName: 'Hương', lastName: 'Trần' },
+    book: { title: 'Cấu trúc dữ liệu và giải thuật', code: 'BOOK002', slug: 'cau-truc-du-lieu-va-giai-thuat' },
+  },
+]);
 
 const statusGroups = [
   { type: 'loan', label: 'Phiếu mượn', statuses: ['pending', 'approved', 'borrowing', 'overdue', 'returned', 'rejected', 'cancelled', 'expired'] },
@@ -264,6 +285,40 @@ function submitForm() {
             isRead: true,
             createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
           }"
+        />
+      </div>
+    </section>
+
+    <section class="surface-card p-4 mb-4">
+      <h2 class="h5 mb-3">
+        RatingSummary, ReviewForm & ReviewItem
+      </h2>
+      <RatingSummary
+        :rating-avg="4.5"
+        :rating-count="12"
+        :reviews="demoReviews"
+      />
+      <div class="mb-4">
+        <h3 class="h6 fw-bold mb-2">
+          ReviewForm (mô phỏng được phép đánh giá):
+        </h3>
+        <ReviewForm
+          book-id="demo-book-1"
+          book-title="Lập trình JavaScript nâng cao"
+          :can-review-prop="true"
+          @submitted="toast.success('Đã nhận sự kiện submitted từ ReviewForm!')"
+        />
+      </div>
+      <div>
+        <h3 class="h6 fw-bold mb-2">
+          ReviewItem (chế độ /my/reviews):
+        </h3>
+        <ReviewItem
+          :review="demoReviews[0]"
+          :show-book="true"
+          :allow-actions="true"
+          @edit="toast.info('Bấm sửa đánh giá: ' + $event._id)"
+          @delete="toast.warning('Bấm xóa đánh giá: ' + $event._id)"
         />
       </div>
     </section>

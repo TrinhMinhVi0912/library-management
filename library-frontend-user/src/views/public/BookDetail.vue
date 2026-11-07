@@ -7,9 +7,12 @@ import { useCartStore } from '@/stores/cart.store';
 import bookService from '@/services/book.service';
 import BookAvailability from '@/components/book/BookAvailability.vue';
 import RatingStars from '@/components/book/RatingStars.vue';
+import RatingSummary from '@/components/book/RatingSummary.vue';
+import ReviewItem from '@/components/book/ReviewItem.vue';
+import ReviewForm from '@/components/book/ReviewForm.vue';
 import BookCarousel from '@/components/book/BookCarousel.vue';
 import EmptyState from '@/components/common/EmptyState.vue';
-import { formatDate, formatMoney } from '@/utils/format';
+import { formatMoney } from '@/utils/format';
 import { cloudinaryThumb } from '@/utils/image';
 
 const route = useRoute();
@@ -51,25 +54,6 @@ const displayDescription = computed(() => {
   }
   return desc.slice(0, 320) + '...';
 });
-
-// Tính phân bố điểm đánh giá
-const ratingBreakdown = computed(() => {
-  const distribution = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
-  if (!reviews.value || reviews.value.length === 0) return distribution;
-  reviews.value.forEach((r) => {
-    const star = Math.min(5, Math.max(1, Math.round(Number(r.rating) || 0)));
-    if (distribution[star] !== undefined) {
-      distribution[star]++;
-    }
-  });
-  return distribution;
-});
-
-function getStarPercent(star) {
-  const total = reviews.value?.length || 0;
-  if (total === 0) return 0;
-  return Math.round(((ratingBreakdown.value[star] || 0) / total) * 100);
-}
 
 // Lấy thông tin sách theo slug hoặc id
 async function loadBookData(slugOrId) {
@@ -132,6 +116,26 @@ async function fetchReviews(bookId) {
     reviews.value = [];
     reviewMeta.value = null;
   }
+}
+
+const myReview = computed(() => {
+  if (!authStore.user?._id || !reviews.value.length) return null;
+  const userId = String(authStore.user._id);
+  return reviews.value.find((r) => {
+    const readerId = typeof r.reader === 'object' ? String(r.reader?._id) : String(r.reader);
+    return readerId === userId;
+  }) || null;
+});
+
+async function handleReviewSubmitted() {
+  if (!book.value?._id) return;
+  await Promise.allSettled([
+    fetchReviews(book.value._id),
+    (async () => {
+      const updated = await bookService.getBookByIdOrSlug(book.value.slug || book.value._id);
+      if (updated) book.value = updated;
+    })(),
+  ]);
 }
 
 // Xử lý hành động thêm sách vào giỏ mượn
@@ -677,109 +681,30 @@ onMounted(() => {
                 class="tab-pane-reviews"
               >
                 <!-- Tóm tắt đánh giá & phân bố sao -->
-                <div class="card border-0 bg-light p-3 rounded-3 mb-4">
-                  <div class="row align-items-center g-3">
-                    <div class="col-12 col-sm-4 text-center border-end-sm">
-                      <div class="display-4 fw-bold text-dark">
-                        {{ (book.ratingAvg || 0).toFixed(1) }}
-                      </div>
-                      <div class="my-1">
-                        <RatingStars
-                          :rating="book.ratingAvg || 0"
-                          :show-value="false"
-                        />
-                      </div>
-                      <div class="text-muted small">
-                        Dựa trên {{ book.ratingCount || 0 }} đánh giá
-                      </div>
-                    </div>
+                <RatingSummary
+                  :rating-avg="book.ratingAvg || 0"
+                  :rating-count="book.ratingCount || 0"
+                  :reviews="reviews"
+                />
 
-                    <div class="col-12 col-sm-8">
-                      <div class="rating-bars d-flex flex-column gap-1">
-                        <div
-                          v-for="star in [5, 4, 3, 2, 1]"
-                          :key="star"
-                          class="d-flex align-items-center small gap-2"
-                        >
-                          <span
-                            class="text-muted"
-                            style="width: 45px;"
-                          >{{ star }} sao</span>
-                          <div
-                            class="progress flex-grow-1"
-                            style="height: 8px;"
-                          >
-                            <div
-                              class="progress-bar bg-warning"
-                              role="progressbar"
-                              :style="{ width: `${getStarPercent(star)}%` }"
-                              :aria-valuenow="getStarPercent(star)"
-                              aria-valuemin="0"
-                              aria-valuemax="100"
-                            />
-                          </div>
-                          <span
-                            class="text-muted text-end"
-                            style="width: 35px;"
-                          >{{ ratingBreakdown[star] || 0 }}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Khung gợi ý gửi đánh giá -->
-                <div class="alert alert-info d-flex align-items-center justify-content-between p-3 mb-4 rounded-3">
-                  <div class="d-flex align-items-center gap-2">
-                    <i
-                      class="bi bi-pencil-square fs-5"
-                      aria-hidden="true"
-                    />
-                    <span class="small">
-                      <template v-if="authStore.isAuthenticated">
-                        Chỉ những bạn đọc đã mượn tác phẩm này mới có thể gửi đánh giá và nhận xét.
-                      </template>
-                      <template v-else>
-                        Đăng nhập và mượn sách này để chia sẻ cảm nhận của bạn cùng mọi người.
-                      </template>
-                    </span>
-                  </div>
-                  <span class="badge bg-primary text-white py-1.5 px-2 small">FE-17</span>
-                </div>
+                <!-- Biểu mẫu đánh giá hoặc gợi ý mượn sách -->
+                <ReviewForm
+                  :book-id="book._id"
+                  :book-title="book.title"
+                  :existing-review="myReview"
+                  @submitted="handleReviewSubmitted"
+                />
 
                 <!-- Danh sách nhận xét -->
                 <div
                   v-if="reviews.length > 0"
-                  class="reviews-list d-flex flex-column gap-3"
+                  class="reviews-list d-flex flex-column"
                 >
-                  <div
+                  <ReviewItem
                     v-for="rev in reviews"
                     :key="rev._id"
-                    class="card border p-3 rounded-3"
-                  >
-                    <div class="d-flex align-items-center justify-content-between mb-2">
-                      <div class="d-flex align-items-center gap-2">
-                        <div class="user-avatar rounded-circle bg-primary text-white d-flex align-items-center justify-content-center fw-bold">
-                          {{ (rev.reader?.lastName || rev.reader?.firstName || 'U').charAt(0).toUpperCase() }}
-                        </div>
-                        <div>
-                          <div class="fw-semibold text-dark small">
-                            {{ rev.reader ? `${rev.reader.lastName || ''} ${rev.reader.firstName || ''}`.trim() : 'Độc giả thư viện' }}
-                          </div>
-                          <div class="text-muted extra-small">
-                            {{ formatDate(rev.createdAt, 'DD/MM/YYYY') }}
-                          </div>
-                        </div>
-                      </div>
-                      <RatingStars
-                        :rating="rev.rating"
-                        :show-value="false"
-                      />
-                    </div>
-                    <p class="text-secondary small mb-0 lh-base">
-                      {{ rev.comment || 'Không có bình luận chữ.' }}
-                    </p>
-                  </div>
+                    :review="rev"
+                  />
                 </div>
 
                 <EmptyState

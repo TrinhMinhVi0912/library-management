@@ -16,6 +16,7 @@ import Author from '@/views/public/Author.vue';
 import Cart from '@/views/reader/Cart.vue';
 import MyLoans from '@/views/reader/MyLoans.vue';
 import MyFines from '@/views/reader/MyFines.vue';
+import MyReviews from '@/views/reader/MyReviews.vue';
 import Notifications from '@/views/reader/Notifications.vue';
 import Profile from '@/views/reader/Profile.vue';
 
@@ -51,7 +52,7 @@ const router = createRouter({
         { path: 'my/loans', name: 'my-loans', component: MyLoans, meta: { title: 'Lịch sử mượn', requiresAuth: true, roles: ['reader'] } },
         { path: 'my/fines', name: 'my-fines', component: MyFines, meta: { title: 'Phạt của tôi', requiresAuth: true, roles: ['reader'] } },
         placeholderRoute('my/shelves', 'my-shelves', 'Kệ sách của tôi', { requiresAuth: true, roles: ['reader'] }),
-        placeholderRoute('my/reviews', 'my-reviews', 'Đánh giá của tôi', { requiresAuth: true, roles: ['reader'] }),
+        { path: 'my/reviews', name: 'my-reviews', component: MyReviews, meta: { title: 'Đánh giá của tôi', requiresAuth: true, roles: ['reader'] } },
         placeholderRoute('my/reservations', 'my-reservations', 'Sách đặt trước', { requiresAuth: true, roles: ['reader'] }),
         { path: 'notifications', name: 'notifications', component: Notifications, meta: { title: 'Thông báo', requiresAuth: true, roles: ['reader'] } },
         { path: 'profile', name: 'profile', component: Profile, meta: { title: 'Hồ sơ', requiresAuth: true, roles: ['reader'] } },
