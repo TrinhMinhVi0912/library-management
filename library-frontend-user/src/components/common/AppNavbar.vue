@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { useToast } from 'vue-toastification';
 import SearchBar from '@/components/common/SearchBar.vue';
 import { useAuthStore } from '@/stores/auth.store';
+import { formatMoney } from '@/utils/format';
 
 const props = defineProps({
   cartCount: { type: Number, default: 0 },
@@ -22,6 +23,8 @@ const accountMenu = ref(null);
 const fullName = computed(() => [auth.user?.firstName, auth.user?.lastName].filter(Boolean).join(' ') || auth.user?.email || 'Tài khoản');
 const initials = computed(() => fullName.value.split(/\s+/).filter(Boolean).slice(-2).map((part) => part[0]).join('').toLocaleUpperCase('vi-VN') || 'TV');
 const roleLabel = computed(() => ({ reader: 'Độc giả', staff: 'Nhân viên', admin: 'Quản trị viên' })[auth.role] || 'Khách');
+const unpaidFineTotal = computed(() => Number(auth.user?.unpaidFineTotal || 0));
+const hasFineDebt = computed(() => auth.isAuthenticated && auth.role === 'reader' && unpaidFineTotal.value > 0);
 
 watch(() => [route.query.q, route.query.scope], ([query, scope]) => {
   searchText.value = String(query || '');
@@ -145,9 +148,11 @@ async function logout() {
 
           <div class="account-actions">
             <RouterLink
-              class="nav-action"
+              class="nav-action cart-action position-relative"
+              :class="{ 'has-fine-debt': hasFineDebt }"
               :to="{ name: 'cart' }"
-              :aria-label="`Giỏ mượn, ${Math.max(0, props.cartCount)} sách`"
+              :aria-label="`Giỏ mượn, ${Math.max(0, props.cartCount)} sách${hasFineDebt ? ', tài khoản bị khóa mượn do nợ phạt' : ''}`"
+              :title="hasFineDebt ? 'Tài khoản đang bị tạm khóa mượn do nợ tiền phạt' : undefined"
               @click="closeNavigation"
             >
               <i
@@ -156,6 +161,13 @@ async function logout() {
               />
               <span class="action-label">Giỏ mượn</span>
               <span class="count-badge">{{ Math.max(0, props.cartCount) }}</span>
+              <span
+                v-if="hasFineDebt"
+                class="fine-debt-indicator"
+                aria-hidden="true"
+              >
+                <i class="bi bi-lock-fill" />
+              </span>
             </RouterLink>
             <RouterLink
               class="nav-action notification-action"
@@ -209,6 +221,20 @@ async function logout() {
                       Lịch sử mượn
                     </RouterLink>
                     <RouterLink
+                      :to="{ name: 'my-fines' }"
+                      class="fine-menu-link d-flex align-items-center justify-content-between"
+                      @click="closeAccountMenu"
+                    >
+                      <span>Phạt của tôi</span>
+                      <span
+                        v-if="hasFineDebt"
+                        class="badge bg-danger rounded-pill ms-1"
+                        title="Tiền phạt chưa thanh toán"
+                      >
+                        {{ formatMoney(unpaidFineTotal) }}
+                      </span>
+                    </RouterLink>
+                    <RouterLink
                       :to="{ name: 'my-shelves' }"
                       @click="closeAccountMenu"
                     >
@@ -255,6 +281,37 @@ async function logout() {
         </div>
       </div>
     </nav>
+
+    <!-- Banner cảnh báo khóa mượn khi còn nợ phạt -->
+    <div
+      v-if="hasFineDebt"
+      class="fine-warning-banner"
+      role="alert"
+    >
+      <div class="container-xl d-flex align-items-center justify-content-between flex-wrap gap-2 py-1 px-3">
+        <div class="banner-content d-flex align-items-center gap-2">
+          <i
+            class="bi bi-exclamation-triangle-fill text-danger flex-shrink-0"
+            aria-hidden="true"
+          />
+          <span class="banner-text">
+            Tài khoản đang bị <strong>tạm khóa mượn</strong> do còn nợ tiền phạt
+            <strong class="text-danger">{{ formatMoney(unpaidFineTotal) }}</strong>.
+            Vui lòng nộp phạt tại quầy thư viện để tiếp tục mượn sách.
+          </span>
+        </div>
+        <RouterLink
+          :to="{ name: 'my-fines' }"
+          class="btn btn-sm btn-outline-danger banner-link"
+        >
+          <i
+            class="bi bi-receipt me-1"
+            aria-hidden="true"
+          />
+          Xem khoản phạt
+        </RouterLink>
+      </div>
+    </div>
   </header>
 </template>
 
@@ -451,6 +508,45 @@ async function logout() {
 .account-logout {
   border-top: 1px solid #e5e7eb;
   color: #dc2626;
+}
+
+.fine-debt-indicator {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  background-color: #ef4444;
+  color: #ffffff;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.65rem;
+  box-shadow: 0 0 0 2px #ffffff;
+}
+
+.fine-warning-banner {
+  background-color: #fef2f2;
+  border-bottom: 1px solid #fee2e2;
+  font-size: 0.85rem;
+  color: #991b1b;
+
+  .banner-text {
+    line-height: 1.4;
+  }
+
+  .banner-link {
+    font-size: 0.75rem;
+    padding: 0.2rem 0.55rem;
+  }
+}
+
+.fine-menu-link {
+  .badge {
+    font-size: 0.7rem;
+    font-weight: 600;
+  }
 }
 
 @media (max-width: 991.98px) {
