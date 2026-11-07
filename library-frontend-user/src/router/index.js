@@ -10,6 +10,7 @@ import Register from '@/views/public/Register.vue';
 import ForgotPassword from '@/views/public/ForgotPassword.vue';
 import ResetPassword from '@/views/public/ResetPassword.vue';
 import Home from '@/views/public/Home.vue';
+import BookList from '@/views/public/BookList.vue';
 
 const placeholderRoute = (path, name, title, meta = {}) => ({
   path,
@@ -26,7 +27,7 @@ const router = createRouter({
       component: PublicLayout,
       children: [
         { path: '', name: 'home', component: Home, meta: { title: 'Trang chủ' } },
-        placeholderRoute('books', 'books', 'Danh mục sách'),
+        { path: 'books', name: 'books', component: BookList, meta: { title: 'Danh mục sách' } },
         placeholderRoute('books/:slug', 'book-detail', 'Chi tiết sách'),
         placeholderRoute('authors/:id', 'author-detail', 'Tác giả'),
         { path: 'login', name: 'login', component: Login, meta: { title: 'Đăng nhập', guestOnly: true } },
