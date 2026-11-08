@@ -350,7 +350,7 @@ onMounted(() => {
                 v-for="shelf in shelves"
                 :key="shelf._id"
                 type="button"
-                class="list-group-item list-group-item-action d-flex align-items-center justify-content-between py-3 px-3 border-start-4 transition"
+                class="list-group-item list-group-item-action shelf-nav-item py-3 px-3 border-start-4 transition"
                 :class="{
                   'active-shelf': shelf._id === activeShelfId,
                   'border-start-primary': shelf._id === activeShelfId,
@@ -358,12 +358,14 @@ onMounted(() => {
                 }"
                 @click="activeShelfId = shelf._id"
               >
-                <div class="d-flex align-items-center gap-2.5 overflow-hidden me-2">
-                  <i
-                    :class="[getShelfIcon(shelf), 'fs-5 flex-shrink-0']"
+                <div class="shelf-nav-main">
+                  <span
+                    class="shelf-nav-icon"
                     aria-hidden="true"
-                  />
-                  <div class="text-truncate">
+                  >
+                    <i :class="[getShelfIcon(shelf), 'fs-5']" />
+                  </span>
+                  <div class="shelf-nav-copy">
                     <span class="d-block text-truncate fw-medium fs-sm shelf-title">
                       {{ shelf.name }}
                     </span>
@@ -379,7 +381,7 @@ onMounted(() => {
                 </div>
 
                 <span
-                  class="badge rounded-pill flex-shrink-0"
+                  class="badge rounded-pill shelf-nav-count"
                   :class="shelf._id === activeShelfId ? 'bg-primary text-white' : 'bg-light text-secondary border'"
                 >
                   {{ shelf.items?.length || 0 }}
@@ -427,13 +429,15 @@ onMounted(() => {
             <!-- Shelf Information & Action Bar -->
             <div class="card border-0 shadow-sm rounded-3 p-3 bg-white">
               <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
-                <div class="d-flex align-items-center gap-2.5">
-                  <i
-                    :class="[getShelfIcon(activeShelf), 'fs-3']"
+                <div class="active-shelf-summary">
+                  <span
+                    class="active-shelf-icon"
                     aria-hidden="true"
-                  />
-                  <div>
-                    <div class="d-flex align-items-center gap-2">
+                  >
+                    <i :class="[getShelfIcon(activeShelf), 'fs-3']" />
+                  </span>
+                  <div class="active-shelf-copy">
+                    <div class="active-shelf-title">
                       <h2 class="h5 fw-bold mb-0 text-dark">
                         {{ activeShelf.name }}
                       </h2>
@@ -840,6 +844,76 @@ onMounted(() => {
 
 .shelf-sidebar {
   top: 5rem;
+}
+
+.shelf-nav-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.shelf-nav-main {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 auto;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.shelf-nav-icon,
+.active-shelf-icon {
+  display: inline-flex;
+  flex: 0 0 2.5rem;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  background: #f8fafc;
+}
+
+.shelf-nav-copy,
+.active-shelf-copy {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.shelf-nav-copy {
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.shelf-nav-count {
+  flex: 0 0 auto;
+}
+
+.active-shelf-summary {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 16rem;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.active-shelf-icon {
+  flex-basis: 3rem;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 0.75rem;
+  background: #f1f5f9;
+}
+
+.active-shelf-title {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.active-shelf-title h2 {
+  max-width: 100%;
+  overflow-wrap: anywhere;
 }
 
 .shelf-nav-list .list-group-item {
