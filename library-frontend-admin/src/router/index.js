@@ -3,7 +3,6 @@ import { useAuthStore } from '@/stores/auth.store';
 import { pinia } from '@/stores/pinia';
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import AdminLogin from '@/views/auth/AdminLogin.vue';
-import AdminPlaceholder from '@/views/admin/AdminPlaceholder.vue';
 import AdminDashboard from '@/views/admin/Dashboard.vue';
 import AdminRequests from '@/views/admin/Requests.vue';
 import AdminHandover from '@/views/admin/Handover.vue';
@@ -14,19 +13,13 @@ import AdminFines from '@/views/admin/Fines.vue';
 import AdminBooks from '@/views/admin/Books.vue';
 import AdminCatalog from '@/views/admin/Catalog.vue';
 import AdminUsers from '@/views/admin/Users.vue';
+import AdminStaff from '@/views/admin/Staff.vue';
 import AdminNotifications from '@/views/admin/Notifications.vue';
 import AdminSettings from '@/views/admin/Settings.vue';
 import AdminAuditLogs from '@/views/admin/AuditLogs.vue';
 import AdminForum from '@/views/admin/Forum.vue';
 import Forbidden from '@/views/Forbidden.vue';
 import NotFound from '@/views/NotFound.vue';
-
-const section = (path, name, title, roles = ['staff', 'admin']) => ({
-  path,
-  name,
-  component: AdminPlaceholder,
-  meta: { title, roles },
-});
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -51,7 +44,7 @@ const router = createRouter({
         { path: 'users', name: 'admin-users', component: AdminUsers, meta: { title: 'Người dùng', roles: ['staff', 'admin'] } },
         { path: 'notifications', name: 'admin-notifications', component: AdminNotifications, meta: { title: 'Thông báo', roles: ['staff', 'admin'] } },
         { path: 'forum', name: 'admin-forum', component: AdminForum, meta: { title: 'Kiểm duyệt diễn đàn', roles: ['staff', 'admin'] } },
-        section('staff', 'admin-staff', 'Quản lý nhân viên', ['admin']),
+        { path: 'staff', name: 'admin-staff', component: AdminStaff, meta: { title: 'Quản lý nhân viên', roles: ['admin'] } },
         { path: 'settings', name: 'admin-settings', component: AdminSettings, meta: { title: 'Cài đặt', roles: ['admin'] } },
         { path: 'audit-logs', name: 'admin-audit-logs', component: AdminAuditLogs, meta: { title: 'Nhật ký hệ thống', roles: ['admin'] } },
       ],

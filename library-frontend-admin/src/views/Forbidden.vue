@@ -3,13 +3,24 @@ const userAppUrl = import.meta.env.VITE_USER_APP_URL;
 </script>
 
 <template>
-  <main class="message-page">
-    <section class="message-card surface-card">
+  <main
+    id="main-content"
+    class="message-page"
+  >
+    <section
+      class="message-card surface-card"
+      aria-labelledby="forbidden-title"
+    >
       <i
         class="bi bi-shield-lock message-icon"
         aria-hidden="true"
       />
-      <h1>Không có quyền truy cập</h1>
+      <p class="error-code">
+        403
+      </p>
+      <h1 id="forbidden-title">
+        Không có quyền truy cập
+      </h1>
       <p class="text-muted-strong">
         Trang quản trị chỉ dành cho nhân viên và quản trị viên.
       </p>
@@ -18,13 +29,17 @@ const userAppUrl = import.meta.env.VITE_USER_APP_URL;
         class="btn btn-primary"
         :href="userAppUrl"
       >Đến website độc giả</a>
-      <RouterLink
+      <div
         v-else
-        class="btn btn-outline-primary"
-        :to="{ name: 'admin-login' }"
+        class="d-flex flex-column flex-sm-row justify-content-center gap-2"
       >
-        Quay lại đăng nhập
-      </RouterLink>
+        <RouterLink
+          class="btn btn-primary"
+          :to="{ name: 'admin-login' }"
+        >
+          Đến đăng nhập quản trị
+        </RouterLink>
+      </div>
     </section>
   </main>
 </template>
@@ -54,5 +69,12 @@ const userAppUrl = import.meta.env.VITE_USER_APP_URL;
 h1 {
   margin: 0 0 0.65rem;
   font-size: 1.4rem;
+}
+
+.error-code {
+  margin: 0 0 0.5rem;
+  color: #dc2626;
+  font-size: 2rem;
+  font-weight: 700;
 }
 </style>
