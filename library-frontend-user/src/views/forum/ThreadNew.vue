@@ -227,6 +227,12 @@
                   Đang tìm kiếm sách...
                 </div>
                 <div
+                  v-else-if="bookSearchError"
+                  class="text-center py-3 text-danger small"
+                >
+                  Không thể tìm sách lúc này. Vui lòng thử lại.
+                </div>
+                <div
                   v-else-if="searchBookResults.length === 0"
                   class="text-center py-3 text-muted small"
                 >
@@ -530,7 +536,7 @@
 </template>
 
 <script setup>
-import { computed, nextTick, onMounted, reactive, ref } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useToast } from 'vue-toastification';
 import forumService from '@/services/forum.service';
@@ -566,8 +572,10 @@ const selectedBook = ref(null);
 const bookSearchQuery = ref('');
 const searchingBooks = ref(false);
 const searchBookResults = ref([]);
+const bookSearchError = ref(false);
 const showBookResults = ref(false);
 let searchDebounceTimer = null;
+let bookSearchRequestId = 0;
 
 // Thẻ tags
 const tagInput = ref('');
@@ -648,30 +656,41 @@ async function checkPrefilledBook() {
 function handleBookSearch() {
   clearTimeout(searchDebounceTimer);
   const q = bookSearchQuery.value.trim();
+  const requestId = ++bookSearchRequestId;
 
   if (!q) {
     searchBookResults.value = [];
+    searchingBooks.value = false;
+    bookSearchError.value = false;
     return;
   }
 
   showBookResults.value = true;
   searchingBooks.value = true;
+  bookSearchError.value = false;
 
   searchDebounceTimer = setTimeout(async () => {
     try {
-      const res = await bookService.getBooks({ q, limit: 6 });
+      const res = await bookService.listBooks({ q, limit: 6 });
+      if (requestId !== bookSearchRequestId) return;
       searchBookResults.value = res.books || [];
     } catch {
+      if (requestId !== bookSearchRequestId) return;
       searchBookResults.value = [];
+      bookSearchError.value = true;
     } finally {
-      searchingBooks.value = false;
+      if (requestId === bookSearchRequestId) searchingBooks.value = false;
     }
   }, 300);
 }
 
 function clearBookSearch() {
+  clearTimeout(searchDebounceTimer);
+  bookSearchRequestId += 1;
   bookSearchQuery.value = '';
   searchBookResults.value = [];
+  searchingBooks.value = false;
+  bookSearchError.value = false;
   showBookResults.value = false;
 }
 
@@ -810,6 +829,11 @@ async function handleSubmit() {
 onMounted(() => {
   loadCategories();
   checkPrefilledBook();
+});
+
+onBeforeUnmount(() => {
+  clearTimeout(searchDebounceTimer);
+  bookSearchRequestId += 1;
 });
 </script>
 
