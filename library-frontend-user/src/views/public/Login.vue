@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue';
+import { onBeforeUnmount, onMounted, ref } from 'vue';
 import { Form, Field } from 'vee-validate';
 import * as yup from 'yup';
 import { useRoute, useRouter } from 'vue-router';
@@ -22,9 +22,39 @@ function getRememberedEmail() {
 const rememberedEmail = getRememberedEmail();
 const rememberEmail = ref(Boolean(rememberedEmail));
 const formError = ref('');
+const googleError = ref('');
+const googleButton = ref(null);
+const googleBusy = ref(false);
+const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID?.trim() || '';
 const route = useRoute();
 const router = useRouter();
 const auth = useAuthStore();
+let isUnmounted = false;
+
+function loadGoogleIdentityServices() {
+  if (window.google?.accounts?.id) return Promise.resolve();
+
+  return new Promise((resolve, reject) => {
+    let script = document.querySelector('script[data-google-identity-services]');
+    const onLoad = () => (window.google?.accounts?.id ? resolve() : reject(new Error('Google Identity Services không sẵn sàng.')));
+    const onError = () => reject(new Error('Không tải được dịch vụ đăng nhập Google.'));
+
+    if (script) {
+      script.addEventListener('load', onLoad, { once: true });
+      script.addEventListener('error', onError, { once: true });
+      return;
+    }
+
+    script = document.createElement('script');
+    script.src = 'https://accounts.google.com/gsi/client';
+    script.async = true;
+    script.defer = true;
+    script.dataset.googleIdentityServices = 'true';
+    script.addEventListener('load', onLoad, { once: true });
+    script.addEventListener('error', onError, { once: true });
+    document.head.appendChild(script);
+  });
+}
 
 function formatApiError(error) {
   return error.response?.data?.errors?.[0]?.message
@@ -36,6 +66,62 @@ function getSafeRedirect() {
   const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : '';
   return redirect.startsWith('/') && !redirect.startsWith('//') ? redirect : { name: 'home' };
 }
+
+async function handleGoogleCredential(response) {
+  if (isUnmounted || !response?.credential || googleBusy.value) return;
+  googleBusy.value = true;
+  googleError.value = '';
+
+  try {
+    const user = await auth.loginWithGoogle(response.credential);
+    if (user?.role !== 'reader') {
+      try {
+        await auth.logout();
+      } catch {
+        auth.clearSession();
+      }
+      googleError.value = 'Tài khoản nhân viên hoặc quản trị viên cần đăng nhập tại website quản trị.';
+      return;
+    }
+    await router.replace(getSafeRedirect());
+  } catch (error) {
+    googleError.value = formatApiError(error);
+  } finally {
+    googleBusy.value = false;
+  }
+}
+
+onMounted(async () => {
+  if (!googleClientId) {
+    googleError.value = 'Đăng nhập Google chưa được cấu hình. Vui lòng dùng email và mật khẩu.';
+    return;
+  }
+
+  try {
+    await loadGoogleIdentityServices();
+    if (isUnmounted || !googleButton.value) return;
+
+    window.google.accounts.id.initialize({
+      client_id: googleClientId,
+      callback: handleGoogleCredential,
+    });
+    window.google.accounts.id.renderButton(googleButton.value, {
+      type: 'standard',
+      theme: 'outline',
+      size: 'large',
+      text: 'continue_with',
+      shape: 'rect',
+      width: Math.min(400, Math.floor(googleButton.value.clientWidth || 400)),
+      logo_alignment: 'left',
+    });
+  } catch {
+    if (!isUnmounted) googleError.value = 'Không tải được dịch vụ Google. Hãy kiểm tra kết nối mạng rồi thử lại.';
+  }
+});
+
+onBeforeUnmount(() => {
+  isUnmounted = true;
+});
 
 async function submit(values) {
   formError.value = '';
@@ -180,6 +266,44 @@ async function submit(values) {
         </button>
       </Form>
 
+      <div
+        class="auth-google-separator"
+        aria-hidden="true"
+      >
+        <span>hoặc</span>
+      </div>
+
+      <div class="auth-google-login">
+        <div
+          ref="googleButton"
+          class="auth-google-login__button"
+          :class="{ 'auth-google-login__button--busy': googleBusy }"
+          aria-label="Tiếp tục bằng Google"
+        />
+        <p class="small text-secondary text-center mt-2 mb-0">
+          Đóng cửa sổ Google để quay lại đăng nhập bằng email và mật khẩu.
+        </p>
+        <p
+          v-if="googleBusy"
+          class="small text-secondary text-center mt-2 mb-0"
+          role="status"
+          aria-live="polite"
+        >
+          <span
+            class="spinner-border spinner-border-sm me-2"
+            aria-hidden="true"
+          />
+          Đang xác minh tài khoản Google…
+        </p>
+        <div
+          v-if="googleError"
+          class="alert alert-warning mt-3 mb-0"
+          role="alert"
+        >
+          {{ googleError }}
+        </div>
+      </div>
+
       <p class="text-center text-secondary mt-4 mb-0">
         Chưa có tài khoản?
         <RouterLink
@@ -192,3 +316,32 @@ async function submit(values) {
     </div>
   </section>
 </template>
+
+<style scoped>
+.auth-google-separator {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin: 1.25rem 0;
+  color: var(--bs-secondary-color);
+  font-size: 0.875rem;
+}
+
+.auth-google-separator::before,
+.auth-google-separator::after {
+  content: '';
+  flex: 1;
+  border-top: 1px solid var(--bs-border-color);
+}
+
+.auth-google-login__button {
+  display: flex;
+  justify-content: center;
+  min-height: 40px;
+}
+
+.auth-google-login__button--busy {
+  opacity: 0.65;
+  pointer-events: none;
+}
+</style>

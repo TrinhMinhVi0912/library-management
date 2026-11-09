@@ -40,6 +40,11 @@ export const useAuthStore = defineStore('auth', {
       this.setSession(result?.user, result?.accessToken);
       return result?.user || null;
     },
+    async loginWithGoogle(idToken) {
+      const result = await authService.loginWithGoogle(idToken);
+      this.setSession(result?.user, result?.accessToken);
+      return result?.user || null;
+    },
     async register(payload) {
       const result = await authService.register(payload);
       this.setSession(result?.user, result?.accessToken);

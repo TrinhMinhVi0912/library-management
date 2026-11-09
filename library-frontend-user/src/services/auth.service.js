@@ -12,6 +12,11 @@ const authService = {
     return response.data?.data;
   },
 
+  async loginWithGoogle(idToken) {
+    const response = await api.post('/auth/google', { idToken }, requestOptions);
+    return response.data?.data;
+  },
+
   async register(payload) {
     const response = await api.post('/auth/register', payload, requestOptions);
     return response.data?.data;
