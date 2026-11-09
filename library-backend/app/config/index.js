@@ -48,7 +48,7 @@ const config = {
   env: process.env.NODE_ENV || 'development',
   port: parseInt(process.env.PORT, 10) || 5000,
   mongodbUri:
-    process.env.MONGODB_URI || 'mongodb://localhost:27017/library?retryWrites=true&w=majority',
+    process.env.MONGODB_URI || 'mongodb://localhost:27017/library?replicaSet=rs0&retryWrites=true&w=majority',
   clientUrls,
   jwt: {
     accessSecret: process.env.JWT_ACCESS_SECRET || 'default_jwt_access_secret_key',

@@ -36,9 +36,10 @@ const isCloudinaryConfigured = () => {
  */
 const uploadBuffer = (buffer, folder = 'library/books') => {
   return new Promise((resolve, reject) => {
-    // Nếu chưa cấu hình Cloudinary (ở môi trường test/dev), trả về dữ liệu mẫu để test không bị lỗi
+    // Chỉ giả lập upload trong test. Ở development cần báo thiếu cấu hình để tránh
+    // trả URL demo khiến người dùng tưởng ảnh đã được lưu lên Cloudinary thật.
     if (!isCloudinaryConfigured()) {
-      if (config.env === 'test' || config.env === 'development') {
+      if (config.env === 'test') {
         const mockPublicId = `${folder}/mock_${Date.now()}`;
         return resolve({
           url: `https://res.cloudinary.com/demo/image/upload/${mockPublicId}.jpg`,
