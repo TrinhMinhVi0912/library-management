@@ -6,6 +6,7 @@ const ApiError = require('../api-error');
 const { User, RefreshToken } = require('../models');
 const { nextCode } = require('../utils/code.util');
 const mailer = require('../utils/mailer.util');
+const googleTokenUtil = require('../utils/google-token.util');
 const shelfService = require('./shelf.service');
 
 /**
@@ -139,6 +140,88 @@ const login = async (email, password, userAgent = '') => {
     user: user.toJSON(),
     accessToken,
     refreshToken,
+  };
+};
+
+/**
+ * Authenticate a reader with a Google ID token. Existing password accounts are never linked automatically.
+ * @param {string} idToken
+ * @param {string} [userAgent]
+ */
+const loginWithGoogle = async (idToken, userAgent = '') => {
+  let identity;
+  try {
+    identity = await googleTokenUtil.verifyGoogleIdToken(idToken);
+  } catch (error) {
+    if (error.code === 'GOOGLE_NOT_CONFIGURED') {
+      throw new ApiError(503, 'Đăng nhập Google chưa được cấu hình trên máy chủ');
+    }
+    throw new ApiError(503, 'Không thể xác minh tài khoản Google lúc này');
+  }
+
+  if (!identity) throw ApiError.unauthorized('Google ID token không hợp lệ hoặc đã hết hạn');
+
+  const normalizedEmail = identity.email.toLowerCase().trim();
+  let user = await User.findOne({ googleId: identity.sub });
+  let created = false;
+
+  if (user) {
+    if (user.role !== 'reader') throw ApiError.forbidden('Đăng nhập Google chỉ dành cho độc giả');
+    if (user.status !== 'active') {
+      const lockMsg = user.lockReason
+        ? `Tài khoản đã bị khóa. Lý do: ${user.lockReason}`
+        : 'Tài khoản đã bị khóa';
+      throw ApiError.unauthorized(lockMsg);
+    }
+  } else {
+    const existingEmailUser = await User.findOne({ email: normalizedEmail });
+    if (existingEmailUser) {
+      throw ApiError.conflict('Email này đã có tài khoản. Hãy đăng nhập bằng email và mật khẩu trước; hệ thống không tự liên kết tài khoản Google.');
+    }
+
+    const fullName = String(identity.name || '').trim().split(/\s+/).filter(Boolean);
+    const firstName = String(identity.given_name || fullName.slice(0, -1).join(' ') || normalizedEmail.split('@')[0] || 'Độc giả')
+      .trim().slice(0, 50);
+    const lastName = String(identity.family_name || fullName.at(-1) || 'Độc giả').trim().slice(0, 50);
+    const randomPassword = crypto.randomBytes(48).toString('base64url');
+    const passwordHash = await bcrypt.hash(randomPassword, 10);
+
+    let code;
+    try {
+      code = await nextCode('user');
+      user = await User.create({
+        code,
+        email: normalizedEmail,
+        passwordHash,
+        googleId: identity.sub,
+        role: 'reader',
+        firstName,
+        lastName,
+        status: 'active',
+      });
+      created = true;
+    } catch (error) {
+      if (error.code !== 11000) throw error;
+      user = await User.findOne({ googleId: identity.sub });
+      if (!user) {
+        throw ApiError.conflict('Email này đã có tài khoản. Hãy đăng nhập bằng email và mật khẩu trước; hệ thống không tự liên kết tài khoản Google.');
+      }
+      if (user.role !== 'reader') throw ApiError.forbidden('Đăng nhập Google chỉ dành cho độc giả');
+      if (user.status !== 'active') throw ApiError.unauthorized('Tài khoản đã bị khóa');
+    }
+
+    if (created) await shelfService.ensureDefaultShelves(user._id);
+  }
+
+  user.lastLoginAt = new Date();
+  await user.save();
+  const { accessToken, refreshToken } = await createSession(user, userAgent);
+
+  return {
+    user: user.toJSON(),
+    accessToken,
+    refreshToken,
+    created,
   };
 };
 
@@ -283,6 +366,7 @@ module.exports = {
   createSession,
   register,
   login,
+  loginWithGoogle,
   refresh,
   logout,
   forgotPassword,

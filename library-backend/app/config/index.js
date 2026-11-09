@@ -56,6 +56,9 @@ const config = {
     accessTtl: process.env.ACCESS_TOKEN_TTL || '15m',
     refreshTtlDays: parseInt(process.env.REFRESH_TOKEN_TTL_DAYS, 10) || 7,
   },
+  google: {
+    clientId: process.env.GOOGLE_CLIENT_ID || '',
+  },
   cookie: {
     secure: process.env.COOKIE_SECURE === 'true',
     sameSite: (process.env.COOKIE_SAMESITE || 'lax').toLowerCase(),

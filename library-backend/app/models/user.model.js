@@ -22,6 +22,13 @@ const userSchema = new mongoose.Schema(
       required: true,
       select: false,
     },
+    googleId: {
+      type: String,
+      trim: true,
+      unique: true,
+      sparse: true,
+      select: false,
+    },
     role: {
       type: String,
       enum: ['reader', 'staff', 'admin'],
@@ -93,6 +100,7 @@ const userSchema = new mongoose.Schema(
     toJSON: {
       transform: function (_doc, ret) {
         delete ret.passwordHash;
+        delete ret.googleId;
         delete ret.passwordResetToken;
         delete ret.passwordResetExpires;
         delete ret.__v;

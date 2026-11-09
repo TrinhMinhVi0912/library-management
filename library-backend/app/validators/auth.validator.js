@@ -60,6 +60,14 @@ const loginSchema = Joi.object({
   }),
 });
 
+const googleLoginSchema = Joi.object({
+  idToken: Joi.string().trim().max(8192).required().messages({
+    'string.empty': 'Google ID token không được để trống',
+    'string.max': 'Google ID token không hợp lệ',
+    'any.required': 'Google ID token là bắt buộc',
+  }),
+});
+
 const refreshSchema = Joi.object({
   refreshToken: Joi.string().allow('', null).optional(),
 });
@@ -94,6 +102,7 @@ const resetPasswordSchema = Joi.object({
 module.exports = {
   registerSchema,
   loginSchema,
+  googleLoginSchema,
   refreshSchema,
   forgotPasswordSchema,
   resetPasswordSchema,

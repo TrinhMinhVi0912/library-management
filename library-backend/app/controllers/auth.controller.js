@@ -62,6 +62,22 @@ const login = asyncHandler(async (req, res) => {
 });
 
 /**
+ * Đăng nhập hoặc đăng ký độc giả bằng Google ID token đã được backend xác minh
+ * POST /api/v1/auth/google
+ */
+const googleLogin = asyncHandler(async (req, res) => {
+  const userAgent = req.headers['user-agent'] || '';
+  const result = await authService.loginWithGoogle(req.body.idToken, userAgent);
+
+  res.cookie('refreshToken', result.refreshToken, getCookieOptions());
+
+  return ok(res, {
+    user: result.user,
+    accessToken: result.accessToken,
+  }, null, result.created ? 201 : 200);
+});
+
+/**
  * Làm mới access token bằng refresh token (Rotate)
  * POST /api/v1/auth/refresh
  */
@@ -116,6 +132,7 @@ const resetPassword = asyncHandler(async (req, res) => {
 module.exports = {
   register,
   login,
+  googleLogin,
   refresh,
   logout,
   forgotPassword,

@@ -31,6 +31,7 @@ Backend mặc định nghe tại `http://localhost:5000`. Kiểm tra `/health` v
 | `PORT` | Không | Cổng HTTP, mặc định `5000` |
 | `MONGODB_URI` | Có | URI MongoDB; production bắt buộc khai báo rõ; cần replica set để dùng transaction |
 | `CLIENT_URL` | Có | Origin frontend, nhiều origin phân tách bằng dấu phẩy |
+| `GOOGLE_CLIENT_ID` | Không | Google Web OAuth Client ID dùng để xác minh ID token; cần khai báo khi bật Google Login |
 | `JWT_ACCESS_SECRET` | Có | Bí mật ký access token; production tối thiểu 32 ký tự |
 | `JWT_REFRESH_SECRET` | Có | Bí mật ký refresh token, phải khác access secret; production tối thiểu 32 ký tự |
 | `ACCESS_TOKEN_TTL` | Không | Thời hạn access token, mặc định `15m` |
@@ -76,7 +77,7 @@ Hai domain ví dụ trên là hai site khác nhau. Cookie refresh khi admin fron
 1. Tạo Web Service từ repository backend; đặt root directory là `library-backend` nếu kết nối repo monorepo.
 2. Dùng Node.js 20.19 trở lên, Build Command `npm ci`, Start Command `npm start`.
 3. Đặt Health Check Path là `/health`.
-4. Thêm environment variables trong dashboard của service: `NODE_ENV=production`, `MONGODB_URI`, `CLIENT_URL`, `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, `JOBS_SECRET`, `COOKIE_SECURE=true`, `COOKIE_SAMESITE` theo kiến trúc domain, Cloudinary và SMTP nếu sử dụng. Đặt `ENABLE_DOCS=false`; nền tảng tự cấp `PORT`.
+4. Thêm environment variables trong dashboard của service: `NODE_ENV=production`, `MONGODB_URI`, `CLIENT_URL`, `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, `JOBS_SECRET`, `COOKIE_SECURE=true`, `COOKIE_SAMESITE` theo kiến trúc domain, `GOOGLE_CLIENT_ID` nếu bật Google Login, Cloudinary và SMTP nếu sử dụng. Đặt `ENABLE_DOCS=false`; nền tảng tự cấp `PORT`.
 5. Tạo từng secret độc lập, không dùng secret local. Có thể chạy lệnh sau ba lần ở máy cá nhân và nhập riêng từng kết quả vào dashboard: `node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"`.
 6. Deploy, lấy URL HTTPS của API và kiểm tra `https://<api-domain>/health` trả HTTP 200.
 

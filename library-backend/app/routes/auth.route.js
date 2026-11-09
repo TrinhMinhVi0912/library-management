@@ -3,6 +3,7 @@ const { authLimiter, validate, optionalAuth } = require('../middlewares');
 const {
   registerSchema,
   loginSchema,
+  googleLoginSchema,
   refreshSchema,
   forgotPasswordSchema,
   resetPasswordSchema,
@@ -27,6 +28,13 @@ router.post('/register', validate(registerSchema), authController.register);
  * @access  Khách
  */
 router.post('/login', validate(loginSchema), authController.login);
+
+/**
+ * @route   POST /api/v1/auth/google
+ * @desc    Xác minh Google ID token và đăng nhập/tạo tài khoản độc giả
+ * @access  Khách
+ */
+router.post('/google', validate(googleLoginSchema), authController.googleLogin);
 
 /**
  * @route   POST /api/v1/auth/refresh
