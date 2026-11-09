@@ -22,6 +22,8 @@ const loading = ref(true);
 const loadError = ref(false);
 const lookupError = ref(false);
 const saving = ref(false);
+const uploadingImage = ref(false);
+const uploadedCover = ref(null);
 const isEditing = computed(() => Boolean(route.params.id));
 
 onMounted(loadEditorData);
@@ -70,7 +72,9 @@ async function saveBook({ payload, imageFile }) {
   if (saving.value || loadError.value) return;
   saving.value = true;
   try {
-    if (imageFile) {
+    if (uploadedCover.value) {
+      payload.cover = uploadedCover.value;
+    } else if (imageFile) {
       const uploaded = await uploadAdminImage(imageFile, 'books');
       payload.cover = { url: uploaded.url, publicId: uploaded.publicId };
     }
@@ -85,6 +89,23 @@ async function saveBook({ payload, imageFile }) {
   } finally {
     saving.value = false;
   }
+}
+
+async function uploadSelectedImage(file) {
+  if (!file || uploadingImage.value || saving.value) return;
+  uploadingImage.value = true;
+  try {
+    uploadedCover.value = await uploadAdminImage(file, 'books');
+    toast.success('Tải ảnh lên Cloudinary thành công. Nhấn lưu sách để gắn ảnh vào dữ liệu.');
+  } catch (error) {
+    toast.error(error.response?.data?.message || 'Không thể tải ảnh lên Cloudinary.');
+  } finally {
+    uploadingImage.value = false;
+  }
+}
+
+function clearUploadedCover() {
+  uploadedCover.value = null;
 }
 
 async function retryLookups() {
@@ -180,8 +201,12 @@ async function retryLookups() {
         :authors="authors"
         :publishers="publishers"
         :saving="saving"
+        :uploading-image="uploadingImage"
+        :uploaded-cover="uploadedCover"
         @submit="saveBook"
         @cancel="goBack"
+        @upload-image="uploadSelectedImage"
+        @clear-uploaded-cover="clearUploadedCover"
         @author-created="(record) => addOption(authors, record)"
         @category-created="(record) => addOption(categories, record)"
       />

@@ -9,18 +9,20 @@ const props = defineProps({
   authors: { type: Array, default: () => [] },
   publishers: { type: Array, default: () => [] },
   saving: { type: Boolean, default: false },
+  uploadingImage: { type: Boolean, default: false },
+  uploadedCover: { type: Object, default: null },
 });
-const emit = defineEmits(['submit', 'cancel', 'author-created', 'category-created']);
+const emit = defineEmits(['submit', 'cancel', 'author-created', 'category-created', 'upload-image', 'clear-uploaded-cover']);
 const toast = useToast();
 const imageFile = ref(null);
 const imagePreview = ref('');
+const authorInput = ref(null);
 const quickAuthorLoading = ref(false);
 const quickCategoryLoading = ref(false);
 const newCategoryName = ref('');
 const authorSearch = ref('');
 const categorySearch = ref('');
 const authorSearchActive = ref(false);
-const categorySearchActive = ref(false);
 const form = reactive({});
 let previewObjectUrl = '';
 
@@ -30,12 +32,15 @@ const selectedCategories = computed(() => props.categories.filter((category) => 
 const authorFieldValue = computed(() => (authorSearchActive.value
   ? authorSearch.value
   : selectedAuthors.value.map((author) => author.name).join(', ')));
-const categoryFieldValue = computed(() => (categorySearchActive.value
-  ? categorySearch.value
-  : selectedCategories.value.map((category) => category.name).join(', ')));
 const filteredAuthors = computed(() => filterOptions(props.authors, authorSearch.value));
 const filteredCategories = computed(() => filterOptions(props.categories, categorySearch.value));
 watch(() => props.book, initializeForm, { immediate: true });
+watch(() => props.uploadedCover, (cover) => {
+  if (!cover?.url) return;
+  clearPreviewUrl();
+  imageFile.value = null;
+  imagePreview.value = cover.url;
+});
 onBeforeUnmount(clearPreviewUrl);
 
 function normalizeSearch(value) {
@@ -65,17 +70,11 @@ function selectAuthor(id) {
   toggleSelection('authors', id);
   authorSearch.value = '';
   authorSearchActive.value = false;
-}
-
-function startCategorySearch() {
-  categorySearchActive.value = true;
-  categorySearch.value = '';
+  authorInput.value?.blur();
 }
 
 function selectCategory(id) {
   toggleSelection('categories', id);
-  categorySearch.value = '';
-  categorySearchActive.value = false;
 }
 
 function initializeForm() {
@@ -98,7 +97,6 @@ function initializeForm() {
   authorSearch.value = '';
   categorySearch.value = '';
   authorSearchActive.value = false;
-  categorySearchActive.value = false;
   imageFile.value = null;
   clearPreviewUrl();
   imagePreview.value = book.cover?.url || '';
@@ -124,6 +122,7 @@ function handleImage(event) {
   }
   clearPreviewUrl();
   imageFile.value = file;
+  emit('clear-uploaded-cover');
   previewObjectUrl = URL.createObjectURL(file);
   imagePreview.value = previewObjectUrl;
 }
@@ -223,6 +222,24 @@ function submitForm() {
             @change="handleImage"
           >
           <small>JPG, PNG hoặc WEBP · tối đa 2MB</small>
+          <button
+            v-if="imageFile"
+            class="btn btn-outline-secondary btn-sm"
+            type="button"
+            :disabled="uploadingImage || saving"
+            @click="emit('upload-image', imageFile)"
+          >
+            <span
+              v-if="uploadingImage"
+              class="spinner-border spinner-border-sm me-1"
+              aria-hidden="true"
+            />{{ uploadingImage ? 'Đang tải ảnh…' : uploadedCover ? 'Tải ảnh khác lên' : 'Tải ảnh lên Cloudinary' }}
+          </button>
+          <small
+            v-if="uploadedCover"
+            class="text-success"
+            role="status"
+          >Ảnh đã tải lên. Nhấn lưu sách để gắn ảnh vào dữ liệu.</small>
         </div>
         <div class="fields-grid">
           <label class="form-field span-two"><span>Tên sách <b>*</b></span><input
@@ -246,6 +263,7 @@ function submitForm() {
           <div class="form-field span-two">
             <span>Tác giả</span>
             <input
+              ref="authorInput"
               :value="authorFieldValue"
               class="form-control"
               type="search"
@@ -316,16 +334,36 @@ function submitForm() {
           <div class="form-field">
             <span>Thể loại</span>
             <input
-              :value="categoryFieldValue"
+              v-model="categorySearch"
               class="form-control"
               type="search"
               autocomplete="off"
               placeholder="Tìm thể loại để thêm vào sách"
               aria-label="Tìm thể loại"
-              @focus="startCategorySearch"
-              @input="categorySearch = $event.target.value"
-              @blur="categorySearchActive = false; categorySearch = ''"
             >
+            <div
+              v-if="selectedCategories.length"
+              class="selected-options"
+              aria-label="Thể loại đã chọn"
+            >
+              <span
+                v-for="category in selectedCategories"
+                :key="category._id"
+                class="selected-option"
+              >
+                {{ category.name }}
+                <button
+                  type="button"
+                  :aria-label="`Bỏ thể loại ${category.name}`"
+                  @click="toggleSelection('categories', category._id)"
+                >
+                  <i
+                    class="bi bi-x"
+                    aria-hidden="true"
+                  />
+                </button>
+              </span>
+            </div>
             <div
               v-if="categorySearch.trim()"
               class="search-results"
@@ -449,6 +487,10 @@ function submitForm() {
 .icon-close { width: 2.25rem; height: 2.25rem; border: 0; border-radius: .5rem; background: #f3f4f6; }
 .form-layout { display: grid; grid-template-columns: 200px 1fr; align-items: start; gap: 1.25rem; }.cover-field { display: grid; justify-items: start; gap: .6rem; }.field-label { font-size: .85rem; font-weight: 600; }.cover-preview { display: grid; width: 180px; aspect-ratio: 3 / 4; place-items: center; overflow: hidden; border: 1px dashed #cbd5e1; border-radius: .75rem; background: #f8fafc; color: #94a3b8; font-size: 2rem; }.cover-preview img { width: 100%; height: 100%; object-fit: cover; }.cover-field small { color: #6b7280; font-size: .7rem; }
 .fields-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem; }.form-field { display: grid; align-content: start; gap: .35rem; font-size: .82rem; }.form-field b { color: #dc2626; }.span-two { grid-column: span 2; }.field-inline { display: flex; gap: .5rem; }.form-actions { display: flex; justify-content: flex-end; gap: .5rem; margin-top: 1.25rem; }
+.selected-options { display: flex; flex-wrap: wrap; gap: .4rem; }
+.selected-option { display: inline-flex; align-items: center; gap: .25rem; max-width: 100%; padding: .2rem .35rem .2rem .6rem; border: 1px solid #bfdbfe; border-radius: 999px; background: #eff6ff; color: #1d4ed8; font-size: .75rem; }
+.selected-option button { display: grid; width: 1.15rem; height: 1.15rem; place-items: center; border: 0; border-radius: 50%; background: transparent; color: inherit; }
+.selected-option button:hover { background: #dbeafe; }
 .search-results { display: grid; border: 1px solid #dbe2ea; border-radius: .5rem; background: #fff; }
 .search-result { display: flex; align-items: center; justify-content: space-between; gap: .75rem; padding: .55rem .7rem; border: 0; border-bottom: 1px solid #f1f5f9; background: #fff; color: #1f2937; text-align: left; }
 .search-result:last-of-type { border-bottom: 0; }
