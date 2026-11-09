@@ -1,5 +1,6 @@
 <script setup>
 import { computed } from 'vue';
+import { useRoute } from 'vue-router';
 
 const props = defineProps({
   collapsed: { type: Boolean, default: false },
@@ -8,6 +9,7 @@ const props = defineProps({
   pendingLoans: { type: Number, default: 0 },
   pendingRenewals: { type: Number, default: 0 },
 });
+const route = useRoute();
 
 defineEmits(['navigate']);
 
@@ -69,7 +71,10 @@ function countFor(link) {
         :key="link.to"
         :to="link.to"
         class="nav-link"
-        :class="{ 'nav-link-exact': link.exact }"
+        :class="{
+          'nav-link-exact': link.exact,
+          'is-manually-active': link.to === '/admin/books' && route.path.startsWith('/admin/books'),
+        }"
         :title="collapsed ? link.label : undefined"
         :aria-label="collapsed ? link.label : undefined"
         @click="$emit('navigate')"
@@ -169,7 +174,8 @@ function countFor(link) {
 
 .nav-link:hover,
 .nav-link.router-link-active,
-.nav-link.router-link-exact-active {
+.nav-link.router-link-exact-active,
+.nav-link.is-manually-active {
   background: #f8f9fa;
   color: #1d4ed8;
 }

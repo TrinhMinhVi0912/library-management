@@ -11,6 +11,7 @@ import AdminRenewals from '@/views/admin/Renewals.vue';
 import AdminLoans from '@/views/admin/Loans.vue';
 import AdminFines from '@/views/admin/Fines.vue';
 import AdminBooks from '@/views/admin/Books.vue';
+import AdminBookEditor from '@/views/admin/BookEditor.vue';
 import AdminCatalog from '@/views/admin/Catalog.vue';
 import AdminUsers from '@/views/admin/Users.vue';
 import AdminStaff from '@/views/admin/Staff.vue';
@@ -40,6 +41,8 @@ const router = createRouter({
         { path: 'loans', name: 'admin-loans', component: AdminLoans, meta: { title: 'Phiếu mượn', roles: ['staff', 'admin'] } },
         { path: 'fines', name: 'admin-fines', component: AdminFines, meta: { title: 'Quản lý phạt', roles: ['staff', 'admin'] } },
         { path: 'books', name: 'admin-books', component: AdminBooks, meta: { title: 'Quản lý sách', roles: ['staff', 'admin'] } },
+        { path: 'books/new', name: 'admin-book-create', component: AdminBookEditor, meta: { title: 'Thêm sách', roles: ['staff', 'admin'] } },
+        { path: 'books/:id/edit', name: 'admin-book-edit', component: AdminBookEditor, meta: { title: 'Sửa sách', roles: ['staff', 'admin'] } },
         { path: 'catalog', name: 'admin-catalog', component: AdminCatalog, meta: { title: 'Danh mục', roles: ['staff', 'admin'] } },
         { path: 'users', name: 'admin-users', component: AdminUsers, meta: { title: 'Người dùng', roles: ['staff', 'admin'] } },
         { path: 'notifications', name: 'admin-notifications', component: AdminNotifications, meta: { title: 'Thông báo', roles: ['staff', 'admin'] } },

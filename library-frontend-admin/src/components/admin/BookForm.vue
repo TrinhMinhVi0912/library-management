@@ -17,12 +17,36 @@ const imagePreview = ref('');
 const quickAuthorLoading = ref(false);
 const quickCategoryLoading = ref(false);
 const newCategoryName = ref('');
+const authorSearch = ref('');
+const categorySearch = ref('');
 const form = reactive({});
 let previewObjectUrl = '';
 
 const title = computed(() => (props.book?._id ? 'Cập nhật sách' : 'Thêm sách'));
+const selectedAuthors = computed(() => props.authors.filter((author) => form.authors?.includes(author._id)));
+const selectedCategories = computed(() => props.categories.filter((category) => form.categories?.includes(category._id)));
+const filteredAuthors = computed(() => filterOptions(props.authors, authorSearch.value));
+const filteredCategories = computed(() => filterOptions(props.categories, categorySearch.value));
 watch(() => props.book, initializeForm, { immediate: true });
 onBeforeUnmount(clearPreviewUrl);
+
+function normalizeSearch(value) {
+  return String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D').toLocaleLowerCase('vi');
+}
+
+function filterOptions(options, query) {
+  const normalizedQuery = normalizeSearch(query.trim());
+  if (!normalizedQuery) return [];
+  return options
+    .filter((option) => normalizeSearch(option.name).includes(normalizedQuery))
+    .slice(0, 6);
+}
+
+function toggleSelection(field, id) {
+  form[field] = form[field].includes(id)
+    ? form[field].filter((selectedId) => selectedId !== id)
+    : [...form[field], id];
+}
 
 function initializeForm() {
   const book = props.book || {};
@@ -41,6 +65,8 @@ function initializeForm() {
     description: book.description || '',
     location: book.location || '',
   });
+  authorSearch.value = '';
+  categorySearch.value = '';
   imageFile.value = null;
   clearPreviewUrl();
   imagePreview.value = book.cover?.url || '';
@@ -121,9 +147,6 @@ function submitForm() {
 <template>
   <section
     class="book-form surface-card"
-    role="dialog"
-    aria-modal="true"
-    aria-labelledby="book-form-title"
   >
     <header class="form-heading">
       <div>
@@ -134,7 +157,7 @@ function submitForm() {
       <button
         class="icon-close"
         type="button"
-        aria-label="Đóng biểu mẫu"
+        aria-label="Quay lại danh sách sách"
         @click="emit('cancel')"
       >
         <i class="bi bi-x-lg" />
@@ -190,21 +213,69 @@ function submitForm() {
           ></label>
           <div class="form-field span-two">
             <span>Tác giả</span>
-            <select
-              v-model="form.authors"
-              class="form-select"
-              multiple
-              size="4"
-              aria-label="Chọn một hoặc nhiều tác giả"
+            <input
+              v-model="authorSearch"
+              class="form-control"
+              type="search"
+              autocomplete="off"
+              placeholder="Tìm tên tác giả để thêm vào sách"
+              aria-label="Tìm tác giả"
             >
-              <option
-                v-for="author in authors"
+            <div
+              v-if="selectedAuthors.length"
+              class="selected-options"
+              aria-label="Tác giả đã chọn"
+            >
+              <span
+                v-for="author in selectedAuthors"
                 :key="author._id"
-                :value="author._id"
+                class="selected-option"
               >
                 {{ author.name }}
-              </option>
-            </select>
+                <button
+                  type="button"
+                  :aria-label="`Bỏ tác giả ${author.name}`"
+                  @click="toggleSelection('authors', author._id)"
+                >
+                  <i
+                    class="bi bi-x"
+                    aria-hidden="true"
+                  />
+                </button>
+              </span>
+            </div>
+            <div
+              v-if="authorSearch.trim()"
+              class="search-results"
+              role="listbox"
+              aria-label="Kết quả tác giả"
+              aria-multiselectable="true"
+            >
+              <button
+                v-for="author in filteredAuthors"
+                :key="author._id"
+                class="search-result"
+                :class="{ 'is-selected': form.authors.includes(author._id) }"
+                type="button"
+                role="option"
+                :aria-selected="form.authors.includes(author._id)"
+                @click="toggleSelection('authors', author._id)"
+              >
+                <span>{{ author.name }}</span><i
+                  v-if="form.authors.includes(author._id)"
+                  class="bi bi-check2"
+                  aria-hidden="true"
+                />
+              </button>
+              <span
+                v-if="!filteredAuthors.length"
+                class="search-empty"
+              >Không tìm thấy tác giả phù hợp.</span>
+              <span
+                v-else-if="filteredAuthors.length === 6"
+                class="search-hint"
+              >Đang hiển thị 6 kết quả đầu. Nhập thêm để thu hẹp kết quả.</span>
+            </div>
             <div class="field-inline">
               <input
                 v-model.trim="form.authorText"
@@ -229,17 +300,72 @@ function submitForm() {
             :key="publisher._id"
             :value="publisher._id"
           >{{ publisher.name }}</option></select></label>
-          <label class="form-field"><span>Thể loại</span><select
-            v-model="form.categories"
-            class="form-select"
-            multiple
-            size="4"
-            aria-label="Chọn nhiều thể loại"
-          ><option
-            v-for="category in categories"
-            :key="category._id"
-            :value="category._id"
-          >{{ category.name }}</option></select></label>
+          <div class="form-field">
+            <span>Thể loại</span>
+            <input
+              v-model="categorySearch"
+              class="form-control"
+              type="search"
+              autocomplete="off"
+              placeholder="Tìm thể loại để thêm vào sách"
+              aria-label="Tìm thể loại"
+            >
+            <div
+              v-if="selectedCategories.length"
+              class="selected-options"
+              aria-label="Thể loại đã chọn"
+            >
+              <span
+                v-for="category in selectedCategories"
+                :key="category._id"
+                class="selected-option"
+              >
+                {{ category.name }}
+                <button
+                  type="button"
+                  :aria-label="`Bỏ thể loại ${category.name}`"
+                  @click="toggleSelection('categories', category._id)"
+                >
+                  <i
+                    class="bi bi-x"
+                    aria-hidden="true"
+                  />
+                </button>
+              </span>
+            </div>
+            <div
+              v-if="categorySearch.trim()"
+              class="search-results"
+              role="listbox"
+              aria-label="Kết quả thể loại"
+              aria-multiselectable="true"
+            >
+              <button
+                v-for="category in filteredCategories"
+                :key="category._id"
+                class="search-result"
+                :class="{ 'is-selected': form.categories.includes(category._id) }"
+                type="button"
+                role="option"
+                :aria-selected="form.categories.includes(category._id)"
+                @click="toggleSelection('categories', category._id)"
+              >
+                <span>{{ category.name }}</span><i
+                  v-if="form.categories.includes(category._id)"
+                  class="bi bi-check2"
+                  aria-hidden="true"
+                />
+              </button>
+              <span
+                v-if="!filteredCategories.length"
+                class="search-empty"
+              >Không tìm thấy thể loại phù hợp.</span>
+              <span
+                v-else-if="filteredCategories.length === 6"
+                class="search-hint"
+              >Đang hiển thị 6 kết quả đầu. Nhập thêm để thu hẹp kết quả.</span>
+            </div>
+          </div>
           <div class="form-field span-two quick-category">
             <span>Thêm thể loại mới</span>
             <div class="field-inline">
@@ -324,10 +450,19 @@ function submitForm() {
 </template>
 
 <style scoped lang="scss">
-.book-form { width: min(100%, 980px); max-height: calc(100vh - 2rem); overflow-y: auto; padding: 1.35rem; box-shadow: 0 20px 50px rgb(17 24 39 / 20%); }
+.book-form { width: 100%; padding: 1.5rem; }
 .form-heading { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 1.25rem; }.form-heading h2 { margin: .2rem 0 0; font-size: 1.2rem; }.eyebrow { color: #6b7280; font-size: .75rem; }
 .icon-close { width: 2.25rem; height: 2.25rem; border: 0; border-radius: .5rem; background: #f3f4f6; }
 .form-layout { display: grid; grid-template-columns: 200px 1fr; align-items: start; gap: 1.25rem; }.cover-field { display: grid; justify-items: start; gap: .6rem; }.field-label { font-size: .85rem; font-weight: 600; }.cover-preview { display: grid; width: 180px; aspect-ratio: 3 / 4; place-items: center; overflow: hidden; border: 1px dashed #cbd5e1; border-radius: .75rem; background: #f8fafc; color: #94a3b8; font-size: 2rem; }.cover-preview img { width: 100%; height: 100%; object-fit: cover; }.cover-field small { color: #6b7280; font-size: .7rem; }
-.fields-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem; }.form-field { display: grid; align-content: start; gap: .35rem; font-size: .82rem; }.form-field b { color: #dc2626; }.span-two { grid-column: span 2; }.form-field select[multiple] { min-height: 6rem; }.field-inline { display: flex; gap: .5rem; }.form-actions { display: flex; justify-content: flex-end; gap: .5rem; margin-top: 1.25rem; }
+.fields-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem; }.form-field { display: grid; align-content: start; gap: .35rem; font-size: .82rem; }.form-field b { color: #dc2626; }.span-two { grid-column: span 2; }.field-inline { display: flex; gap: .5rem; }.form-actions { display: flex; justify-content: flex-end; gap: .5rem; margin-top: 1.25rem; }
+.selected-options { display: flex; flex-wrap: wrap; gap: .4rem; }
+.selected-option { display: inline-flex; align-items: center; gap: .25rem; max-width: 100%; padding: .2rem .35rem .2rem .6rem; border: 1px solid #bfdbfe; border-radius: 999px; background: #eff6ff; color: #1d4ed8; font-size: .75rem; }
+.selected-option button { display: grid; width: 1.15rem; height: 1.15rem; place-items: center; border: 0; border-radius: 50%; background: transparent; color: inherit; }
+.selected-option button:hover { background: #dbeafe; }
+.search-results { display: grid; border: 1px solid #dbe2ea; border-radius: .5rem; background: #fff; }
+.search-result { display: flex; align-items: center; justify-content: space-between; gap: .75rem; padding: .55rem .7rem; border: 0; border-bottom: 1px solid #f1f5f9; background: #fff; color: #1f2937; text-align: left; }
+.search-result:last-of-type { border-bottom: 0; }
+.search-result:hover,.search-result.is-selected { background: #eff6ff; color: #1d4ed8; }
+.search-empty,.search-hint { padding: .55rem .7rem; color: #6b7280; font-size: .75rem; }
 @media (max-width: 700px) { .book-form { padding: 1rem; }.form-layout { grid-template-columns: 1fr; }.cover-field { grid-template-columns: auto 1fr; align-items: center; }.cover-field .field-label,.cover-field small { grid-column: 1 / -1; }.cover-preview { width: 100px; }.fields-grid { grid-template-columns: 1fr; }.span-two { grid-column: auto; }.field-inline { flex-direction: column; } }
 </style>

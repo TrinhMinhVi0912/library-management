@@ -4,16 +4,11 @@ import { useRoute, useRouter } from 'vue-router';
 import { useToast } from 'vue-toastification';
 import Swal from 'sweetalert2';
 import DataTable from '@/components/admin/DataTable.vue';
-import BookForm from '@/components/admin/BookForm.vue';
 import {
-  createAdminBook,
   deleteAdminBook,
   getAdminBooks,
   getCatalogOptions,
-  getAdminBook,
-  updateAdminBook,
   updateAdminBookStatus,
-  uploadAdminImage,
 } from '@/services/admin.service';
 
 const route = useRoute();
@@ -24,15 +19,9 @@ const total = ref(0);
 const totalPages = ref(1);
 const loading = ref(false);
 const loadError = ref(false);
-const lookupLoading = ref(false);
-const saving = ref(false);
 const actionId = ref('');
-const formOpen = ref(false);
-const selectedBook = ref(null);
 const categories = ref([]);
 const authors = ref([]);
-const publishers = ref([]);
-const lookupsError = ref(false);
 
 const query = computed(() => String(route.query.q || ''));
 const status = computed(() => String(route.query.status || 'all'));
@@ -55,7 +44,7 @@ const columns = [
 
 onMounted(() => {
   loadBooks();
-  loadLookups();
+  loadCatalogFilters();
 });
 watch(() => [route.query.q, route.query.status, route.query.category, route.query.author, route.query.page, route.query.sort], loadBooks);
 
@@ -82,19 +71,13 @@ async function loadBooks() {
   }
 }
 
-async function loadLookups() {
-  lookupLoading.value = true;
-  lookupsError.value = false;
+async function loadCatalogFilters() {
   try {
     const result = await getCatalogOptions();
     categories.value = result.categories;
     authors.value = result.authors;
-    publishers.value = result.publishers;
   } catch (error) {
-    lookupsError.value = true;
-    toast.error(error.response?.data?.message || 'Không tải được danh mục sách.');
-  } finally {
-    lookupLoading.value = false;
+    toast.error(error.response?.data?.message || 'Không tải được bộ lọc danh mục sách.');
   }
 }
 
@@ -117,53 +100,11 @@ function updateSort({ key, order }) {
 }
 
 function openCreate() {
-  selectedBook.value = null;
-  formOpen.value = true;
+  router.push({ name: 'admin-book-create', query: route.query });
 }
 
-async function openEdit(book) {
-  saving.value = true;
-  try {
-    selectedBook.value = await getAdminBook(book._id);
-    formOpen.value = true;
-  } catch (error) {
-    toast.error(error.response?.data?.message || 'Không tải được thông tin sách.');
-  } finally {
-    saving.value = false;
-  }
-}
-
-async function saveBook({ payload, imageFile }) {
-  if (saving.value) return;
-  saving.value = true;
-  try {
-    if (imageFile) {
-      const uploaded = await uploadAdminImage(imageFile, 'books');
-      payload.cover = { url: uploaded.url, publicId: uploaded.publicId };
-    }
-    if (selectedBook.value?._id) await updateAdminBook(selectedBook.value._id, payload);
-    else await createAdminBook(payload);
-    toast.success(selectedBook.value?._id ? 'Đã cập nhật sách.' : 'Đã thêm sách mới.');
-    formOpen.value = false;
-    selectedBook.value = null;
-    await loadBooks();
-  } catch (error) {
-    toast.error(error.response?.data?.message || 'Không thể lưu thông tin sách.');
-  } finally {
-    saving.value = false;
-  }
-}
-
-function handleAuthorCreated(authorRecord) {
-  if (authorRecord?._id && !authors.value.some((item) => item._id === authorRecord._id)) {
-    authors.value = [...authors.value, authorRecord].sort((first, second) => first.name.localeCompare(second.name, 'vi'));
-  }
-}
-
-function handleCategoryCreated(categoryRecord) {
-  if (categoryRecord?._id && !categories.value.some((item) => item._id === categoryRecord._id)) {
-    categories.value = [...categories.value, categoryRecord].sort((first, second) => first.name.localeCompare(second.name, 'vi'));
-  }
+function openEdit(book) {
+  router.push({ name: 'admin-book-edit', params: { id: book._id }, query: route.query });
 }
 
 async function toggleVisibility(book) {
@@ -242,7 +183,6 @@ function displayCategories(book) {
       <button
         class="btn btn-primary"
         type="button"
-        :disabled="lookupLoading || lookupsError"
         @click="openCreate"
       >
         <i
@@ -335,7 +275,7 @@ function displayCategories(book) {
           <button
             class="btn btn-sm btn-outline-primary"
             type="button"
-            :disabled="Boolean(actionId) || saving"
+            :disabled="Boolean(actionId)"
             @click="openEdit(row)"
           >
             Sửa
@@ -374,24 +314,6 @@ function displayCategories(book) {
         </button>
       </template>
     </DataTable>
-
-    <div
-      v-if="formOpen"
-      class="modal-backdrop-custom"
-      @click.self="formOpen = false"
-    >
-      <BookForm
-        :book="selectedBook"
-        :categories="categories"
-        :authors="authors"
-        :publishers="publishers"
-        :saving="saving"
-        @submit="saveBook"
-        @cancel="formOpen = false"
-        @author-created="handleAuthorCreated"
-        @category-created="handleCategoryCreated"
-      />
-    </div>
   </section>
 </template>
 
@@ -403,7 +325,6 @@ function displayCategories(book) {
 .book-title { display: grid; min-width: 160px; gap: .2rem; }.book-title small,.book-meta,.inventory-total { color: #6b7280; font-size: .75rem; }.book-meta { display: block; min-width: 110px; max-width: 180px; white-space: normal; }
 .status-badge { display: inline-flex; padding: .3rem .55rem; border-radius: 999px; font-size: .75rem; font-weight: 600; white-space: nowrap; }.status-active { background: #ecfdf5; color: #047857; }.status-hidden { background: #f3f4f6; color: #6b7280; }
 .row-actions { display: flex; flex-wrap: wrap; gap: .35rem; }.empty-state { display: flex; align-items: center; justify-content: center; gap: .6rem; padding: 1rem; }
-.modal-backdrop-custom { position: fixed; z-index: 1050; inset: 0; display: grid; overflow-y: auto; place-items: center; padding: 1rem; background: rgb(17 24 39 / 45%); }
 .books-page :deep(.table-toolbar) { align-items: flex-end; flex-wrap: wrap; }
 .books-page :deep(.search-field) { width: min(100%, 560px); flex: 1 1 420px; }
 .books-page :deep(.search-field input) { min-width: 0; }
