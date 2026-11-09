@@ -158,20 +158,20 @@
 
               <!-- Thông tin tác giả & Thống kê lượt xem -->
               <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 pb-3 mb-4 border-bottom">
-                <div class="d-flex align-items-center gap-2.5">
+                <div class="thread-author">
                   <!-- Avatar tác giả -->
                   <div class="flex-shrink-0">
                     <img
                       v-if="authorAvatarUrl"
                       :src="authorAvatarUrl"
                       :alt="authorName"
-                      class="rounded-circle object-fit-cover border"
+                      class="rounded-circle object-fit-cover border thread-author-avatar"
                       style="width: 44px; height: 44px;"
                       @error="authorAvatarFailed = true"
                     >
                     <div
                       v-else
-                      class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold shadow-xs"
+                      class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold shadow-xs thread-author-avatar"
                       :class="authorRole === 'admin' ? 'bg-danger' : (authorRole === 'staff' ? 'bg-primary' : 'bg-secondary')"
                       style="width: 44px; height: 44px; font-size: 1.1rem;"
                     >
@@ -180,7 +180,7 @@
                   </div>
 
                   <!-- Tên và ngày đăng -->
-                  <div class="d-flex flex-column">
+                  <div class="d-flex flex-column thread-author-copy">
                     <div class="d-flex align-items-center gap-2">
                       <span class="fw-bold text-dark">{{ authorName }}</span>
                       <span
@@ -203,10 +203,10 @@
                 </div>
 
                 <!-- Thống kê tương tác -->
-                <div class="d-flex align-items-center gap-3 text-secondary small">
+                <div class="thread-stats text-secondary small">
                   <span
                     title="Lượt xem"
-                    class="d-flex align-items-center gap-1"
+                    class="thread-stat"
                   >
                     <i
                       class="bi bi-eye"
@@ -216,7 +216,7 @@
                   </span>
                   <span
                     title="Lượt phản hồi"
-                    class="d-flex align-items-center gap-1"
+                    class="thread-stat"
                   >
                     <i
                       class="bi bi-chat-dots"
@@ -283,7 +283,7 @@
               <!-- Thẻ tag hashtags -->
               <div
                 v-if="thread.tags && thread.tags.length"
-                class="d-flex flex-wrap gap-1.5 mb-4"
+                class="d-flex flex-wrap thread-tags mb-4"
               >
                 <span
                   v-for="tag in thread.tags"
@@ -306,7 +306,7 @@
                 <div class="d-flex align-items-center gap-2">
                   <button
                     type="button"
-                    class="btn btn-sm btn-outline-secondary rounded-pill px-3 d-inline-flex align-items-center gap-1.5"
+                    class="btn btn-sm btn-outline-secondary rounded-pill px-3 d-inline-flex align-items-center thread-report-button"
                     @click="openReportModal('thread', thread._id, thread.title)"
                   >
                     <i
@@ -890,6 +890,58 @@ onMounted(() => {
 
 .shadow-xs {
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.thread-author {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.thread-author-avatar {
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+}
+
+.thread-author-copy {
+  min-width: 0;
+}
+
+.thread-stats {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 0.875rem;
+  white-space: nowrap;
+}
+
+.thread-stat,
+.thread-report-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.thread-stat i,
+.thread-report-button i {
+  flex: 0 0 auto;
+}
+
+.thread-tags {
+  column-gap: 0.375rem;
+  row-gap: 0.375rem;
+}
+
+@media (max-width: 575.98px) {
+  .thread-author {
+    flex: 1 1 100%;
+  }
+
+  .thread-stats {
+    margin-left: 3.25rem;
+  }
 }
 
 .thread-body :deep(img) {

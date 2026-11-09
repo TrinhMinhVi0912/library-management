@@ -8,7 +8,7 @@
   >
     <!-- Header thông tin tác giả -->
     <div class="d-flex align-items-start justify-content-between gap-2 mb-2">
-      <div class="d-flex align-items-center gap-2.5">
+      <div class="post-author">
         <!-- Avatar tác giả -->
         <div class="author-avatar position-relative flex-shrink-0">
           <img
@@ -33,7 +33,7 @@
 
         <!-- Tên tác giả & Nhãn vai trò & Thời gian -->
         <div class="d-flex flex-column">
-          <div class="d-flex align-items-center gap-1.5 flex-wrap">
+          <div class="d-flex align-items-center post-author-name-row flex-wrap">
             <span class="fw-bold text-dark fs-6">{{ authorName }}</span>
             <span
               v-if="authorRole === 'admin'"
@@ -232,6 +232,18 @@ const isOwner = computed(() => {
 .avatar-sm {
   width: 32px;
   height: 32px;
+}
+
+.post-author {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.625rem;
+}
+
+.post-author-name-row {
+  column-gap: 0.375rem;
+  row-gap: 0.25rem;
 }
 
 .fs-7 {

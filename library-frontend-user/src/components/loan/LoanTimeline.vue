@@ -110,6 +110,11 @@ const steps = computed(() => {
 
   return [step1, step2, step3, step4];
 });
+
+const completedTransitions = computed(() => {
+  const firstIncompleteStep = steps.value.findIndex((step) => step.status !== 'completed');
+  return firstIncompleteStep === -1 ? steps.value.length - 1 : Math.max(0, firstIncompleteStep);
+});
 </script>
 
 <template>
@@ -117,7 +122,16 @@ const steps = computed(() => {
     class="loan-timeline-wrap"
     aria-label="Tiến trình mượn trả sách"
   >
-    <ol class="loan-timeline-list list-unstyled mb-0 d-flex flex-column flex-md-row justify-content-between">
+    <ol class="loan-timeline-list list-unstyled mb-0 d-flex flex-column flex-md-row">
+      <li
+        class="timeline-track d-none d-md-block"
+        aria-hidden="true"
+      >
+        <span
+          class="timeline-track-progress"
+          :style="{ width: `${(completedTransitions / (steps.length - 1)) * 100}%` }"
+        />
+      </li>
       <li
         v-for="(step, idx) in steps"
         :key="idx"
@@ -162,13 +176,6 @@ const steps = computed(() => {
             {{ step.date }}
           </div>
         </div>
-
-        <!-- Đường nối giữa các bước (trên desktop/tablet) -->
-        <div
-          v-if="idx < steps.length - 1"
-          class="timeline-connector d-none d-md-block"
-          aria-hidden="true"
-        />
       </li>
     </ol>
   </div>
@@ -179,13 +186,19 @@ const steps = computed(() => {
   padding: 0.75rem 0;
 }
 
+.loan-timeline-list {
+  position: relative;
+}
+
 .loan-timeline-step {
   gap: 0.5rem;
   padding-bottom: 1rem;
+  z-index: 1;
 }
 
 @media (min-width: 768px) {
   .loan-timeline-step {
+    flex: 1 1 0;
     padding-bottom: 0;
   }
 }
@@ -232,18 +245,20 @@ const steps = computed(() => {
   border: 1px dashed #ced4da;
 }
 
-/* Đường nối */
-.timeline-connector {
+/* Một đường liền chạy qua tâm các mốc trên bố cục ngang. */
+.timeline-track {
   position: absolute;
   top: 16px;
-  left: 50%;
-  width: 100%;
+  left: 12.5%;
+  right: 12.5%;
   height: 2px;
   background-color: #dee2e6;
   z-index: 1;
 }
 
-.step-completed .timeline-connector {
+.timeline-track-progress {
+  display: block;
+  height: 100%;
   background-color: #198754;
 }
 

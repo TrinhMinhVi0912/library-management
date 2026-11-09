@@ -1,7 +1,7 @@
 <template>
   <button
     type="button"
-    class="btn btn-like d-inline-flex align-items-center gap-1.5 transition-all"
+    class="btn btn-like d-inline-flex align-items-center transition-all"
     :class="[
       buttonSizeClass,
       liked ? 'btn-like-active border-danger-subtle' : 'btn-outline-secondary border-light-subtle text-muted',
@@ -16,7 +16,7 @@
       class="bi fs-6 transition-transform"
       :class="[
         liked ? 'bi-heart-fill text-danger scale-up' : 'bi-heart',
-        loading ? 'spinner-border spinner-border-sm me-1' : ''
+        loading ? 'spinner-border spinner-border-sm' : ''
       ]"
       aria-hidden="true"
     />
@@ -59,9 +59,18 @@ const buttonSizeClass = computed(() => {
 
 <style scoped>
 .btn-like {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.35rem 0.7rem;
   border-radius: 9999px;
   background-color: #ffffff;
   transition: all 0.2s ease-in-out;
+}
+
+.btn-like.btn-sm {
+  padding: 0.25rem 0.55rem;
+  font-size: 0.8125rem;
 }
 
 .btn-like:hover:not(:disabled) {
