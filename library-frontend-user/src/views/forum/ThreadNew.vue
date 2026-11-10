@@ -30,7 +30,7 @@
             class="breadcrumb-item active text-dark fw-medium"
             aria-current="page"
           >
-            Tạo chủ đề mới
+            {{ isEditing ? 'Sửa bài đăng' : 'Tạo chủ đề mới' }}
           </li>
         </ol>
       </nav>
@@ -43,7 +43,7 @@
               class="bi bi-pencil-square text-primary"
               aria-hidden="true"
             />
-            <span>Tạo chủ đề thảo luận mới</span>
+            <span>{{ isEditing ? 'Chỉnh sửa chủ đề' : 'Tạo chủ đề thảo luận mới' }}</span>
           </h1>
           <p class="text-secondary small mb-0">
             Chia sẻ cảm nhận sách, đặt câu hỏi hoặc trao đổi cùng cộng đồng độc giả thư viện.
@@ -526,7 +526,7 @@
                 class="bi bi-send-fill"
                 aria-hidden="true"
               />
-              <span>Đăng chủ đề</span>
+              <span>{{ isEditing ? 'Lưu thay đổi' : 'Đăng chủ đề' }}</span>
             </button>
           </div>
         </form>
@@ -547,6 +547,7 @@ import { cloudinaryThumb } from '@/utils/image';
 const route = useRoute();
 const router = useRouter();
 const toast = useToast();
+const isEditing = computed(() => typeof route.query.edit === 'string' && Boolean(route.query.edit));
 
 const categories = ref([]);
 const loadingCategories = ref(true);
@@ -633,6 +634,7 @@ async function loadCategories() {
 }
 
 async function checkPrefilledBook() {
+  if (isEditing.value) return;
   const bookId = route.query.bookId;
   const bookTitle = route.query.bookTitle;
 
@@ -650,6 +652,27 @@ async function checkPrefilledBook() {
     } catch {
       // Giữ thông tin cơ bản nếu không tải được chi tiết
     }
+  }
+}
+
+async function loadThreadForEdit() {
+  if (!isEditing.value) return;
+  try {
+    const thread = await forumService.getMyThread(route.query.edit);
+    if (thread.status !== 'active') {
+      toast.error('Bài đăng đã ẩn nên không thể chỉnh sửa.');
+      router.replace({ name: 'forum-my' });
+      return;
+    }
+    form.category = thread.category?._id || thread.category;
+    form.title = thread.title || '';
+    form.content = thread.content || '';
+    form.tags = [...(thread.tags || [])];
+    form.book = thread.book?._id || thread.book || '';
+    selectedBook.value = thread.book || null;
+  } catch (error) {
+    toast.error(error.response?.data?.message || 'Không tải được bài đăng để chỉnh sửa.');
+    router.replace({ name: 'forum-my' });
   }
 }
 
@@ -815,9 +838,11 @@ async function handleSubmit() {
   };
 
   try {
-    const createdThread = await forumService.createThread(payload);
-    toast.success('Đã tạo chủ đề thành công');
-    router.push({ path: `/forum/t/${createdThread.slug || createdThread._id}` });
+    const thread = isEditing.value
+      ? await forumService.updateThread(route.query.edit, payload)
+      : await forumService.createThread(payload);
+    toast.success(isEditing.value ? 'Đã cập nhật chủ đề' : 'Đã tạo chủ đề thành công');
+    router.push({ path: `/forum/t/${thread.slug || thread._id}` });
   } catch (err) {
     serverError.value = err?.response?.data?.message || err?.message || 'Không thể đăng chủ đề. Vui lòng kiểm tra lại.';
     toast.error('Lỗi đăng bài: ' + serverError.value);
@@ -829,6 +854,7 @@ async function handleSubmit() {
 onMounted(() => {
   loadCategories();
   checkPrefilledBook();
+  loadThreadForEdit();
 });
 
 onBeforeUnmount(() => {

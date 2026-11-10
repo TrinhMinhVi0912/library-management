@@ -15,6 +15,8 @@ const {
 const router = express.Router();
 
 router.get('/categories', forumController.listCategories);
+router.get('/my/threads', auth, validate(forumListQuerySchema, 'query'), forumController.listMyThreads);
+router.get('/my/threads/:id', auth, validate(idParamSchema, 'params'), forumController.getMyThread);
 router.get('/threads', validate(forumListQuerySchema, 'query'), forumController.listThreads);
 router.get('/threads/:idOrSlug', validate(threadParamSchema, 'params'), forumController.getThread);
 router.get('/threads/:id/posts', validate(idParamSchema, 'params'), validate(forumListQuerySchema, 'query'), forumController.listPosts);

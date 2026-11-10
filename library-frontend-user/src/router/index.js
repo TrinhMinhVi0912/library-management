@@ -25,6 +25,7 @@ import ForumHome from '@/views/forum/ForumHome.vue';
 import ForumCategory from '@/views/forum/ForumCategory.vue';
 import ThreadDetail from '@/views/forum/ThreadDetail.vue';
 import ThreadNew from '@/views/forum/ThreadNew.vue';
+import MyForumThreads from '@/views/forum/MyForumThreads.vue';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -56,6 +57,7 @@ const router = createRouter({
         { path: 'notifications', name: 'notifications', component: Notifications, meta: { title: 'Thông báo', requiresAuth: true, roles: ['reader'] } },
         { path: 'profile', name: 'profile', component: Profile, meta: { title: 'Hồ sơ', requiresAuth: true, roles: ['reader'] } },
         { path: 'forum/new', name: 'forum-new', component: ThreadNew, meta: { title: 'Tạo chủ đề', requiresAuth: true, roles: ['reader'] } },
+        { path: 'forum/my', name: 'forum-my', component: MyForumThreads, meta: { title: 'Bài đăng của tôi', requiresAuth: true, roles: ['reader'] } },
       ],
     },
     { path: '/:pathMatch(.*)*', redirect: { name: 'not-found' } },

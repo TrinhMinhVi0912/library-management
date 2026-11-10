@@ -20,6 +20,11 @@ const listThreads = asyncHandler(async (req, res) => {
   const result = await forumService.listThreads(req.query);
   return ok(res, result.items, result.meta);
 });
+const listMyThreads = asyncHandler(async (req, res) => {
+  const result = await forumService.listMyThreads(req.user, req.query);
+  return ok(res, result.items, result.meta);
+});
+const getMyThread = asyncHandler(async (req, res) => ok(res, await forumService.getMyThread(req.params.id, req.user)));
 const getThread = asyncHandler(async (req, res) => ok(res, await forumService.getThread(req.params.idOrSlug)));
 const createThread = asyncHandler(async (req, res) => ok(res, await forumService.createThread(req.user, req.body), null, 201));
 const updateThread = asyncHandler(async (req, res) => ok(res, await forumService.updateThread(req.params.id, req.user, req.body)));
@@ -37,6 +42,6 @@ const togglePostLike = asyncHandler(async (req, res) => ok(res, await forumServi
 module.exports = {
   listCategories, createCategory, updateCategory, deleteCategory,
   createReport, getAdminReports, updateReportStatus, pinThread, lockThread, hideThread, hidePost, deletePostAsAdmin,
-  listThreads, getThread, createThread, updateThread, deleteThread,
+  listThreads, listMyThreads, getMyThread, getThread, createThread, updateThread, deleteThread,
   listPosts, createPost, updatePost, deletePost, toggleThreadLike, togglePostLike,
 };

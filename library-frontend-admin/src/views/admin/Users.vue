@@ -173,20 +173,28 @@ async function unlockUser(user) {
 
 async function sendPasswordReset(user) {
   const confirmation = await Swal.fire({
-    title: 'Gửi liên kết đặt lại mật khẩu?',
-    text: `Liên kết sẽ được gửi tới ${user.email}.`,
-    icon: 'question',
+    title: 'Tạo mã khôi phục mật khẩu?',
+    text: 'Chỉ tiếp tục sau khi đã xác minh trực tiếp thẻ độc giả hoặc giấy tờ của người yêu cầu.',
+    icon: 'warning',
     showCancelButton: true,
-    confirmButtonText: 'Gửi email',
+    confirmButtonText: 'Tạo mã',
     cancelButtonText: 'Hủy',
   });
   if (!confirmation.isConfirmed) return;
   busyId.value = user._id;
   try {
     const result = await requestAdminPasswordReset(user._id);
-    toast.success(result?.message || 'Đã gửi email hướng dẫn đặt lại mật khẩu.');
+    await Swal.fire({
+      title: 'Mã khôi phục đã được tạo',
+      text: result?.resetCode || 'Không nhận được mã khôi phục. Vui lòng kiểm tra kết quả API.',
+      input: 'text',
+      inputValue: result?.resetCode || '',
+      inputAttributes: { readonly: true, 'aria-label': 'Mã khôi phục dùng một lần' },
+      footer: 'Mã chỉ hiển thị lần này, có hiệu lực 30 phút. Ghi nhận việc bàn giao trực tiếp cho độc giả; không gửi mã qua email hoặc kênh công khai.',
+      confirmButtonText: 'Đã ghi nhận',
+    });
   } catch (error) {
-    toast.error(error.response?.data?.message || 'Không thể gửi email đặt lại mật khẩu.');
+    toast.error(error.response?.data?.message || 'Không thể tạo mã khôi phục.');
   } finally {
     busyId.value = '';
   }

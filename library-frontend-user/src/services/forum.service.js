@@ -31,6 +31,26 @@ export const forumService = {
     };
   },
 
+  async getMyThreads(params = {}) {
+    const response = await api.get('/forum/my/threads', { params });
+    return { threads: getData(response) || [], meta: response.data?.meta || null };
+  },
+
+  async getMyThread(id) {
+    const response = await api.get(`/forum/my/threads/${encodeURIComponent(id)}`);
+    return getData(response);
+  },
+
+  async updateThread(id, payload) {
+    const response = await api.patch(`/forum/threads/${encodeURIComponent(id)}`, payload);
+    return getData(response);
+  },
+
+  async deleteThread(id) {
+    const response = await api.delete(`/forum/threads/${encodeURIComponent(id)}`);
+    return getData(response);
+  },
+
   /**
    * Lấy chi tiết một chủ đề theo ID hoặc Slug
    * @param {string} idOrSlug

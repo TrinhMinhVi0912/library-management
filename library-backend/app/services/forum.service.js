@@ -200,6 +200,27 @@ async function listThreads(query = {}) {
   return { items, meta: buildPaginationMeta(total, page, limit) };
 }
 
+async function listMyThreads(user, query = {}) {
+  const { page, limit, skip } = parsePagination(query);
+  const filter = { author: user._id };
+  if (query.q) {
+    const escaped = query.q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    filter.$or = [{ title: new RegExp(escaped, 'i') }, { content: new RegExp(escaped, 'i') }];
+  }
+  const [items, total] = await Promise.all([
+    ForumThread.find(filter).populate('category', 'name slug').populate('author', 'firstName lastName avatar role').populate('book', 'title slug cover').sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
+    ForumThread.countDocuments(filter),
+  ]);
+  return { items, meta: buildPaginationMeta(total, page, limit) };
+}
+
+async function getMyThread(threadId, user) {
+  const thread = await ForumThread.findOne({ _id: threadId, author: user._id })
+    .populate('category', 'name slug').populate('author', 'firstName lastName avatar role').populate('book', 'title slug cover');
+  if (!thread) throw ApiError.notFound('Không tìm thấy bài đăng của bạn');
+  return thread;
+}
+
 async function getThread(idOrSlug) {
   const filter = /^[0-9a-fA-F]{24}$/.test(idOrSlug) ? { _id: idOrSlug, status: 'active' } : { slug: idOrSlug, status: 'active' };
   const thread = await ForumThread.findOneAndUpdate(filter, { $inc: { viewCount: 1 } }, { new: true })
@@ -369,6 +390,8 @@ module.exports = {
   setThreadLocked,
   hideThread,
   listThreads,
+  listMyThreads,
+  getMyThread,
   getThread,
   createThread,
   updateThread,

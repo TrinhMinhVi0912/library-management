@@ -156,17 +156,30 @@ onMounted(() => {
           </div>
 
           <div class="col-lg-4 text-lg-end">
-            <button
-              type="button"
-              class="btn btn-light btn-lg px-4 py-2.5 fw-semibold text-primary shadow-sm d-inline-flex align-items-center gap-2"
-              @click="handleCreateThread"
-            >
-              <i
-                class="bi bi-pencil-square"
-                aria-hidden="true"
-              />
-              <span>Đăng chủ đề mới</span>
-            </button>
+            <div class="d-flex flex-wrap justify-content-lg-end gap-2">
+              <RouterLink
+                v-if="authStore.isAuthenticated"
+                :to="{ name: 'forum-my' }"
+                class="btn btn-outline-light btn-lg px-4 py-2.5 fw-semibold d-inline-flex align-items-center gap-2"
+              >
+                <i
+                  class="bi bi-person-lines-fill"
+                  aria-hidden="true"
+                />
+                <span>Bài đăng của tôi</span>
+              </RouterLink>
+              <button
+                type="button"
+                class="btn btn-light btn-lg px-4 py-2.5 fw-semibold text-primary shadow-sm d-inline-flex align-items-center gap-2"
+                @click="handleCreateThread"
+              >
+                <i
+                  class="bi bi-pencil-square"
+                  aria-hidden="true"
+                />
+                <span>Đăng chủ đề mới</span>
+              </button>
+            </div>
           </div>
         </div>
       </section>
