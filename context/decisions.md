@@ -35,5 +35,9 @@
 | D-029 | Frontend dùng ESLint flat config với `eslint-plugin-vue`, `@eslint/js` và `globals` để lint cả Vue SFC lẫn JavaScript | ESLint không phân tích cú pháp/template `.vue` nếu thiếu parser/plugin Vue; lint đầy đủ cần bộ tooling này |
 | D-030 | Dashboard quản trị coi phiếu mượn có `pickupDeadline` trong 3 ngày tới là “sắp đến hạn nhận” | Người dùng chốt ngưỡng 3 ngày cho FE-20 |
 | D-031 | Staff/admin được đọc riêng `lateFeePerDay`, `lostBookFeeRate`, `lostBookProcessingFee` qua `GET /api/v1/admin/loan-return-policy` để tính preview tiền phạt; API không trả hoặc cho sửa settings khác | Người dùng đồng ý mở rộng BE nhỏ trong FE-23 để staff có cùng preview chính xác với backend |
+| D-032 | Checkbox “Ghi nhớ” tại user login chỉ lưu email trên thiết bị; access token vẫn ở Pinia memory và không lưu mật khẩu/token trong localStorage | Người dùng chọn lưu email; backend hiện chưa hỗ trợ tùy chỉnh thời hạn refresh cookie |
+| D-033 | Google Login chỉ cấp role `reader`; email trùng tài khoản mật khẩu không tự liên kết, người dùng đăng nhập mật khẩu trước | Tránh chiếm tài khoản và không cho OAuth nâng quyền; đã chốt trước BE-39 |
+| D-034 | Thay khôi phục mật khẩu qua email bằng mã ngẫu nhiên 128-bit (32 ký tự hex) dùng một lần, hết hạn 30 phút; staff/admin chỉ cấp sau khi xác minh trực tiếp tại quầy; chỉ hiển thị mã một lần, lưu SHA-256, reset thành công thu hồi mọi refresh token | Không cần dịch vụ email; mã đủ mạnh nhưng dễ bàn giao trực tiếp hơn token 256-bit. D-034 thay thế quy trình reset email trước đó trong D-020/Q6 |
+| D-035 | Trang “Bài đăng của tôi” lấy danh sách theo `req.user`, hiển thị cả chủ đề active và hidden; độc giả chỉ sửa/ẩn chủ đề active của mình; ẩn bài cũng ẩn các phản hồi theo nghiệp vụ backend hiện có | Người dùng cần quản lý chủ đề đã đăng; quyền sở hữu phải áp dụng phía máy chủ, không lọc ở frontend |
 
 

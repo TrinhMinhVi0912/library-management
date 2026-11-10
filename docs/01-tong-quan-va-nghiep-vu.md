@@ -21,7 +21,7 @@ Xây dựng website thư viện cho phép độc giả tìm sách, đăng ký m�
 | Tầng | Công nghệ chính | Thư viện bổ trợ |
 |---|---|---|
 | Frontend | Vue 3 (Vite) + Bootstrap 5 | vue-router, pinia, axios, **socket.io-client**, bootstrap-icons, chart.js + vue-chartjs, vee-validate + yup, vue-toastification, dayjs, sweetalert2; lint: eslint + eslint-plugin-vue + @eslint/js + globals |
-| Backend | Node.js + Express.js | mongoose, jsonwebtoken, bcryptjs, joi, **socket.io**, **cloudinary**, multer (memoryStorage), cors, helmet, express-rate-limit, express-mongo-sanitize, morgan, node-cron, dotenv, nodemailer, swagger-ui-express, exceljs (xuất báo cáo) |
+| Backend | Node.js + Express.js | mongoose, jsonwebtoken, bcryptjs, joi, **socket.io**, **cloudinary**, multer (memoryStorage), cors, helmet, express-rate-limit, express-mongo-sanitize, morgan, node-cron, dotenv, swagger-ui-express, exceljs (xuất báo cáo) |
 | Database | MongoDB | Mongoose ODM; MongoDB Atlas (cả dev lẫn production) hoặc local replica set |
 | Lưu trữ ảnh | Cloudinary | Upload từ backend, trả về `url` + `publicId` |
 

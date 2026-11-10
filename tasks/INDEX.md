@@ -4,7 +4,7 @@ Ký hiệu: ⬜ chưa làm · 🟦 đang làm · ✅ xong. `/next` chọn task �
 
 Mỗi task = 1 cuộc trò chuyện (~45–90 phút). Chi tiết: `tasks/backend/BE-xx.md`, `tasks/frontend/FE-xx.md`.
 
-## TRACK BACKEND (BE-01 → BE-38): khởi tạo đến hoàn thành backend
+## TRACK BACKEND (BE-01 → BE-40): khởi tạo, hoàn thiện và tích hợp dịch vụ
 
 | ID | Tiêu đề | Giai đoạn | Phụ thuộc | Trạng thái | Ghi chú |
 |---|---|---|---|:-:|---|
@@ -46,10 +46,12 @@ Mỗi task = 1 cuộc trò chuyện (~45–90 phút). Chi tiết: `tasks/backend
 | [BE-36](backend/BE-36.md) | Kiểm thử tự động cho nghiệp vụ trọng yếu | B8 Hoàn thiện | BE-35 | ✅ | Lint pass; người dùng xác nhận 27 suites / 432 tests pass; chưa có MongoDB replica set integration |
 | [BE-37](backend/BE-37.md) | Swagger, README backend, rà soát bảo mật | B8 Hoàn thiện | BE-36 | ✅ | 29 suites / 441 tests pass; Cloudinary bundle chưa thể quét do frontend chưa có source/build |
 | [BE-38](backend/BE-38.md) | Chuẩn bị & kiểm tra deploy backend | B8 Hoàn thiện | BE-37 | ✅ | Render + Atlas; health/auth và Socket.IO `notification:new` đã xác nhận |
+| [BE-39](backend/BE-39.md) | Đăng nhập Google (OAuth backend) | B9 Tích hợp | BE-08 | ✅ | Backend, xác minh ID token, tạo phiên và test xong; FE-40 local login/F5 đã xác nhận |
+| [BE-40](backend/BE-40.md) | Khôi phục mật khẩu có nhân viên xác minh (không email) | B9 Tích hợp | BE-09, FE-06, FE-29, FE-39 | 🟦 | Staff/admin cấp mã một lần sau xác minh trực tiếp; giao mã tại quầy; FE-38 không cần chờ email provider |
 
-## TRACK FRONTEND (FE-01 → FE-38): admin trước, user sau; hai app dùng chung backend
+## TRACK FRONTEND (FE-01 → FE-41): admin trước, user sau; hai app dùng chung backend
 
-Thứ tự triển khai: hoàn thành app admin (`library-frontend-admin/`, FE-19…FE-31 và FE-34), sau đó khởi tạo và hoàn thành app user (`library-frontend-user/`, FE-01…FE-18, FE-32, FE-33, FE-35). Cuối cùng FE-36…FE-38 rà soát, kiểm thử và deploy cả hai app. Chi tiết trong `docs/07-workflow-phat-trien.md`.
+Thứ tự triển khai: hoàn thành app admin (`library-frontend-admin/`, FE-19…FE-31, FE-34, FE-39), sau đó khởi tạo và hoàn thành app user (`library-frontend-user/`, FE-01…FE-18, FE-32, FE-33, FE-35). Chuỗi tích hợp được yêu cầu: **BE-39 → FE-40 → BE-40 → FE-38**; FE-38 vẫn cần FE-37 hoàn tất trước khi deploy. Chi tiết trong `docs/07-workflow-phat-trien.md`.
 
 | ID | Tiêu đề | Giai đoạn | Phụ thuộc | Trạng thái | Ghi chú |
 |---|---|---|---|:-:|---|
@@ -61,36 +63,39 @@ Thứ tự triển khai: hoàn thành app admin (`library-frontend-admin/`, FE-1
 | [FE-24](frontend/FE-24.md) | Duyệt yêu cầu gia hạn | F3 Quản trị | FE-19 | ✅ | Code/lint/build xong; browser QA còn trong `frontend/qa/FE-24.md` |
 | [FE-25](frontend/FE-25.md) | Tất cả phiếu mượn | F3 Quản trị | FE-19 | ✅ | Code/lint/build xong; browser QA còn trong `frontend/qa/FE-25.md` |
 | [FE-26](frontend/FE-26.md) | Quản lý phạt | F3 Quản trị | FE-19 | ✅ | Code/lint/build xong; browser QA còn trong `frontend/qa/FE-26.md`; tổng unpaid hiển thị theo trang hiện tại |
-| [FE-27](frontend/FE-27.md) | Quản lý sách | F3 Quản trị | FE-19 | ✅ | Code/lint/build xong; browser QA còn trong `frontend/qa/FE-27.md`; upload thật chờ QA Cloudinary |
+| [FE-27](frontend/FE-27.md) | Quản lý sách | F3 Quản trị | FE-19 | ✅ | Form riêng, bộ chọn tìm kiếm, thử upload Cloudinary; development không còn trả URL giả; QA tại `frontend/qa/FE-27.md` |
 | [FE-28](frontend/FE-28.md) | Quản lý danh mục | F3 Quản trị | FE-19 | ✅ | Code/lint/build xong; browser QA còn trong `frontend/qa/FE-28.md` |
-| [FE-29](frontend/FE-29.md) | Quản lý người dùng | F3 Quản trị | FE-19 | ✅ | Code/lint/build xong; browser QA còn trong `frontend/qa/FE-29.md`; email reset cần SMTP hoạt động |
+| [FE-29](frontend/FE-29.md) | Quản lý người dùng | F3 Quản trị | FE-19 | ✅ | Code/lint/build xong; browser QA còn trong `frontend/qa/FE-29.md`; reset code cập nhật theo BE-40 |
 | [FE-30](frontend/FE-30.md) | Quản lý thông báo | F3 Quản trị | FE-19 | ✅ | Code/lint/build xong; browser QA còn trong `frontend/qa/FE-30.md`; toast phía độc giả chờ FE-16 |
 | [FE-31](frontend/FE-31.md) | Cài đặt & nhật ký hệ thống | F3 Quản trị | FE-19 | ✅ | Code/lint/build xong; browser QA còn trong `frontend/qa/FE-31.md`; hai route admin-only |
 | [FE-34](frontend/FE-34.md) | Kiểm duyệt diễn đàn (admin) | F4 Diễn đàn & đặt trước | FE-19 | ✅ | Code/lint/build xong; browser QA còn trong `frontend/qa/FE-34.md` |
+| [FE-39](frontend/FE-39.md) | Trang quản lý nhân viên riêng | F3 Quản trị | FE-19, FE-29 | ✅ | Trang `/admin/staff` hoàn thành; lint/build pass; browser QA tại `frontend/qa/FE-39.md` đang chờ |
 | [FE-01](frontend/FE-01.md) | Khởi tạo project frontend | F0 Khởi tạo | – | ✅ | Skeleton, lint/build xong; browser QA còn trong `frontend/qa/FE-01.md` |
 | [FE-02](frontend/FE-02.md) | Styles, design tokens, App shell | F0 Khởi tạo | FE-01 | ✅ | Tokens, toast wiring, formatter; lint/build xong; browser QA còn trong `frontend/qa/FE-02.md` |
 | [FE-03](frontend/FE-03.md) | api.service (axios), auth store khung, ui store | F0 Khởi tạo | FE-02 | ✅ | Code/lint/build xong; kiểm tra endpoint/CORS còn chờ tại `frontend/qa/FE-03.md` |
 | [FE-04](frontend/FE-04.md) | Component chung (1/2) | F0 Khởi tạo | FE-02 | ✅ | 7 component + dev preview; lint/build xong; browser QA còn trong `frontend/qa/FE-04.md` |
-| [FE-05](frontend/FE-05.md) | Layout công khai, navbar, footer, router khung | F1 Khách & Auth | FE-03, FE-04 | ✅ | Code/lint/build xong; browser QA và kiểm tra F5 sau FE-06 còn trong `frontend/qa/FE-05.md` |
-| [FE-06](frontend/FE-06.md) | Trang đăng nhập, đăng ký, quên/đặt lại mật khẩu | F1 Khách & Auth | FE-05 | ⬜ | |
-| [FE-07](frontend/FE-07.md) | Service sách + component sách | F1 Khách & Auth | FE-04 | ⬜ | |
-| [FE-08](frontend/FE-08.md) | Trang chủ | F1 Khách & Auth | FE-07, FE-05 | ⬜ | |
-| [FE-09](frontend/FE-09.md) | Danh sách & tìm kiếm sách | F1 Khách & Auth | FE-07, FE-05 | ⬜ | |
-| [FE-10](frontend/FE-10.md) | Chi tiết sách & trang tác giả | F1 Khách & Auth | FE-09 | ⬜ | |
-| [FE-11](frontend/FE-11.md) | Giỏ mượn | F2 Độc giả | FE-10, FE-06 | ⬜ | |
-| [FE-12](frontend/FE-12.md) | Lịch sử mượn của tôi | F2 Độc giả | FE-11 | ⬜ | |
-| [FE-13](frontend/FE-13.md) | Yêu cầu gia hạn phía độc giả | F2 Độc giả | FE-12 | ⬜ | |
-| [FE-14](frontend/FE-14.md) | Phạt của tôi | F2 Độc giả | FE-12 | ⬜ | |
-| [FE-15](frontend/FE-15.md) | Hồ sơ cá nhân & ImageUploader | F2 Độc giả | FE-06 | ⬜ | |
-| [FE-16](frontend/FE-16.md) | Thông báo realtime (Socket.IO) | F2 Độc giả | FE-06 | ⬜ | |
-| [FE-17](frontend/FE-17.md) | Đánh giá sách | F2 Độc giả | FE-10, FE-06 | ⬜ | |
-| [FE-18](frontend/FE-18.md) | Kệ sách của tôi | F2 Độc giả | FE-10 | ⬜ | |
-| [FE-32](frontend/FE-32.md) | Diễn đàn (1/2): trang chủ, chuyên mục | F4 Diễn đàn & đặt trước | FE-06 | ⬜ | |
-| [FE-33](frontend/FE-33.md) | Diễn đàn (2/2): chi tiết, soạn bài, báo cáo | F4 Diễn đàn & đặt trước | FE-32 | ⬜ | |
-| [FE-35](frontend/FE-35.md) | Đặt trước sách | F4 Diễn đàn & đặt trước | FE-12 | ⬜ | |
-| [FE-36](frontend/FE-36.md) | Trang giới thiệu, 403, rà soát giao diện | F5 Hoàn thiện | FE-35, FE-34 | ⬜ | |
-| [FE-37](frontend/FE-37.md) | Kiểm thử chấp nhận theo vai trò & sửa lỗi | F5 Hoàn thiện | FE-36 | ⬜ | |
-| [FE-38](frontend/FE-38.md) | Build & deploy frontend | F5 Hoàn thiện | FE-37 | ⬜ | |
+| [FE-05](frontend/FE-05.md) | Layout công khai, navbar, footer, router khung | F1 Khách & Auth | FE-03, FE-04 | ✅ | Thêm chuyển cảnh route, hỗ trợ giảm chuyển động; lint/build pass; browser QA tại `frontend/qa/FE-05.md` |
+| [FE-06](frontend/FE-06.md) | Trang đăng nhập, đăng ký, quên/đặt lại mật khẩu | F1 Khách & Auth | FE-05 | ✅ | Code/lint/build xong; khôi phục trực tiếp được cập nhật ở BE-40; browser QA còn chờ |
+| [FE-07](frontend/FE-07.md) | Service sách + component sách | F1 Khách & Auth | FE-04 | ✅ | Code/lint/build xong; xác nhận API và giao diện browser còn trong `frontend/qa/FE-07.md` |
+| [FE-08](frontend/FE-08.md) | Trang chủ | F1 Khách & Auth | FE-07, FE-05 | ✅ | Code/lint/build xong; browser QA còn trong `frontend/qa/FE-08.md` |
+| [FE-09](frontend/FE-09.md) | Danh sách & tìm kiếm sách | F1 Khách & Auth | FE-07, FE-05 | ✅ | Code/lint/build xong; browser QA còn trong `frontend/qa/FE-09.md` |
+| [FE-10](frontend/FE-10.md) | Chi tiết sách & trang tác giả | F1 Khách & Auth | FE-09 | ✅ | Code/lint/build xong; browser QA còn trong `frontend/qa/FE-10.md` |
+| [FE-11](frontend/FE-11.md) | Giỏ mượn | F2 Độc giả | FE-10, FE-06 | ✅ | Code/lint/build xong; browser QA còn trong `frontend/qa/FE-11.md` |
+| [FE-12](frontend/FE-12.md) | Lịch sử mượn của tôi | F2 Độc giả | FE-11 | ✅ | Sửa timeline thành đường nối liên tục; lint/build pass; browser QA còn trong `frontend/qa/FE-12.md` |
+| [FE-13](frontend/FE-13.md) | Yêu cầu gia hạn phía độc giả | F2 Độc giả | FE-12 | ✅ | Code/lint/build xong; browser QA còn trong `frontend/qa/FE-13.md` |
+| [FE-14](frontend/FE-14.md) | Phạt của tôi | F2 Độc giả | FE-12 | ✅ | Code/lint/build xong; browser QA còn trong `frontend/qa/FE-14.md` |
+| [FE-15](frontend/FE-15.md) | Hồ sơ cá nhân & ImageUploader | F2 Độc giả | FE-06 | ✅ | Code/lint/build xong; browser QA còn trong `frontend/qa/FE-15.md` |
+| [FE-16](frontend/FE-16.md) | Thông báo realtime (Socket.IO) | F2 Độc giả | FE-06 | ✅ | Code/lint/build xong; browser QA còn trong `frontend/qa/FE-16.md` |
+| [FE-17](frontend/FE-17.md) | Đánh giá sách | F2 Độc giả | FE-10, FE-06 | ✅ | Code/lint/build xong; browser QA còn trong `frontend/qa/FE-17.md` |
+| [FE-18](frontend/FE-18.md) | Kệ sách của tôi | F2 Độc giả | FE-10 | ✅ | Đã sửa khoảng cách icon/tên kệ; lint/build pass; browser QA chờ tại `frontend/qa/FE-18.md` |
+| [FE-32](frontend/FE-32.md) | Diễn đàn (1/2): trang chủ, chuyên mục | F4 Diễn đàn & đặt trước | FE-06 | ✅ | Code/lint/build xong; browser QA chờ tại `frontend/qa/FE-32.md` |
+| [FE-33](frontend/FE-33.md) | Diễn đàn (2/2): chi tiết, soạn bài, báo cáo | F4 Diễn đàn & đặt trước | FE-32 | ✅ | Sửa tìm sách liên quan và khoảng cách icon/chữ trang chi tiết; lint/build pass; browser QA tại `frontend/qa/FE-33.md` |
+| [FE-35](frontend/FE-35.md) | Đặt trước sách | F4 Diễn đàn & đặt trước | FE-12 | ✅ | Code/lint/build xong; browser QA còn trong `frontend/qa/FE-35.md` |
+| [FE-36](frontend/FE-36.md) | Trang giới thiệu, 403, rà soát giao diện | F5 Hoàn thiện | FE-35, FE-34 | ✅ | Lint/build hai app thành công; browser QA còn chờ tại `frontend/qa/FE-36.md` |
+| [FE-37](frontend/FE-37.md) | Kiểm thử chấp nhận theo vai trò & sửa lỗi | F5 Hoàn thiện | FE-36, FE-39 | 🟦 | Checklist chia theo role tại `frontend/qa/FE-37.md`; kiểm thử trình duyệt đang chờ |
+| [FE-40](frontend/FE-40.md) | Đăng nhập bằng Google (user app) | F6 Tích hợp | FE-06, BE-39 | ✅ | Local Google login và F5 giữ phiên đã được người dùng xác nhận; production smoke test chuyển sang FE-38 |
+| [FE-41](frontend/FE-41.md) | Bài đăng diễn đàn của tôi | F4 Diễn đàn | FE-32, FE-33, BE-33, BE-34 | 🟦 | Trang quản lý, sửa/ẩn bài; lint/build pass, browser QA còn chờ |
+| [FE-38](frontend/FE-38.md) | Build & deploy frontend | F6 Deploy | FE-37, BE-40 | ⬜ | Đã chuẩn bị cấu hình Vercel cho hai app; deploy và xác minh production vẫn chờ FE-37/BE-40 |
 
 ## Cột mốc
 - **M1** sau BE-11: nền tảng + auth chạy được

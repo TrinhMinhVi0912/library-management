@@ -2,6 +2,29 @@
 
 Ứng dụng Vue 3 + Vite dành riêng cho nhân viên và quản trị viên. App có package, router, auth state và build riêng; dùng chung API backend với app độc giả.
 
+## Deploy trên Vercel
+
+Tạo Vercel Project riêng từ cùng repository và chọn Root Directory `library-frontend-admin`.
+
+| Thiết lập | Giá trị |
+|---|---|
+| Framework Preset | Vite |
+| Install Command | `npm ci` (hoặc để Vercel tự nhận diện) |
+| Build Command | `npm run build` |
+| Output Directory | `dist` |
+
+Thêm các biến trong Vercel Project Settings → Environment Variables cho Production (và Preview nếu cần):
+
+```dotenv
+VITE_API_URL=https://<backend>.onrender.com/api/v1
+VITE_SOCKET_URL=https://<backend>.onrender.com
+VITE_USER_APP_URL=https://<frontend-doc-gia>.vercel.app
+```
+
+`VITE_USER_APP_URL` là URL production của frontend độc giả để trang đăng nhập và trang không đủ quyền chuyển người dùng về đúng ứng dụng. Các biến `VITE_*` được nhúng lúc build; đổi biến thì cần redeploy. Không đưa khóa bí mật vào frontend.
+
+File `vercel.json` trong thư mục này cấu hình SPA fallback cho các đường dẫn quản trị khi tải trực tiếp hoặc refresh.
+
 ## Chạy local
 
 Từ thư mục gốc dự án, chạy backend trong terminal thứ nhất:

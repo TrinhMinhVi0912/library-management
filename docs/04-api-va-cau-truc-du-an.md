@@ -38,7 +38,6 @@ library-backend/
 │   ├── utils/
 │   │   ├── mongodb.util.js       # kết nối MongoDB (mongoose.connect)
 │   │   ├── cloudinary.util.js    # cấu hình + hàm upload/xóa ảnh
-│   │   ├── mailer.util.js        # gửi email (quên mật khẩu)
 │   │   ├── code.util.js          # sinh mã DG000001, PM000001…
 │   │   └── pagination.util.js
 │   └── api-error.js              # class ApiError (như mẫu)
@@ -119,12 +118,15 @@ Mỗi `views/*` là một trang gắn với route; `components/*` là phần tá
 | --------- | ------------------------------------------- | --------- | -------------------------------- |
 | POST      | /auth/register                              | Khách     | Đăng ký độc giả                  |
 | POST      | /auth/login                                 | Khách     | Đăng nhập                        |
+| POST      | /auth/google                                | Khách     | Xác minh Google ID token, đăng nhập hoặc tạo độc giả; email trùng tài khoản thường không tự liên kết |
 | POST      | /auth/refresh                               | Cookie    | Cấp access token mới             |
 | POST      | /auth/logout                                | Đăng nhập | Đăng xuất, thu hồi refresh token |
-| POST      | /auth/forgot-password, /auth/reset-password | Khách     | Quên/đặt lại mật khẩu            |
+| POST      | /auth/reset-password                       | Khách     | Đặt mật khẩu mới bằng mã do nhân viên cấp |
 | GET/PATCH | /me                                         | Đăng nhập | Xem/cập nhật hồ sơ               |
 | PATCH     | /me/password                                | Đăng nhập | Đổi mật khẩu                     |
 | POST      | /me/avatar                                  | Đăng nhập | Tải ảnh đại diện lên Cloudinary (multipart, ≤ 2MB) |
+
+`POST /auth/google` nhận `{ "idToken": "..." }` từ Google Identity Services. Backend xác minh chữ ký RS256, audience=`GOOGLE_CLIENT_ID`, issuer và hạn dùng bằng Google JWKS; chỉ chấp nhận email đã xác minh. Tài khoản mới chỉ có role `reader`; email đã thuộc tài khoản khác trả 409 và không tự liên kết. Thành công trả access token và refresh cookie httpOnly như đăng nhập thường.
 
 ### 3.2 Sách (công khai)
 
@@ -176,6 +178,8 @@ Khi đăng ký và khi tải `/me/shelves`, hệ thống bảo đảm đủ 3 k�
 | ------------ | ---------------------------------------------- | --------------- | ------------------------ |
 | GET          | /forum/categories                              | Công khai       | Chuyên mục               |
 | GET          | /forum/threads?category=&book=&q=&sort=        | Công khai       | Danh sách chủ đề; sort `active`, `latest`, `popular`, `views` |
+| GET          | /forum/my/threads?page=&limit=&q=              | Đăng nhập       | Chủ đề của tài khoản hiện tại, gồm chủ đề đã ẩn; phân trang |
+| GET          | /forum/my/threads/:id                           | Chủ bài         | Chi tiết chủ đề của chính tài khoản hiện tại, kể cả đã ẩn |
 | GET          | /forum/threads/:idOrSlug                       | Công khai       | Chi tiết + tăng lượt xem |
 | POST         | /forum/threads                                 | Đăng nhập       | Tạo chủ đề; tiêu đề tối đa 150, nội dung tối đa 10.000 ký tự |
 | PATCH/DELETE | /forum/threads/:id                             | Chủ bài / staff | Sửa / xóa                |
@@ -217,7 +221,7 @@ Admin/staff: `GET /admin/forum/reports?status=&targetType=&page=&limit=` (mặc 
 | PATCH     | /admin/users/:id/lock, /unlock                                     | Khóa / mở khóa                                                     |
 | POST      | /admin/users                                                       | Tạo nhân viên (admin)                                              |
 | PATCH     | /admin/users/:id/role                                              | Đổi vai trò (admin)                                                |
-| POST      | /admin/users/:id/password-reset                                    | Gửi link reset mật khẩu qua email (staff độc giả; admin mọi user active) |
+| POST      | /admin/users/:id/password-reset                                    | Cấp mã 128-bit dùng một lần cho tài khoản active; staff theo quyền quản lý, admin mọi tài khoản active |
 | GET       | /admin/notifications?audience=&type=&q=&page=&limit=               | Danh sách thông báo, lọc và phân trang                              |
 | GET       | /admin/notifications/:id                                           | Chi tiết thông báo                                                 |
 | POST      | /admin/notifications                                               | Tạo thông báo cá nhân hoặc theo nhóm                               |
@@ -346,7 +350,6 @@ COOKIE_SECURE=false                          # production: true
 CLOUDINARY_CLOUD_NAME=...
 CLOUDINARY_API_KEY=...
 CLOUDINARY_API_SECRET=...
-SMTP_HOST=... SMTP_PORT=587 SMTP_USER=... SMTP_PASS=... MAIL_FROM=...
 JOBS_SECRET=...                              # bảo vệ endpoint chạy job từ bên ngoài (xem file 05)
 
 # Mỗi app `library-frontend-user/.env` và `library-frontend-admin/.env`
@@ -367,5 +370,5 @@ Tất cả giá trị cấu hình đọc qua `app/config/index.js`, **không** h
 ## 9. Điểm còn lại cần xác nhận
 
 1. **Mongoose hay driver `mongodb` thuần?** Mẫu hiện tại có `mongodb.util.js` (nhiều khả năng dùng driver thuần). Tài liệu này giả định **Mongoose** (có schema, validate, populate; vẫn dùng được `mongodb.util.js` để kết nối). Nếu bạn muốn giữ driver thuần như mẫu thì bỏ `models/` và viết truy vấn trong `services/`.
-2. **Gửi email** (quên mật khẩu) dùng dịch vụ nào: Gmail SMTP (app password), Brevo, Resend…? Nếu chưa cần có thể làm sau.
+2. **Khôi phục mật khẩu:** độc giả xác minh danh tính trực tiếp tại quầy; staff/admin cấp mã dùng một lần. Không gửi email.
 3. **Nơi deploy** dự kiến (Render/Railway/VPS…) để tinh chỉnh cấu hình – file 05 đang viết theo hướng tổng quát.

@@ -54,8 +54,7 @@ Role: `reader`, `staff`, `admin`. Route admin yêu cầu Bearer; phần lớn ch
 | POST | `/auth/login` | Khách | `{email,password}` | `{user,accessToken}`; cookie refresh |
 | POST | `/auth/refresh` | Cookie refresh hoặc body `{refreshToken}` | Body tùy chọn | `{user,accessToken}`; cookie được rotate |
 | POST | `/auth/logout` | Khách/đã đăng nhập | Cookie refresh hoặc body `{refreshToken}` | `{message}`; xóa cookie |
-| POST | `/auth/forgot-password` | Khách | `{email}` | `{message}`; gửi link email nếu mailer cấu hình |
-| POST | `/auth/reset-password` | Khách có reset token | `{token,newPassword}` | `{message}` |
+| POST | `/auth/reset-password` | Khách có mã do nhân viên cấp trực tiếp | `{code,newPassword}` | `{message}`; mã dùng một lần, hết hạn sau 30 phút |
 | GET | `/me` | Đăng nhập | — | Hồ sơ user hiện tại |
 | PATCH | `/me` | Đăng nhập | `firstName,lastName,birthDate,gender,address,phone` (các trường cập nhật) | User đã cập nhật |
 | PATCH | `/me/password` | Đăng nhập | Mật khẩu hiện tại và mật khẩu mới (xem validator `changePasswordSchema`) | `{message}` |
@@ -206,7 +205,7 @@ Book fields: `title,slug,isbn,authors[],authorText,publisher,publishYear,price,t
 | PATCH | `/admin/users/:id/lock` | staff/admin | `{reason}` | User đã khóa |
 | PATCH | `/admin/users/:id/unlock` | staff/admin | — | User đã mở khóa |
 | PATCH | `/admin/users/:id/role` | **admin** | `{role:"reader"|"staff"|"admin"}` theo quyền cho phép | User đã đổi role |
-| POST | `/admin/users/:id/password-reset` | staff/admin | — | Kết quả yêu cầu gửi link reset qua email |
+| POST | `/admin/users/:id/password-reset` | staff/admin | — | `{resetCode,expiresAt,message}`; mã chỉ hiện một lần sau xác minh trực tiếp |
 | GET/PUT | `/admin/settings` | **admin** | PUT các trường settings (gửi ít nhất 1) | Settings |
 | GET | `/admin/audit-logs` | **admin** | `actor,action,from,to,page,limit,sort` | Mảng audit + `meta` |
 | GET | `/admin/notifications` | staff/admin | `audience,type,q,page,limit,sort` | Mảng notification + `meta` |

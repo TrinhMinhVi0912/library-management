@@ -90,9 +90,9 @@ Ghi đè biến Bootstrap bằng SCSS (`$primary`, `$border-radius`, `$font-fami
 | `/books` | Danh sách / tìm kiếm | Cột trái **bộ lọc** (thể loại, tác giả, NXB, năm, chỉ còn sách, điểm đánh giá); phía trên: ô tìm, sắp xếp (liên quan, mới, phổ biến, A–Z), chuyển lưới/danh sách; thẻ sách phân trang; chip bộ lọc đang chọn có nút xóa |
 | `/books/:slug` | Chi tiết sách | Trái: ảnh bìa lớn. Giữa: tên, tác giả (link), NXB, năm, ISBN, thể loại (chip), số trang, vị trí kệ, mô tả (thu gọn/mở rộng). Phải: **hộp mượn** – trạng thái còn/hết, nút **Thêm vào giỏ mượn** (hoặc **Đặt trước** nếu hết), **Thêm vào kệ ▾**. Dưới: tab **Đánh giá** (điểm TB, phân bố sao, danh sách; form đánh giá chỉ hiện với người đã mượn sách này, người khác thấy gợi ý "Mượn sách để đánh giá"), **Thảo luận** (chủ đề diễn đàn liên quan), **Sách tương tự**. Khách bấm nút mượn → chuyển đến đăng nhập rồi quay lại |
 | `/authors/:id` | Tác giả | Giới thiệu + sách của tác giả |
-| `/login` | Đăng nhập | Email, mật khẩu, ghi nhớ, link quên mật khẩu/đăng ký |
+| `/login` | Đăng nhập | Email, mật khẩu, tùy chọn ghi nhớ email trên thiết bị, link quên mật khẩu/đăng ký |
 | `/register` | Đăng ký | Họ lót, tên, email, mật khẩu (+ chỉ báo độ mạnh), ngày sinh, giới tính, địa chỉ, SĐT |
-| `/forgot-password`, `/reset-password/:token` | Quên mật khẩu | Gửi email đặt lại |
+| `/forgot-password`, `/reset-password` | Khôi phục mật khẩu | Hướng dẫn đến quầy xác minh; nhập mã một lần staff cấp để đặt lại |
 | `/forum` | Diễn đàn | Xem mục 4.4 |
 | `/about` | Giới thiệu / nội quy | Giờ mở cửa, chính sách mượn, mức phạt |
 | `/404` | Không tìm thấy | Gợi ý về trang chủ |
@@ -124,6 +124,7 @@ Ghi đè biến Bootstrap bằng SCSS (`$primary`, `$border-radius`, `$font-fami
 | `/admin/books` | Quản lý sách | Bảng + tìm/lọc; form thêm/sửa (ảnh bìa tải lên **Cloudinary**, có xem trước, thể loại nhiều lựa chọn, tác giả chọn/thêm nhanh, tồn kho); ẩn/hiện; xóa (chỉ khi chưa có lịch sử mượn) |
 | `/admin/catalog` | Danh mục | Tab **NXB · Tác giả · Thể loại** (CRUD gọn trong modal) |
 | `/admin/users` | Quản lý người dùng | Bảng độc giả/nhân viên; lọc vai trò/trạng thái; xem chi tiết (lịch sử mượn, phạt); khóa/mở khóa (kèm lý do); đặt lại mật khẩu; thêm nhân viên, đổi vai trò (admin) |
+| `/admin/staff` | Quản lý nhân viên | Trang riêng cho admin: danh sách nhân viên (`staff`), tìm kiếm/lọc trạng thái, xem hồ sơ, khóa/mở khóa, cấp mã khôi phục sau xác minh trực tiếp, tạo nhân viên và nâng nhân viên thành admin |
 | `/admin/notifications` | Quản lý thông báo | Danh sách đã gửi; **Soạn thông báo** (tiêu đề, nội dung, đối tượng: tất cả/độc giả/nhân viên/một người, hạn hiển thị); sửa/xóa |
 | `/admin/forum` | Kiểm duyệt diễn đàn | Hàng đợi báo cáo; ẩn/xóa bài, khóa/ghim chủ đề; quản lý chuyên mục |
 | `/admin/settings` | Cài đặt (admin) | Chính sách mượn, mức phạt, thời gian giữ sách… |
