@@ -5,13 +5,11 @@ const userService = require('../app/services/user.service');
 const authService = require('../app/services/auth.service');
 const userController = require('../app/controllers/user.controller');
 const authController = require('../app/controllers/auth.controller');
-const mailer = require('../app/utils/mailer.util');
 const {
   updateProfileSchema,
   changePasswordSchema,
 } = require('../app/validators/user.validator');
 const {
-  forgotPasswordSchema,
   resetPasswordSchema,
 } = require('../app/validators/auth.validator');
 
@@ -80,30 +78,10 @@ describe('Profile & Password Management Test Suite (BE-09)', () => {
       expect(changePasswordSchema.validate(valid).error).toBeUndefined();
     });
 
-    it('forgotPasswordSchema & resetPasswordSchema validate đúng định dạng', () => {
-      expect(forgotPasswordSchema.validate({ email: 'bad' }).error).toBeDefined();
-      expect(forgotPasswordSchema.validate({ email: 'user@example.com' }).error).toBeUndefined();
-
-      expect(resetPasswordSchema.validate({ token: 'tok', newPassword: '123' }).error).toBeDefined();
-      expect(resetPasswordSchema.validate({ token: 'tok', newPassword: 'NewSecurePass123' }).error).toBeUndefined();
-    });
-  });
-
-  describe('2. mailer.util', () => {
-    it('gửi email giả lập khi thiếu cấu hình SMTP (log console ở dev)', async () => {
-      const logSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-
-      const result = await mailer.sendPasswordResetEmail(
-        'reader@example.com',
-        'raw_reset_token_123',
-        'Nam'
-      );
-
-      expect(result).toHaveProperty('simulated', true);
-      expect(logSpy).toHaveBeenCalled();
-      const logOutput = logSpy.mock.calls.map((c) => c.join(' ')).join('\n');
-      expect(logOutput).toContain('reader@example.com');
-      expect(logOutput).toContain('raw_reset_token_123');
+    it('resetPasswordSchema yêu cầu mã 32 ký tự hex và mật khẩu đủ mạnh', () => {
+      expect(resetPasswordSchema.validate({ code: 'bad', newPassword: 'NewSecurePass123' }).error).toBeDefined();
+      expect(resetPasswordSchema.validate({ code: 'a'.repeat(32), newPassword: '123' }).error).toBeDefined();
+      expect(resetPasswordSchema.validate({ code: 'a'.repeat(32), newPassword: 'NewSecurePass123' }).error).toBeUndefined();
     });
   });
 
@@ -234,46 +212,26 @@ describe('Profile & Password Management Test Suite (BE-09)', () => {
     });
   });
 
-  describe('4. auth.service (forgot-password & reset-password)', () => {
-    it('forgotPassword luôn trả về thông báo 200 chung dù email không tồn tại', async () => {
-      jest.spyOn(User, 'findOne').mockResolvedValue(null);
+  describe('4. auth.service (reset-password)', () => {
+    it('issuePasswordResetCode returns a 128-bit code while persisting only its SHA-256 hash for 30 minutes', async () => {
+      const mockUser = { save: jest.fn().mockResolvedValue(true) };
 
-      const res = await authService.forgotPassword('nonexistent@example.com');
-      expect(res).toHaveProperty('message');
-      expect(res.message).toContain('Nếu email tồn tại trong hệ thống');
-    });
+      const result = await authService.issuePasswordResetCode(mockUser);
 
-    it('forgotPassword lưu token băm, hạn 30 phút và gọi mailer khi email hợp lệ', async () => {
-      const mockUser = {
-        _id: 'user_1',
-        email: 'reader@example.com',
-        firstName: 'An',
-        status: 'active',
-        save: jest.fn().mockResolvedValue(true),
-      };
-
-      jest.spyOn(User, 'findOne').mockResolvedValue(mockUser);
-      const mailerSpy = jest.spyOn(mailer, 'sendPasswordResetEmail').mockResolvedValue({ simulated: true });
-
-      const res = await authService.forgotPassword('reader@example.com');
-      expect(res.message).toContain('Nếu email tồn tại trong hệ thống');
-      expect(mockUser.save).toHaveBeenCalled();
-      expect(mockUser.passwordResetToken).toBeDefined();
-      expect(mockUser.passwordResetExpires).toBeInstanceOf(Date);
-      expect(mailerSpy).toHaveBeenCalledWith(
-        'reader@example.com',
-        expect.any(String),
-        'An'
-      );
+      expect(result.code).toMatch(/^[\da-f]{32}$/);
+      expect(mockUser.passwordResetToken).toBe(crypto.createHash('sha256').update(result.code).digest('hex'));
+      expect(mockUser.passwordResetToken).not.toBe(result.code);
+      expect(mockUser.passwordResetExpires.getTime()).toBeGreaterThan(Date.now() + 29 * 60 * 1000);
+      expect(mockUser.passwordResetExpires.getTime()).toBeLessThanOrEqual(Date.now() + 30 * 60 * 1000);
+      expect(result.expiresAt).toEqual(mockUser.passwordResetExpires);
+      expect(mockUser.save).toHaveBeenCalledTimes(1);
     });
 
     it('resetPassword từ chối khi token sai hoặc hết hạn', async () => {
-      jest.spyOn(User, 'findOne').mockReturnValue({
-        select: jest.fn().mockResolvedValue(null),
-      });
+      jest.spyOn(User, 'findOneAndUpdate').mockResolvedValue(null);
 
       await expect(
-        authService.resetPassword('invalid_token', 'NewPassword123')
+        authService.resetPassword('invalid_code', 'NewPassword123')
       ).rejects.toMatchObject({
         statusCode: 400,
         message: 'Mã khôi phục mật khẩu không hợp lệ hoặc đã hết hạn',
@@ -281,8 +239,8 @@ describe('Profile & Password Management Test Suite (BE-09)', () => {
     });
 
     it('resetPassword thành công cập nhật mật khẩu, xóa token và thu hồi tất cả refresh token', async () => {
-      const rawToken = 'valid_raw_token_12345';
-      const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
+      const rawCode = 'a'.repeat(32);
+      const tokenHash = crypto.createHash('sha256').update(rawCode).digest('hex');
 
       const mockUser = {
         _id: 'user_123',
@@ -293,17 +251,23 @@ describe('Profile & Password Management Test Suite (BE-09)', () => {
         save: jest.fn().mockResolvedValue(true),
       };
 
-      jest.spyOn(User, 'findOne').mockReturnValue({
-        select: jest.fn().mockResolvedValue(mockUser),
+      const updateUserSpy = jest.spyOn(User, 'findOneAndUpdate').mockImplementation(async (_filter, update) => {
+        mockUser.passwordHash = update.$set.passwordHash;
+        return mockUser;
       });
       const deleteTokensSpy = jest.spyOn(RefreshToken, 'deleteMany').mockResolvedValue({ deletedCount: 2 });
 
-      const res = await authService.resetPassword(rawToken, 'BrandNewPass123');
+      const res = await authService.resetPassword(rawCode, 'BrandNewPass123');
 
       expect(res.message).toContain('Đặt lại mật khẩu thành công');
-      expect(mockUser.passwordResetToken).toBeUndefined();
-      expect(mockUser.passwordResetExpires).toBeUndefined();
-      expect(mockUser.save).toHaveBeenCalled();
+      expect(updateUserSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ passwordResetToken: tokenHash, status: 'active' }),
+        expect.objectContaining({
+          $set: { passwordHash: expect.any(String) },
+          $unset: { passwordResetToken: 1, passwordResetExpires: 1 },
+        }),
+        { new: true }
+      );
       expect(deleteTokensSpy).toHaveBeenCalledWith({ user: 'user_123' });
 
       const isNewMatch = await bcrypt.compare('BrandNewPass123', mockUser.passwordHash);
@@ -351,27 +315,13 @@ describe('Profile & Password Management Test Suite (BE-09)', () => {
       expect(res.jsonData.data.message).toBe('Đổi mật khẩu thành công');
     });
 
-    it('authController.forgotPassword trả về 200 generic message', async () => {
-      jest.spyOn(authService, 'forgotPassword').mockResolvedValue({
-        message: 'Nếu email tồn tại...',
-      });
-
-      const { req, res, next } = createMockReqRes({
-        body: { email: 'test@example.com' },
-      });
-
-      await authController.forgotPassword(req, res, next);
-      expect(res.statusCode).toBe(200);
-      expect(res.jsonData.data.message).toContain('Nếu email tồn tại');
-    });
-
     it('authController.resetPassword trả về 200 thông báo thành công', async () => {
       jest.spyOn(authService, 'resetPassword').mockResolvedValue({
         message: 'Đặt lại mật khẩu thành công',
       });
 
       const { req, res, next } = createMockReqRes({
-        body: { token: 'tok', newPassword: 'pass' },
+        body: { code: 'a'.repeat(32), newPassword: 'pass' },
       });
 
       await authController.resetPassword(req, res, next);

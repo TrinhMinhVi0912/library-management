@@ -68,13 +68,6 @@ const config = {
     apiKey: process.env.CLOUDINARY_API_KEY || '',
     apiSecret: process.env.CLOUDINARY_API_SECRET || '',
   },
-  smtp: {
-    host: process.env.SMTP_HOST || 'smtp.gmail.com',
-    port: parseInt(process.env.SMTP_PORT, 10) || 587,
-    user: process.env.SMTP_USER || '',
-    pass: process.env.SMTP_PASS || '',
-    from: process.env.SMTP_FROM || '"Thư viện" <no-reply@library.example.com>',
-  },
   jobs: {
     secret: process.env.JOBS_SECRET || '',
     disableInternalCron: process.env.DISABLE_INTERNAL_CRON === 'true',

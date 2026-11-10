@@ -5,7 +5,6 @@ const config = require('../config');
 const ApiError = require('../api-error');
 const { User, RefreshToken } = require('../models');
 const { nextCode } = require('../utils/code.util');
-const mailer = require('../utils/mailer.util');
 const googleTokenUtil = require('../utils/google-token.util');
 const shelfService = require('./shelf.service');
 
@@ -296,62 +295,47 @@ const logout = async (rawRefreshToken) => {
 };
 
 /**
- * Xử lý quên mật khẩu: sinh token reset băm (hết hạn 30 phút), gửi email
- * Luôn trả thông báo chung an toàn
- * @param {string} email
+ * Tạo mã đặt lại mật khẩu dùng một lần. Chỉ trả mã thô cho nhân viên đã
+ * xác minh danh tính độc giả trực tiếp; database chỉ lưu SHA-256.
+ * @param {object} user Tài khoản đã được kiểm tra quyền và trạng thái
  */
-const forgotPassword = async (email) => {
-  const normalizedEmail = email.toLowerCase().trim();
-  const user = await User.findOne({ email: normalizedEmail });
+const issuePasswordResetCode = async (user) => {
+  const rawCode = crypto.randomBytes(16).toString('hex');
+  user.passwordResetToken = crypto.createHash('sha256').update(rawCode).digest('hex');
+  user.passwordResetExpires = new Date(Date.now() + 30 * 60 * 1000);
+  await user.save();
 
-  // Nếu user tồn tại và đang hoạt động thì tạo token và gửi email
-  if (user && user.status === 'active') {
-    const rawResetToken = crypto.randomBytes(32).toString('hex');
-    const tokenHash = crypto.createHash('sha256').update(rawResetToken).digest('hex');
-
-    user.passwordResetToken = tokenHash;
-    user.passwordResetExpires = new Date(Date.now() + 30 * 60 * 1000); // 30 phút
-    await user.save();
-
-    try {
-      await mailer.sendPasswordResetEmail(user.email, rawResetToken, user.firstName);
-    } catch (err) {
-      console.error('Lỗi khi gửi email đặt lại mật khẩu:', err);
-    }
-  }
-
-  // Luôn trả về phản hồi chung chung để tránh dò quét danh sách email
   return {
-    message: 'Nếu email tồn tại trong hệ thống, hướng dẫn đặt lại mật khẩu đã được gửi đến hộp thư của bạn.',
+    code: rawCode,
+    expiresAt: user.passwordResetExpires,
   };
 };
 
 /**
- * Đặt lại mật khẩu mới bằng token đã nhận qua email (dùng một lần)
- * @param {string} token Token thô
+ * Đặt lại mật khẩu bằng mã do nhân viên cấp trực tiếp (dùng một lần)
+ * @param {string} code Mã thô chưa băm
  * @param {string} newPassword Mật khẩu mới
  */
-const resetPassword = async (token, newPassword) => {
-  const tokenHash = crypto.createHash('sha256').update(token.trim()).digest('hex');
-
-  const user = await User.findOne({
-    passwordResetToken: tokenHash,
-    passwordResetExpires: { $gt: new Date() },
-  }).select('+passwordHash +passwordResetToken +passwordResetExpires');
+const resetPassword = async (code, newPassword) => {
+  const tokenHash = crypto.createHash('sha256').update(code.trim().toLowerCase()).digest('hex');
+  const salt = await bcrypt.genSalt(10);
+  const passwordHash = await bcrypt.hash(newPassword, salt);
+  const user = await User.findOneAndUpdate(
+    {
+      passwordResetToken: tokenHash,
+      passwordResetExpires: { $gt: new Date() },
+      status: 'active',
+    },
+    {
+      $set: { passwordHash },
+      $unset: { passwordResetToken: 1, passwordResetExpires: 1 },
+    },
+    { new: true }
+  );
 
   if (!user) {
     throw ApiError.badRequest('Mã khôi phục mật khẩu không hợp lệ hoặc đã hết hạn');
   }
-
-  if (user.status !== 'active') {
-    throw ApiError.unauthorized('Tài khoản đã bị khóa');
-  }
-
-  const salt = await bcrypt.genSalt(10);
-  user.passwordHash = await bcrypt.hash(newPassword, salt);
-  user.passwordResetToken = undefined;
-  user.passwordResetExpires = undefined;
-  await user.save();
 
   // Thu hồi toàn bộ refresh token cũ của user này để bảo vệ phiên
   await RefreshToken.deleteMany({ user: user._id });
@@ -369,6 +353,6 @@ module.exports = {
   loginWithGoogle,
   refresh,
   logout,
-  forgotPassword,
+  issuePasswordResetCode,
   resetPassword,
 };

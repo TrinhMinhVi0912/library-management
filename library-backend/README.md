@@ -6,7 +6,7 @@ REST API cho hệ thống quản lý mượn sách, xây dựng bằng Express 5
 
 - Node.js 20.19 trở lên và npm (theo yêu cầu của Mongoose 9).
 - MongoDB replica set. Các luồng mượn, trả, gia hạn và phạt dùng transaction; MongoDB standalone không hỗ trợ các luồng này.
-- Cloudinary và SMTP chỉ cần cấu hình nếu dùng upload ảnh hoặc gửi email thật.
+- Cloudinary cần cấu hình nếu dùng upload ảnh. Khôi phục mật khẩu được hỗ trợ trực tiếp tại quầy, không cần SMTP.
 
 ## Cài đặt chạy local
 
@@ -41,9 +41,6 @@ Backend mặc định nghe tại `http://localhost:5000`. Kiểm tra `/health` v
 | `CLOUDINARY_CLOUD_NAME` | Không | Cloudinary cloud name |
 | `CLOUDINARY_API_KEY` | Không | Cloudinary API key |
 | `CLOUDINARY_API_SECRET` | Không | Cloudinary secret; chỉ lưu ở backend |
-| `SMTP_HOST`, `SMTP_PORT` | Không | Máy chủ SMTP và cổng |
-| `SMTP_USER`, `SMTP_PASS` | Không | Tài khoản SMTP/app password |
-| `SMTP_FROM` | Không | Địa chỉ người gửi email |
 | `JOBS_SECRET` | Có để gọi job ngoài | Gửi qua header `x-jobs-secret`; production tối thiểu 32 ký tự |
 | `DISABLE_INTERNAL_CRON` | Không | Đặt `true` để tắt lịch `node-cron` nội bộ |
 | `ENABLE_DOCS` | Không | Đặt `true` để bật Swagger tại `/api/docs`; nên tắt ở production nếu không cần công khai |
@@ -77,7 +74,7 @@ Hai domain ví dụ trên là hai site khác nhau. Cookie refresh khi admin fron
 1. Tạo Web Service từ repository backend; đặt root directory là `library-backend` nếu kết nối repo monorepo.
 2. Dùng Node.js 20.19 trở lên, Build Command `npm ci`, Start Command `npm start`.
 3. Đặt Health Check Path là `/health`.
-4. Thêm environment variables trong dashboard của service: `NODE_ENV=production`, `MONGODB_URI`, `CLIENT_URL`, `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, `JOBS_SECRET`, `COOKIE_SECURE=true`, `COOKIE_SAMESITE` theo kiến trúc domain, `GOOGLE_CLIENT_ID` nếu bật Google Login, Cloudinary và SMTP nếu sử dụng. Đặt `ENABLE_DOCS=false`; nền tảng tự cấp `PORT`.
+4. Thêm environment variables trong dashboard của service: `NODE_ENV=production`, `MONGODB_URI`, `CLIENT_URL`, `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, `JOBS_SECRET`, `COOKIE_SECURE=true`, `COOKIE_SAMESITE` theo kiến trúc domain, `GOOGLE_CLIENT_ID` nếu bật Google Login và Cloudinary nếu sử dụng. Đặt `ENABLE_DOCS=false`; nền tảng tự cấp `PORT`.
 5. Tạo từng secret độc lập, không dùng secret local. Có thể chạy lệnh sau ba lần ở máy cá nhân và nhập riêng từng kết quả vào dashboard: `node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"`.
 6. Deploy, lấy URL HTTPS của API và kiểm tra `https://<api-domain>/health` trả HTTP 200.
 
@@ -115,7 +112,7 @@ Tất cả API chính dùng tiền tố `/api/v1`. Response thành công theo d�
 
 | Nhóm | Endpoint tiêu biểu |
 |---|---|
-| Auth | `POST /auth/register`, `/auth/login`, `/auth/refresh`, `/auth/logout`, `/auth/forgot-password`, `/auth/reset-password` |
+| Auth | `POST /auth/register`, `/auth/login`, `/auth/refresh`, `/auth/logout`, `/auth/reset-password`; staff/admin cấp mã tại `/admin/users/:id/password-reset` sau khi xác minh trực tiếp |
 | Sách | `GET /books`, `/books/:idOrSlug`, `/books/home`; đặt trước `POST /books/:bookId/reservations` |
 | Độc giả | `GET /cart`, `POST /cart/items`, `POST /loans`, `GET /me/loans`, `GET /me/fines`, `GET /me/reservations` |
 | Mượn trả quản trị | `/admin/loans` (duyệt, giao, trả), `/admin/renewals`, `/admin/fines` |

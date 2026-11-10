@@ -72,18 +72,12 @@ const refreshSchema = Joi.object({
   refreshToken: Joi.string().allow('', null).optional(),
 });
 
-const forgotPasswordSchema = Joi.object({
-  email: Joi.string().email().trim().lowercase().required().messages({
-    'string.email': 'Email không đúng định dạng',
-    'string.empty': 'Email không được để trống',
-    'any.required': 'Email là bắt buộc',
-  }),
-});
-
 const resetPasswordSchema = Joi.object({
-  token: Joi.string().trim().required().messages({
-    'string.empty': 'Mã khôi phục token không được để trống',
-    'any.required': 'Mã khôi phục token là bắt buộc',
+  code: Joi.string().trim().length(32).hex().required().messages({
+    'string.length': 'Mã khôi phục không hợp lệ',
+    'string.hex': 'Mã khôi phục không hợp lệ',
+    'string.empty': 'Mã khôi phục là bắt buộc',
+    'any.required': 'Mã khôi phục là bắt buộc',
   }),
   newPassword: Joi.string()
     .min(8)
@@ -104,7 +98,6 @@ module.exports = {
   loginSchema,
   googleLoginSchema,
   refreshSchema,
-  forgotPasswordSchema,
   resetPasswordSchema,
 };
 

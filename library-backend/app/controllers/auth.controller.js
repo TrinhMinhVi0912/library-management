@@ -110,22 +110,12 @@ const logout = asyncHandler(async (req, res) => {
 });
 
 /**
- * Quên mật khẩu - gửi email kèm link reset token
- * POST /api/v1/auth/forgot-password
- */
-const forgotPassword = asyncHandler(async (req, res) => {
-  const { email } = req.body;
-  const result = await authService.forgotPassword(email);
-  return ok(res, result);
-});
-
-/**
- * Đặt lại mật khẩu mới bằng token
+ * Đặt lại mật khẩu mới bằng mã khôi phục do nhân viên cấp
  * POST /api/v1/auth/reset-password
  */
 const resetPassword = asyncHandler(async (req, res) => {
-  const { token, newPassword } = req.body;
-  const result = await authService.resetPassword(token, newPassword);
+  const { code, newPassword } = req.body;
+  const result = await authService.resetPassword(code, newPassword);
   return ok(res, result);
 });
 
@@ -135,7 +125,6 @@ module.exports = {
   googleLogin,
   refresh,
   logout,
-  forgotPassword,
   resetPassword,
 };
 

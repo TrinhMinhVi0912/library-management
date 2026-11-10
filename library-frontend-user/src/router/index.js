@@ -40,7 +40,7 @@ const router = createRouter({
         { path: 'login', name: 'login', component: Login, meta: { title: 'Đăng nhập', guestOnly: true } },
         { path: 'register', name: 'register', component: Register, meta: { title: 'Đăng ký', guestOnly: true } },
         { path: 'forgot-password', name: 'forgot-password', component: ForgotPassword, meta: { title: 'Quên mật khẩu', guestOnly: true } },
-        { path: 'reset-password/:token', name: 'reset-password', component: ResetPassword, meta: { title: 'Đặt lại mật khẩu', guestOnly: true } },
+        { path: 'reset-password', name: 'reset-password', component: ResetPassword, meta: { title: 'Đặt lại mật khẩu', guestOnly: true } },
         { path: 'forum', name: 'forum', component: ForumHome, meta: { title: 'Diễn đàn thư viện' } },
         { path: 'forum/c/:slug', name: 'forum-category', component: ForumCategory, meta: { title: 'Chuyên mục diễn đàn' } },
         { path: 'forum/t/:slug', name: 'forum-thread', component: ThreadDetail, meta: { title: 'Chủ đề diễn đàn' } },

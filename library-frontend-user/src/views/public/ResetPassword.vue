@@ -2,13 +2,12 @@
 import { ref } from 'vue';
 import { Form, Field } from 'vee-validate';
 import * as yup from 'yup';
-import { useRoute } from 'vue-router';
 import authService from '@/services/auth.service';
 
-const route = useRoute();
 const success = ref(false);
 const formError = ref('');
 const schema = yup.object({
+  code: yup.string().trim().length(32, 'Mã khôi phục không hợp lệ').matches(/^[\da-f]+$/i, 'Mã khôi phục không hợp lệ').required('Mã khôi phục là bắt buộc'),
   newPassword: yup.string()
     .min(8, 'Mật khẩu phải có ít nhất 8 ký tự')
     .max(100, 'Mật khẩu không được vượt quá 100 ký tự')
@@ -20,13 +19,13 @@ const schema = yup.object({
 function formatApiError(error) {
   return error.response?.data?.errors?.[0]?.message
     || error.response?.data?.message
-    || (error.response ? 'Không thể đặt lại mật khẩu. Có thể liên kết đã hết hạn.' : 'Không kết nối được máy chủ. Hãy thử lại sau.');
+    || (error.response ? 'Không thể đặt lại mật khẩu. Mã có thể đã hết hạn hoặc được sử dụng.' : 'Không kết nối được máy chủ. Hãy thử lại sau.');
 }
 
 async function submit(values) {
   formError.value = '';
   try {
-    await authService.resetPassword(String(route.params.token || ''), values.newPassword);
+    await authService.resetPassword(values.code.trim(), values.newPassword);
     success.value = true;
   } catch (error) {
     formError.value = formatApiError(error);
@@ -68,16 +67,9 @@ async function submit(values) {
           Đặt mật khẩu mới
         </h1>
         <p class="text-secondary mb-4">
-          Tạo mật khẩu mới gồm ít nhất 8 ký tự, có chữ cái và chữ số.
+          Nhập mã do nhân viên cấp, sau đó tạo mật khẩu mới gồm ít nhất 8 ký tự, có chữ cái và chữ số.
         </p>
 
-        <div
-          v-if="!route.params.token"
-          class="alert alert-danger"
-          role="alert"
-        >
-          Liên kết đặt lại mật khẩu không hợp lệ hoặc bị thiếu.
-        </div>
         <div
           v-if="formError"
           class="alert alert-danger"
@@ -91,6 +83,34 @@ async function submit(values) {
           :validation-schema="schema"
           @submit="submit"
         >
+          <Field
+            v-slot="{ field, errorMessage: fieldError }"
+            name="code"
+          >
+            <div class="mb-3">
+              <label
+                class="form-label"
+                for="reset-code"
+              >Mã khôi phục</label>
+              <input
+                id="reset-code"
+                v-bind="field"
+                class="form-control"
+                :class="{ 'is-invalid': fieldError }"
+                type="text"
+                autocomplete="one-time-code"
+                maxlength="32"
+                spellcheck="false"
+                required
+              >
+              <div
+                v-if="fieldError"
+                class="invalid-feedback"
+              >
+                {{ fieldError }}
+              </div>
+            </div>
+          </Field>
           <Field
             v-slot="{ field, errorMessage: fieldError }"
             name="newPassword"
@@ -146,7 +166,7 @@ async function submit(values) {
           <button
             class="btn btn-primary w-100"
             type="submit"
-            :disabled="isSubmitting || !route.params.token"
+            :disabled="isSubmitting"
           >
             <span
               v-if="isSubmitting"

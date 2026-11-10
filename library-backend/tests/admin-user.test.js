@@ -119,29 +119,31 @@ describe('BE-28: Admin user management', () => {
         .rejects.toMatchObject({ statusCode: 403 });
     });
 
-    it('sends a reset link through the existing email flow and audits the request', async () => {
-      const reader = { _id: readerId, role: 'reader', status: 'active', email: 'reader@example.com' };
+    it('issues a one-time reset code after staff verifies the reader and audits without storing the code', async () => {
+      const reader = { _id: readerId, role: 'reader', status: 'active' };
       jest.spyOn(User, 'findById').mockResolvedValue(reader);
-      jest.spyOn(authService, 'forgotPassword').mockResolvedValue({ message: 'sent' });
+      const expiresAt = new Date(Date.now() + 30 * 60 * 1000);
+      jest.spyOn(authService, 'issuePasswordResetCode').mockResolvedValue({ code: 'one-time-secret', expiresAt });
 
       const result = await userService.requestPasswordReset(staff, readerId, { ip: '127.0.0.1' });
 
-      expect(authService.forgotPassword).toHaveBeenCalledWith(reader.email);
+      expect(authService.issuePasswordResetCode).toHaveBeenCalledWith(reader);
       expect(auditService.log).toHaveBeenCalledWith(expect.objectContaining({
-        actor: staffId, action: 'user.password_reset_requested', targetId: readerId, ip: '127.0.0.1',
+        actor: staffId, action: 'user.password_reset_code_issued', targetId: readerId, ip: '127.0.0.1',
       }));
-      expect(result.message).toContain('email');
+      expect(result).toEqual(expect.objectContaining({ resetCode: 'one-time-secret', expiresAt }));
+      expect(JSON.stringify(auditService.log.mock.calls)).not.toContain('one-time-secret');
     });
 
     it('prevents staff from requesting resets for staff accounts and blocks locked accounts', async () => {
       const findByIdSpy = jest.spyOn(User, 'findById')
         .mockResolvedValueOnce({ _id: otherStaffId, role: 'staff', status: 'active' })
         .mockResolvedValueOnce({ _id: readerId, role: 'reader', status: 'locked' });
-      const forgotPasswordSpy = jest.spyOn(authService, 'forgotPassword');
+      const issueCodeSpy = jest.spyOn(authService, 'issuePasswordResetCode');
       await expect(userService.requestPasswordReset(staff, otherStaffId)).rejects.toMatchObject({ statusCode: 403 });
       await expect(userService.requestPasswordReset(staff, readerId)).rejects.toMatchObject({ statusCode: 409 });
       expect(findByIdSpy).toHaveBeenCalledTimes(2);
-      expect(forgotPasswordSpy).not.toHaveBeenCalled();
+      expect(issueCodeSpy).not.toHaveBeenCalled();
     });
   });
 

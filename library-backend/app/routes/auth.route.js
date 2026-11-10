@@ -5,7 +5,6 @@ const {
   loginSchema,
   googleLoginSchema,
   refreshSchema,
-  forgotPasswordSchema,
   resetPasswordSchema,
 } = require('../validators/auth.validator');
 const authController = require('../controllers/auth.controller');
@@ -51,16 +50,9 @@ router.post('/refresh', validate(refreshSchema), authController.refresh);
 router.post('/logout', optionalAuth, authController.logout);
 
 /**
- * @route   POST /api/v1/auth/forgot-password
- * @desc    Yêu cầu đặt lại mật khẩu qua email
- * @access  Khách
- */
-router.post('/forgot-password', validate(forgotPasswordSchema), authController.forgotPassword);
-
-/**
  * @route   POST /api/v1/auth/reset-password
- * @desc    Đặt lại mật khẩu mới bằng token
- * @access  Khách có token
+ * @desc    Đặt lại mật khẩu mới bằng mã khôi phục do nhân viên cấp
+ * @access  Khách có mã khôi phục do nhân viên cấp
  */
 router.post('/reset-password', validate(resetPasswordSchema), authController.resetPassword);
 

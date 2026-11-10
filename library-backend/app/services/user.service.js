@@ -109,17 +109,21 @@ const requestPasswordReset = async (actor, targetId, options = {}) => {
   const user = await User.findById(targetId);
   if (!user) throw ApiError.notFound('Người dùng không tồn tại');
   ensureCanManage(actor, user);
-  if (user.status !== 'active') throw ApiError.conflict('Chỉ gửi liên kết đặt lại mật khẩu cho tài khoản đang hoạt động');
+  if (user.status !== 'active') throw ApiError.conflict('Chỉ cấp mã khôi phục cho tài khoản đang hoạt động');
 
-  await authService.forgotPassword(user.email);
+  const recovery = await authService.issuePasswordResetCode(user);
   await auditService.log({
     actor: actor._id,
-    action: 'user.password_reset_requested',
+    action: 'user.password_reset_code_issued',
     targetType: 'User',
     targetId: user._id,
     ip: options.ip || null,
   });
-  return { message: 'Đã gửi hướng dẫn đặt lại mật khẩu đến email của người dùng.' };
+  return {
+    message: 'Đã tạo mã khôi phục. Chỉ cung cấp trực tiếp sau khi xác minh danh tính độc giả.',
+    resetCode: recovery.code,
+    expiresAt: recovery.expiresAt,
+  };
 };
 
 /**

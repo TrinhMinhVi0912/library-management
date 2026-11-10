@@ -2,7 +2,7 @@
 
 Quy tắc chung: `../AGENTS.md`. Chi tiết nền: `../context/digest.md` §D4–D7, D9.
 
-- Stack: Express, Mongoose, JWT (access 15m + refresh httpOnly 7 ngày, rotate), bcryptjs, joi, Socket.IO, Cloudinary (multer memoryStorage), node-cron, nodemailer, helmet, cors, express-rate-limit, express-mongo-sanitize, morgan, swagger-ui-express, exceljs. Test: Jest + Supertest.
+- Stack: Express, Mongoose, JWT (access 15m + refresh httpOnly 7 ngày, rotate), bcryptjs, joi, Socket.IO, Cloudinary (multer memoryStorage), node-cron, helmet, cors, express-rate-limit, express-mongo-sanitize, morgan, swagger-ui-express, exceljs. Test: Jest + Supertest. Password recovery uses staff-issued one-time codes; no email provider.
 - Cấu trúc: `app/{config,controllers,models,routes,services,middlewares,validators,sockets,jobs,utils}`, `app/api-error.js`, `scripts/`, `app.js`, `server.js`.
 - Tên file: `x.controller.js`, `x.route.js`, `x.service.js`, `x.model.js`, `x.validator.js`, `x.util.js`, `x.job.js`.
 - Prefix `/api/v1`; `ok(res,data,meta)`; lỗi `throw new ApiError(status,msg,errors)`; bọc async bằng `asyncHandler`.

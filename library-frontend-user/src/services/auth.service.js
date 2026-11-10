@@ -22,13 +22,8 @@ const authService = {
     return response.data?.data;
   },
 
-  async forgotPassword(email) {
-    const response = await api.post('/auth/forgot-password', { email }, requestOptions);
-    return response.data?.data;
-  },
-
-  async resetPassword(token, newPassword) {
-    const response = await api.post('/auth/reset-password', { token, newPassword }, requestOptions);
+  async resetPassword(code, newPassword) {
+    const response = await api.post('/auth/reset-password', { code, newPassword }, requestOptions);
     return response.data?.data;
   },
 };
