@@ -4,6 +4,7 @@ import { useToast } from 'vue-toastification';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import 'vue-toastification/dist/index.css';
 import '@/assets/styles/main.scss';
+import '@/assets/styles/auth-ocean.scss';
 import App from '@/App.vue';
 import router from '@/router';
 import { pinia } from '@/stores/pinia';

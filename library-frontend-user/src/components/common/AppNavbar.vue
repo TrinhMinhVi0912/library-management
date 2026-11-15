@@ -14,6 +14,7 @@ const props = defineProps({
 
 const route = useRoute();
 const router = useRouter();
+const isAuthRoute = computed(() => ['login', 'register', 'forgot-password', 'reset-password'].includes(route.name));
 const auth = useAuthStore();
 const toast = useToast();
 const searchText = ref(String(route.query.q || ''));
@@ -63,7 +64,10 @@ async function logout() {
 </script>
 
 <template>
-  <header class="public-header">
+  <header
+    class="public-header"
+    :class="{ 'public-header--auth': isAuthRoute }"
+  >
     <nav
       class="navbar navbar-expand-lg public-navbar"
       aria-label="Điều hướng chính"
@@ -321,6 +325,31 @@ async function logout() {
   z-index: 20;
   border-bottom: 1px solid #e5e7eb;
   background: #ffffff;
+}
+
+.public-header--auth {
+  border-bottom-color: rgb(119 177 202 / 15%);
+  background: #041426;
+
+  .library-brand,
+  .nav-link,
+  .nav-action,
+  .account-trigger { color: #e6f4fb; }
+
+  .brand-mark {
+    border: 1px solid rgb(46 202 218 / 35%);
+    background: rgb(17 119 147 / 20%);
+    color: #68e8f1;
+  }
+
+  .nav-link:hover,
+  .nav-action:hover,
+  .account-trigger:hover { color: #6ce4ed; }
+
+  .navbar-toggler { border-color: rgb(119 177 202 / 30%); }
+  .navbar-toggler-icon { filter: invert(1); }
+
+  .account-avatar { background: #0c3048; color: #7ce7ef; }
 }
 
 .navbar-container {

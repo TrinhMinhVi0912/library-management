@@ -1,9 +1,17 @@
 <script setup>
+import { computed } from 'vue';
+import { useRoute } from 'vue-router';
+
 const currentYear = new Date().getFullYear();
+const route = useRoute();
+const isAuthRoute = computed(() => ['login', 'register', 'forgot-password', 'reset-password'].includes(route.name));
 </script>
 
 <template>
-  <footer class="public-footer">
+  <footer
+    class="public-footer"
+    :class="{ 'public-footer--auth': isAuthRoute }"
+  >
     <div class="container-xl py-4">
       <div class="row g-4">
         <section
@@ -75,6 +83,18 @@ const currentYear = new Date().getFullYear();
   margin-top: auto;
   border-top: 1px solid #e5e7eb;
   background: #f8f9fa;
+}
+
+.public-footer--auth {
+  border-top-color: rgb(119 177 202 / 14%);
+  background: #041426;
+
+  .footer-heading { color: #d9edf6; }
+  .footer-copy,
+  .footer-bottom { color: #91aaba; }
+  .footer-bottom { border-top-color: rgb(119 177 202 / 14%); }
+  .footer-links a { color: #a9c1cf; }
+  .footer-links a:hover { color: #65dfe9; }
 }
 
 .footer-heading {

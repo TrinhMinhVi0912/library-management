@@ -1,5 +1,6 @@
 <script setup>
-import { onMounted, watch } from 'vue';
+import { computed, onMounted, watch } from 'vue';
+import { useRoute } from 'vue-router';
 import AppFooter from '@/components/common/AppFooter.vue';
 import AppNavbar from '@/components/common/AppNavbar.vue';
 import RealtimeToast from '@/components/common/RealtimeToast.vue';
@@ -10,6 +11,8 @@ import { useNotificationStore } from '@/stores/notification.store';
 const auth = useAuthStore();
 const cartStore = useCartStore();
 const notificationStore = useNotificationStore();
+const currentRoute = useRoute();
+const isAuthRoute = computed(() => ['login', 'register', 'forgot-password', 'reset-password'].includes(currentRoute.name));
 
 onMounted(async () => {
   if (!auth.initialized) {
@@ -38,7 +41,10 @@ watch(
 </script>
 
 <template>
-  <div class="public-layout">
+  <div
+    class="public-layout"
+    :class="{ 'public-layout--auth': isAuthRoute }"
+  >
     <AppNavbar :cart-count="cartStore.count" />
     <main
       id="main-content"
@@ -69,13 +75,18 @@ watch(
   background: #ffffff;
 }
 
+.public-layout--auth,
+.public-layout--auth .public-main {
+  background-color: #03172a;
+}
+
 .public-main {
   flex: 1;
 }
 
 .page-fade-enter-active,
 .page-fade-leave-active {
-  transition: opacity 180ms ease, transform 180ms ease;
+  transition: opacity 220ms cubic-bezier(0.22, 1, 0.36, 1), transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .page-fade-enter-from {

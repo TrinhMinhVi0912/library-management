@@ -34,149 +34,162 @@ async function submit(values) {
 </script>
 
 <template>
-  <section class="auth-page">
-    <div class="auth-card">
-      <div
-        class="auth-brand-mark mb-4"
-        aria-hidden="true"
-      >
-        <i class="bi bi-shield-lock" />
-      </div>
-      <template v-if="success">
-        <p class="text-uppercase text-secondary small fw-semibold mb-2">
-          Bảo mật tài khoản
-        </p>
-        <h1 class="h2 fw-bold mb-2">
-          Đã đổi mật khẩu
-        </h1>
-        <p class="text-secondary">
-          Bạn có thể đăng nhập bằng mật khẩu mới.
-        </p>
-        <RouterLink
-          class="btn btn-primary w-100 mt-3"
-          :to="{ name: 'login' }"
-        >
-          Đến trang đăng nhập
-        </RouterLink>
-      </template>
-      <template v-else>
-        <p class="text-uppercase text-secondary small fw-semibold mb-2">
-          Bảo mật tài khoản
-        </p>
-        <h1 class="h2 fw-bold mb-2">
-          Đặt mật khẩu mới
-        </h1>
-        <p class="text-secondary mb-4">
-          Nhập mã do nhân viên cấp, sau đó tạo mật khẩu mới gồm ít nhất 8 ký tự, có chữ cái và chữ số.
-        </p>
-
-        <div
-          v-if="formError"
-          class="alert alert-danger"
-          role="alert"
-        >
-          {{ formError }}
+  <section class="auth-page auth-page--ocean">
+    <div class="auth-scene">
+      <div class="auth-story">
+        <span class="auth-story__eyebrow"><i class="bi bi-water me-2" />Bảo vệ hành trình đọc sách</span>
+        <h1>Thiết lập mật khẩu<br>mới an toàn.</h1>
+        <p>Dùng mã do nhân viên thư viện cấp để khôi phục quyền truy cập vào tài khoản của bạn.</p>
+        <div class="auth-story__hint">
+          <i
+            class="bi bi-lock"
+            aria-hidden="true"
+          /><span>Chọn mật khẩu dễ nhớ với bạn, khó đoán với người khác.</span>
         </div>
-
-        <Form
-          v-slot="{ isSubmitting }"
-          :validation-schema="schema"
-          @submit="submit"
+      </div>
+      <div class="auth-card auth-card--ocean">
+        <div
+          class="auth-brand-mark auth-brand-mark--ocean mb-3"
+          aria-hidden="true"
         >
-          <Field
-            v-slot="{ field, errorMessage: fieldError }"
-            name="code"
+          <i class="bi bi-shield-lock" />
+        </div>
+        <template v-if="success">
+          <p class="auth-kicker mb-1">
+            Bảo mật tài khoản
+          </p>
+          <h2 class="h2 fw-bold mb-2">
+            Đã đổi mật khẩu
+          </h2>
+          <p class="auth-description">
+            Bạn có thể đăng nhập bằng mật khẩu mới.
+          </p>
+          <RouterLink
+            class="btn auth-submit w-100 mt-3"
+            :to="{ name: 'login' }"
           >
-            <div class="mb-3">
-              <label
-                class="form-label"
-                for="reset-code"
-              >Mã khôi phục</label>
-              <input
-                id="reset-code"
-                v-bind="field"
-                class="form-control"
-                :class="{ 'is-invalid': fieldError }"
-                type="text"
-                autocomplete="one-time-code"
-                maxlength="32"
-                spellcheck="false"
-                required
-              >
-              <div
-                v-if="fieldError"
-                class="invalid-feedback"
-              >
-                {{ fieldError }}
+            Đến trang đăng nhập
+          </RouterLink>
+        </template>
+        <template v-else>
+          <p class="auth-kicker mb-1">
+            Bảo mật tài khoản
+          </p>
+          <h2 class="h2 fw-bold mb-2">
+            Đặt mật khẩu mới
+          </h2>
+          <p class="auth-description mb-4">
+            Nhập mã do nhân viên cấp, sau đó tạo mật khẩu mới gồm ít nhất 8 ký tự, có chữ cái và chữ số.
+          </p>
+
+          <div
+            v-if="formError"
+            class="alert alert-danger"
+            role="alert"
+          >
+            {{ formError }}
+          </div>
+
+          <Form
+            v-slot="{ isSubmitting }"
+            :validation-schema="schema"
+            @submit="submit"
+          >
+            <Field
+              v-slot="{ field, errorMessage: fieldError }"
+              name="code"
+            >
+              <div class="mb-3">
+                <label
+                  class="form-label"
+                  for="reset-code"
+                >Mã khôi phục</label>
+                <input
+                  id="reset-code"
+                  v-bind="field"
+                  class="form-control"
+                  :class="{ 'is-invalid': fieldError }"
+                  type="text"
+                  autocomplete="one-time-code"
+                  maxlength="32"
+                  spellcheck="false"
+                  required
+                >
+                <div
+                  v-if="fieldError"
+                  class="invalid-feedback"
+                >
+                  {{ fieldError }}
+                </div>
               </div>
-            </div>
-          </Field>
-          <Field
-            v-slot="{ field, errorMessage: fieldError }"
-            name="newPassword"
-          >
-            <div class="mb-3">
-              <label
-                class="form-label"
-                for="reset-password"
-              >Mật khẩu mới</label>
-              <input
-                id="reset-password"
-                v-bind="field"
-                class="form-control"
-                :class="{ 'is-invalid': fieldError }"
-                type="password"
-                autocomplete="new-password"
-                required
-              >
-              <div
-                v-if="fieldError"
-                class="invalid-feedback"
-              >
-                {{ fieldError }}
+            </Field>
+            <Field
+              v-slot="{ field, errorMessage: fieldError }"
+              name="newPassword"
+            >
+              <div class="mb-3">
+                <label
+                  class="form-label"
+                  for="reset-password"
+                >Mật khẩu mới</label>
+                <input
+                  id="reset-password"
+                  v-bind="field"
+                  class="form-control"
+                  :class="{ 'is-invalid': fieldError }"
+                  type="password"
+                  autocomplete="new-password"
+                  required
+                >
+                <div
+                  v-if="fieldError"
+                  class="invalid-feedback"
+                >
+                  {{ fieldError }}
+                </div>
               </div>
-            </div>
-          </Field>
-          <Field
-            v-slot="{ field, errorMessage: fieldError }"
-            name="confirmPassword"
-          >
-            <div class="mb-4">
-              <label
-                class="form-label"
-                for="reset-confirm-password"
-              >Nhập lại mật khẩu mới</label>
-              <input
-                id="reset-confirm-password"
-                v-bind="field"
-                class="form-control"
-                :class="{ 'is-invalid': fieldError }"
-                type="password"
-                autocomplete="new-password"
-                required
-              >
-              <div
-                v-if="fieldError"
-                class="invalid-feedback"
-              >
-                {{ fieldError }}
+            </Field>
+            <Field
+              v-slot="{ field, errorMessage: fieldError }"
+              name="confirmPassword"
+            >
+              <div class="mb-4">
+                <label
+                  class="form-label"
+                  for="reset-confirm-password"
+                >Nhập lại mật khẩu mới</label>
+                <input
+                  id="reset-confirm-password"
+                  v-bind="field"
+                  class="form-control"
+                  :class="{ 'is-invalid': fieldError }"
+                  type="password"
+                  autocomplete="new-password"
+                  required
+                >
+                <div
+                  v-if="fieldError"
+                  class="invalid-feedback"
+                >
+                  {{ fieldError }}
+                </div>
               </div>
-            </div>
-          </Field>
-          <button
-            class="btn btn-primary w-100"
-            type="submit"
-            :disabled="isSubmitting"
-          >
-            <span
-              v-if="isSubmitting"
-              class="spinner-border spinner-border-sm me-2"
-              aria-hidden="true"
-            />
-            Đặt lại mật khẩu
-          </button>
-        </Form>
-      </template>
+            </Field>
+            <button
+              class="btn auth-submit w-100"
+              type="submit"
+              :disabled="isSubmitting"
+            >
+              <span
+                v-if="isSubmitting"
+                class="spinner-border spinner-border-sm me-2"
+                aria-hidden="true"
+              />
+              Đặt lại mật khẩu
+            </button>
+          </Form>
+        </template>
+      </div>
     </div>
   </section>
 </template>
