@@ -386,10 +386,10 @@ async function logout() {
 
 .navbar-search-form {
   display: flex;
-  flex: 1 1 26rem;
+  flex: 1 1 34rem;
   align-items: center;
   gap: 0.5rem;
-  max-width: 40rem;
+  max-width: 52rem;
   margin: 0 auto;
 }
 
@@ -400,7 +400,14 @@ async function logout() {
 
 .quick-search {
   flex: 1;
+  width: 100%;
   min-width: 0;
+}
+
+.quick-search :deep(.input-group-text) {
+  border-color: rgb(119 177 202 / 25%);
+  background: transparent;
+  color: #68e8f1;
 }
 
 .account-actions {

@@ -609,6 +609,8 @@ onMounted(() => {
                 <!-- Nút phụ: Thêm vào kệ sách -->
                 <ShelfDropdown
                   :book="book"
+                  variant="outline-primary"
+                  menu-theme="ocean"
                   class="w-100"
                   button-class="w-100 py-2 d-flex align-items-center justify-content-center gap-2"
                   label="Thêm vào kệ sách"
@@ -823,9 +825,27 @@ onMounted(() => {
 
 <style scoped>
 .book-detail-view {
-  background-color: #ffffff;
+  background-color: #041426;
+  color: #e6f4fb;
   min-height: 80vh;
 }
+
+.book-detail-view :deep(.breadcrumb-item),
+.book-detail-view :deep(.breadcrumb-item.active) { color: #a9bfce; }
+.book-detail-view :deep(.breadcrumb-item a) { color: #61dce8; text-decoration: none; }
+.book-detail-view :deep(.breadcrumb-item a:hover) { color: #a5f3fc; }
+.book-detail-view :deep(.breadcrumb-item + .breadcrumb-item::before) { color: #648194; }
+.book-detail-view :deep(.text-dark) { color: #e8f4fa !important; }
+.book-detail-view :deep(.text-secondary),
+.book-detail-view :deep(.text-muted) { color: #9eb4c3 !important; }
+.book-detail-view :deep(.text-primary) { color: #63dce8 !important; }
+.book-detail-view :deep(.book-cover-card),
+.book-detail-view :deep(.borrow-box-card),
+.book-detail-view :deep(.book-detail-skeleton .border),
+.book-detail-view :deep(.book-additional-section .card) { border: 1px solid rgb(119 177 202 / 18%) !important; background: #081d31 !important; color: #d5e8f1; }
+.book-detail-view :deep(.book-cover-card) { padding: .75rem !important; box-shadow: 0 .75rem 2rem rgb(0 8 20 / 24%) !important; }
+.book-detail-view :deep(.book-cover-fallback) { border-color: rgb(119 177 202 / 26%); background: #0b263d; color: #9eb4c3 !important; }
+.book-detail-view :deep(.category-chip) { border-color: rgb(72 210 228 / 24%) !important; background: #10364b !important; color: #8beaf0 !important; }
 
 .book-cover-img {
   width: 100%;
@@ -846,10 +866,46 @@ onMounted(() => {
 }
 
 .category-chip:hover {
-  background-color: #0d6efd !important;
+  background-color: #0d8299 !important;
   color: #ffffff !important;
-  border-color: #0d6efd !important;
+  border-color: #20bfd0 !important;
 }
+
+.book-detail-view :deep(.bg-light) { border-color: rgb(119 177 202 / 18%) !important; background: #0a2338 !important; }
+.book-detail-view :deep(.borrow-rules-note) { color: #a9bfce !important; }
+.book-detail-view :deep(.book-additional-section) { border-color: rgb(119 177 202 / 18%) !important; }
+.book-detail-view :deep(.nav-tabs) { border-color: rgb(119 177 202 / 20%); }
+.book-detail-view :deep(.nav-tabs .nav-link) { border-color: transparent; color: #9eb4c3; }
+.book-detail-view :deep(.nav-tabs .nav-link:hover) { border-color: rgb(119 177 202 / 20%); color: #72e5ed; }
+.book-detail-view :deep(.nav-tabs .nav-link.active) { border-color: rgb(119 177 202 / 20%) rgb(119 177 202 / 20%) #081d31; background: #081d31; color: #72e5ed; }
+.book-detail-view :deep(.form-control),
+.book-detail-view :deep(.form-select) { border-color: rgb(119 177 202 / 24%); background-color: #06172a; color: #e6f4fb; }
+.book-detail-view :deep(.form-control::placeholder) { color: #819aab; }
+.book-detail-view :deep(.form-control:focus),
+.book-detail-view :deep(.form-select:focus) { border-color: #35cddd; box-shadow: 0 0 0 .2rem rgb(40 201 216 / 15%); }
+.book-detail-view :deep(.btn-primary) { border-color: #20bfd0; background: linear-gradient(105deg, #21cabb, #29c3e9); color: #03253a; font-weight: 700; }
+.book-detail-view :deep(.btn-primary:hover) { border-color: #45d7df; background: linear-gradient(105deg, #45e0cc, #5ed7f2); color: #03253a; }
+.book-detail-view :deep(.btn-outline-primary) { border-color: #25bfd0; color: #6de4ed; }
+.book-detail-view :deep(.btn-outline-primary:hover) { background: #0d3a50; color: #a5f3fc; }
+.book-detail-view :deep(.thread-item) { border-color: rgb(119 177 202 / 18%) !important; background: #091f33 !important; color: #d5e8f1; }
+.book-detail-view :deep(.thread-link) { color: #edf7fb !important; }
+.book-detail-view :deep(.thread-preview),
+.book-detail-view :deep(.thread-meta) { color: #a9bfce !important; }
+.book-detail-view :deep(.thread-item .bg-light) { border-color: rgb(119 177 202 / 18%) !important; background: #10334a !important; color: #c7dbe7 !important; }
+.book-detail-view :deep(.book-carousel-heading h2) { color: #f4fbff; }
+.book-detail-view :deep(.book-carousel-controls .btn) { border-color: rgb(119 177 202 / 28%); color: #b9cfdb; }
+.book-detail-view :deep(.book-carousel-controls .btn:hover) { border-color: #35cddd; background: #0d3a50; color: #72e5ed; }
+.book-detail-view :deep(.book-card) { border-color: rgb(119 177 202 / 18%); background: #081d31; }
+.book-detail-view :deep(.book-card-title) { color: #e8f4fa; }
+.book-detail-view :deep(.book-card-title:hover) { color: #61dce8; }
+.book-detail-view :deep(.rating-summary-card .rating-number) { color: #f4fbff; text-shadow: 0 0 18px rgb(74 222 238 / 18%); }
+.book-detail-view :deep(.book-card-author),
+.book-detail-view :deep(.rating-stars-count) { color: #9eb4c3; }
+.book-detail-view :deep(.rating-stars-value) { color: #e8f4fa; }
+.book-detail-view :deep(.placeholder) { background-color: #14344e; }
+.book-detail-view :deep(.alert-danger) { border-color: rgb(248 113 113 / 25%); background: #351d2a; color: #ffd1d1; }
+.book-detail-view :deep(.empty-state h2) { color: #e8f4fa; }
+.book-detail-view :deep(.empty-state-icon) { color: #61dce8; }
 
 .author-link:hover {
   text-decoration: underline !important;

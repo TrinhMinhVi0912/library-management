@@ -34,6 +34,11 @@ const props = defineProps({
     type: String,
     default: '',
   },
+  menuTheme: {
+    type: String,
+    default: 'light',
+    validator: (value) => ['light', 'ocean'].includes(value),
+  },
 });
 
 const emit = defineEmits(['added', 'removed', 'changed']);
@@ -300,6 +305,7 @@ const totalShelvedCount = computed(() => {
         v-if="isOpen"
         ref="menuRef"
         class="shelf-menu card shadow-lg border animate-fade-in"
+        :class="`shelf-menu-${menuTheme}`"
         :style="menuStyle"
         role="dialog"
         aria-label="Chọn kệ sách"
@@ -501,6 +507,35 @@ const totalShelvedCount = computed(() => {
   display: flex;
   flex-direction: column;
 }
+
+.shelf-menu-ocean {
+  border-color: rgb(119 177 202 / 24%) !important;
+  background: #081d31;
+  color: #d5e8f1;
+  box-shadow: 0 16px 36px rgb(0 8 20 / 42%) !important;
+}
+
+.shelf-menu-ocean .shelf-menu-header,
+.shelf-menu-ocean .shelf-menu-footer {
+  border-color: rgb(119 177 202 / 18%) !important;
+  background: #0a2338 !important;
+}
+
+.shelf-menu-ocean .shelf-menu-header strong,
+.shelf-menu-ocean .shelf-name { color: #e8f4fa !important; }
+.shelf-menu-ocean .shelf-menu-body { background: #081d31; }
+.shelf-menu-ocean .shelf-item-btn { color: #d5e8f1; }
+.shelf-menu-ocean .shelf-item-btn:hover { background: #10334a; }
+.shelf-menu-ocean .shelf-item-btn.is-selected { background: #0d3a50; }
+.shelf-menu-ocean .shelf-item-btn.is-selected .shelf-name { color: #72e5ed !important; }
+.shelf-menu-ocean .shelf-menu-body .text-muted,
+.shelf-menu-ocean .shelf-menu-body .text-secondary { color: #9eb4c3 !important; }
+.shelf-menu-ocean .shelf-menu-body .bg-light { border-color: rgb(119 177 202 / 22%) !important; background: #10334a !important; color: #b9cfdb !important; }
+.shelf-menu-ocean .shelf-menu-body .bg-secondary-subtle { background: #17364b !important; }
+.shelf-menu-ocean .shelf-menu-body .form-control { border-color: rgb(119 177 202 / 26%); background: #06172a; color: #e6f4fb; }
+.shelf-menu-ocean .shelf-menu-body .form-control::placeholder { color: #91aaba; }
+.shelf-menu-ocean .shelf-menu-body .form-control:focus { border-color: #35cddd; box-shadow: 0 0 0 .2rem rgb(40 201 216 / 15%); }
+.shelf-menu-ocean .btn-close { filter: invert(1); }
 
 .shelf-menu-body {
   overflow-y: auto;
