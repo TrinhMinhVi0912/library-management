@@ -14,7 +14,6 @@ const props = defineProps({
 
 const route = useRoute();
 const router = useRouter();
-const isAuthRoute = computed(() => ['login', 'register', 'forgot-password', 'reset-password'].includes(route.name));
 const auth = useAuthStore();
 const toast = useToast();
 const searchText = ref(String(route.query.q || ''));
@@ -64,10 +63,7 @@ async function logout() {
 </script>
 
 <template>
-  <header
-    class="public-header"
-    :class="{ 'public-header--auth': isAuthRoute }"
-  >
+  <header class="public-header">
     <nav
       class="navbar navbar-expand-lg public-navbar"
       aria-label="Điều hướng chính"
@@ -323,33 +319,8 @@ async function logout() {
 .public-header {
   position: relative;
   z-index: 20;
-  border-bottom: 1px solid #e5e7eb;
-  background: #ffffff;
-}
-
-.public-header--auth {
-  border-bottom-color: rgb(119 177 202 / 15%);
+  border-bottom: 1px solid rgb(119 177 202 / 15%);
   background: #041426;
-
-  .library-brand,
-  .nav-link,
-  .nav-action,
-  .account-trigger { color: #e6f4fb; }
-
-  .brand-mark {
-    border: 1px solid rgb(46 202 218 / 35%);
-    background: rgb(17 119 147 / 20%);
-    color: #68e8f1;
-  }
-
-  .nav-link:hover,
-  .nav-action:hover,
-  .account-trigger:hover { color: #6ce4ed; }
-
-  .navbar-toggler { border-color: rgb(119 177 202 / 30%); }
-  .navbar-toggler-icon { filter: invert(1); }
-
-  .account-avatar { background: #0c3048; color: #7ce7ef; }
 }
 
 .navbar-container {
@@ -361,7 +332,7 @@ async function logout() {
   align-items: center;
   gap: 0.65rem;
   margin-right: 0.75rem;
-  color: #111827;
+  color: #e6f4fb;
   font-size: 1.125rem;
   font-weight: 700;
 }
@@ -371,10 +342,12 @@ async function logout() {
   width: 2.5rem;
   height: 2.5rem;
   place-items: center;
-  border-radius: 0.5rem;
-  background: #f8f9fa;
-  color: #2563eb;
+  border: 1px solid rgb(46 202 218 / 35%);
+  border-radius: 0.75rem;
+  background: rgb(17 119 147 / 20%);
+  color: #68e8f1;
   font-size: 1.25rem;
+  box-shadow: 0 0 1.25rem rgb(20 198 214 / 12%);
 }
 
 .navbar-collapse {
@@ -392,20 +365,24 @@ async function logout() {
 .nav-link,
 .nav-action,
 .account-trigger {
-  color: #374151;
+  color: #c7dbe7;
   text-decoration: none;
 }
 
 .nav-link:hover,
 .nav-action:hover,
 .account-trigger:hover {
-  color: #1d4ed8;
+  color: #6ce4ed;
 }
 
 .nav-link.router-link-active {
-  color: #1d4ed8;
+  color: #73e7ef;
   font-weight: 600;
 }
+
+.navbar-toggler { border-color: rgb(119 177 202 / 30%); }
+.navbar-toggler:focus { box-shadow: 0 0 0 .2rem rgb(40 201 216 / 20%); }
+.navbar-toggler-icon { filter: invert(1); }
 
 .navbar-search-form {
   display: flex;
@@ -482,8 +459,8 @@ async function logout() {
   height: 2.25rem;
   place-items: center;
   border-radius: 50%;
-  background: #eff6ff;
-  color: #1d4ed8;
+  background: #0c3048;
+  color: #7ce7ef;
   font-size: 0.8rem;
   font-weight: 700;
   overflow: hidden;
@@ -513,9 +490,10 @@ async function logout() {
   width: 15rem;
   gap: 0.15rem;
   padding: 0.5rem;
-  border: 1px solid #e5e7eb;
-  border-radius: 0.5rem;
-  background: #ffffff;
+  border: 1px solid rgb(119 177 202 / 20%);
+  border-radius: 0.75rem;
+  background: #071c30;
+  box-shadow: 0 1rem 2.5rem rgb(0 8 18 / 35%);
 }
 
 .account-menu-panel a,
@@ -524,16 +502,20 @@ async function logout() {
   border: 0;
   border-radius: 0.375rem;
   background: transparent;
-  color: #374151;
+  color: #c7dbe7;
   text-align: left;
   text-decoration: none;
 }
 
 .account-menu-panel a:hover,
 .account-logout:hover {
-  background: #f8f9fa;
-  color: #1d4ed8;
+  background: #0b2a41;
+  color: #73e7ef;
 }
+
+.account-summary { border-bottom-color: rgb(119 177 202 / 18%); }
+.account-summary span { color: #91aaba; }
+.account-logout { border-top-color: rgb(119 177 202 / 18%); }
 
 .account-summary {
   display: grid;
@@ -566,7 +548,7 @@ async function logout() {
   align-items: center;
   justify-content: center;
   font-size: 0.65rem;
-  box-shadow: 0 0 0 2px #ffffff;
+  box-shadow: 0 0 0 2px #041426;
 }
 
 .fine-warning-banner {

@@ -1,17 +1,9 @@
 <script setup>
-import { computed } from 'vue';
-import { useRoute } from 'vue-router';
-
 const currentYear = new Date().getFullYear();
-const route = useRoute();
-const isAuthRoute = computed(() => ['login', 'register', 'forgot-password', 'reset-password'].includes(route.name));
 </script>
 
 <template>
-  <footer
-    class="public-footer"
-    :class="{ 'public-footer--auth': isAuthRoute }"
-  >
+  <footer class="public-footer">
     <div class="container-xl py-4">
       <div class="row g-4">
         <section
@@ -81,31 +73,19 @@ const isAuthRoute = computed(() => ['login', 'register', 'forgot-password', 'res
 <style scoped lang="scss">
 .public-footer {
   margin-top: auto;
-  border-top: 1px solid #e5e7eb;
-  background: #f8f9fa;
-}
-
-.public-footer--auth {
-  border-top-color: rgb(119 177 202 / 14%);
+  border-top: 1px solid rgb(119 177 202 / 14%);
   background: #041426;
-
-  .footer-heading { color: #d9edf6; }
-  .footer-copy,
-  .footer-bottom { color: #91aaba; }
-  .footer-bottom { border-top-color: rgb(119 177 202 / 14%); }
-  .footer-links a { color: #a9c1cf; }
-  .footer-links a:hover { color: #65dfe9; }
 }
 
 .footer-heading {
   margin: 0 0 0.65rem;
-  color: #111827;
+  color: #d9edf6;
   font-size: 0.95rem;
   font-weight: 650;
 }
 
 .footer-copy {
-  color: #6b7280;
+  color: #91aaba;
   font-size: 0.875rem;
 }
 
@@ -116,8 +96,8 @@ const isAuthRoute = computed(() => ['login', 'register', 'forgot-password', 'res
   gap: 1rem;
   margin-top: 1.5rem;
   padding-top: 1rem;
-  border-top: 1px solid #e5e7eb;
-  color: #6b7280;
+  border-top: 1px solid rgb(119 177 202 / 14%);
+  color: #91aaba;
   font-size: 0.8rem;
 }
 
@@ -128,12 +108,12 @@ const isAuthRoute = computed(() => ['login', 'register', 'forgot-password', 'res
 }
 
 .footer-links a {
-  color: #4b5563;
+  color: #a9c1cf;
   text-decoration: none;
 }
 
 .footer-links a:hover {
-  color: #1d4ed8;
+  color: #65dfe9;
 }
 
 @media (max-width: 575.98px) {
