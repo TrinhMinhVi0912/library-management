@@ -565,9 +565,44 @@ onMounted(() => {
 
 <style scoped>
 .cart-view {
-  background-color: #ffffff;
+  position: relative;
+  isolation: isolate;
+  background: radial-gradient(ellipse at 50% 0%, rgb(13 61 83 / 24%), transparent 42%), #041321;
   min-height: 80vh;
+  color: #d5e8f1;
 }
+.cart-view::before { position: absolute; z-index: -1; inset: 0 -100vw; background: inherit; content: ''; }
+.cart-view :deep(.breadcrumb-item),
+.cart-view :deep(.breadcrumb-item.active) { color: #aac1ce; }
+.cart-view :deep(.breadcrumb-item a) { color: #61dce8; text-decoration: none; }
+.cart-view :deep(.breadcrumb-item + .breadcrumb-item::before) { color: #648194; }
+.cart-view :deep(.text-dark) { color: #edf7fb !important; }
+.cart-view :deep(.text-secondary),
+.cart-view :deep(.text-muted) { color: #9eb4c3 !important; }
+.cart-view :deep(.card),
+.cart-view :deep(.cart-summary-card) { border-color: rgb(119 177 202 / 18%) !important; background: #081d31 !important; color: #d5e8f1; box-shadow: 0 .5rem 1.5rem rgb(0 8 20 / 18%) !important; }
+.cart-view :deep(.cart-item) { border-color: rgb(119 177 202 / 18%) !important; background: #081d31 !important; color: #d5e8f1; }
+.cart-view :deep(.cart-item h3 a) { color: #edf7fb !important; }
+.cart-view :deep(.cart-item .text-secondary),
+.cart-view :deep(.cart-item .text-muted) { color: #9eb4c3 !important; }
+.cart-view :deep(.cart-item .bg-light) { border-color: rgb(119 177 202 / 20%) !important; background: #10334a !important; color: #c7dbe7 !important; }
+.cart-view :deep(.cart-item .cart-item-fallback) { background: #10334a !important; color: #72e5ed !important; }
+.cart-view :deep(.border-bottom),
+.cart-view :deep(.border-top) { border-color: rgb(119 177 202 / 20%) !important; }
+.cart-view :deep(.form-control) { border-color: rgb(119 177 202 / 24%); background: #06172a; color: #e6f4fb; }
+.cart-view :deep(.form-control::placeholder) { color: #91aaba; }
+.cart-view :deep(.form-control:focus) { border-color: #35cddd; box-shadow: 0 0 0 .2rem rgb(40 201 216 / 15%); }
+.cart-view :deep(.form-control.bg-light),
+.cart-view :deep(.loan-policy-box) { border-color: rgb(119 177 202 / 18%) !important; background: #10334a !important; color: #c7dbe7 !important; }
+.cart-view :deep(.btn-primary) { border-color: #0b91a4; background: #0b91a4; color: #fff; }
+.cart-view :deep(.btn-primary:hover) { border-color: #16adbf; background: #16adbf; }
+.cart-view :deep(.btn-outline-primary) { border-color: #35cddd; color: #72e5ed; }
+.cart-view :deep(.btn-outline-primary:hover) { background: #103a50; color: #a5f3fc; }
+.cart-view :deep(.placeholder) { background-color: #14344e; }
+.cart-view :deep(.alert-danger) { border-color: rgb(248 113 113 / 25%); background: #351d2a; color: #ffd1d1; }
+.cart-view :deep(.alert-warning) { border-color: rgb(251 191 36 / 28%); background: #302d20; color: #f5d98c; }
+.cart-view :deep(.empty-state h2) { color: #edf7fb; }
+.cart-view :deep(.empty-state-icon) { color: #61dce8; }
 
 .cart-summary-card {
   border-color: #e5e7eb;

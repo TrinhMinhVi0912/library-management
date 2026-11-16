@@ -256,6 +256,42 @@ watch([activeTab, page], () => {
 </template>
 
 <style scoped>
+.my-loans-page {
+  position: relative;
+  isolation: isolate;
+  min-height: 100vh;
+  background: radial-gradient(ellipse at 50% 0%, rgb(13 61 83 / 24%), transparent 42%), #041321;
+  color: #d5e8f1;
+}
+.my-loans-page::before { position: absolute; z-index: -1; inset: 0 -100vw; background: inherit; content: ''; }
+.my-loans-page :deep(.breadcrumb-item),
+.my-loans-page :deep(.breadcrumb-item.active) { color: #aac1ce; }
+.my-loans-page :deep(.breadcrumb-item a) { color: #61dce8; text-decoration: none; }
+.my-loans-page :deep(.breadcrumb-item + .breadcrumb-item::before) { color: #648194; }
+.my-loans-page h1,
+.my-loans-page :deep(.text-dark) { color: #edf7fb !important; }
+.my-loans-page :deep(.text-secondary),
+.my-loans-page :deep(.text-muted) { color: #9eb4c3 !important; }
+.my-loans-page :deep(.card) { border-color: rgb(119 177 202 / 18%) !important; background: #081d31 !important; color: #d5e8f1; box-shadow: 0 .5rem 1.5rem rgb(0 8 20 / 18%) !important; }
+.my-loans-page :deep(.loan-card) { border-color: rgb(119 177 202 / 18%); background: #081d31; color: #d5e8f1; }
+.my-loans-page :deep(.loan-card-header) { border-color: rgb(119 177 202 / 18%); background: #0a2338; color: #d5e8f1; }
+.my-loans-page :deep(.loan-card-header:hover) { background: #10334a; }
+.my-loans-page :deep(.loan-card-body) { border-color: rgb(119 177 202 / 18%) !important; background: #081d31; color: #d5e8f1; }
+.my-loans-page :deep(.loan-items),
+.my-loans-page :deep(.loan-item) { border-color: rgb(119 177 202 / 18%) !important; }
+.my-loans-page :deep(.loan-item-cover-placeholder) { background: #10334a !important; color: #72e5ed !important; }
+.my-loans-page :deep(.renewal-status) { border-color: rgb(119 177 202 / 22%); background: #10334a; color: #c7dbe7; }
+.my-loans-page :deep(.loan-card .text-info) { color: #72e5ed !important; }
+.my-loans-page :deep(.loan-card .alert-info) { border-color: rgb(56 189 248 / 25%); background: #10364b; color: #b9eaff; }
+.my-loans-page :deep(.bg-light),
+.my-loans-page :deep(.bg-light-subtle) { border-color: rgb(119 177 202 / 18%) !important; background: #10334a !important; color: #c7dbe7 !important; }
+.my-loans-page :deep(.placeholder) { background-color: #14344e; }
+.my-loans-page :deep(.page-link) { border-color: rgb(119 177 202 / 20%); background: #081d31; color: #b9cfdb; }
+.my-loans-page :deep(.page-item.active .page-link) { border-color: #20bfd0; background: #0d8299; color: #fff; }
+.my-loans-page :deep(.page-item.disabled .page-link) { background: #06172a; color: #60798a; }
+.my-loans-page :deep(.empty-state h2) { color: #edf7fb; }
+.my-loans-page :deep(.empty-state-icon) { color: #61dce8; }
+
 .loan-tabs .nav-pills {
   gap: 0.25rem;
   scrollbar-width: thin;
@@ -265,16 +301,17 @@ watch([activeTab, page], () => {
   font-size: 0.875rem;
   padding: 0.5rem 0.75rem;
   border-radius: 0.375rem;
-  color: #495057;
+  color: #b9cfdb;
   transition: all 0.15s ease;
 }
 
 .loan-tabs .nav-link:hover:not(.active) {
-  background-color: #f1f3f5;
+  background-color: #10334a;
+  color: #edf7fb;
 }
 
 .loan-tabs .nav-link.active {
-  background-color: #0d6efd;
+  background-color: #0d8299;
   color: #ffffff;
 }
 

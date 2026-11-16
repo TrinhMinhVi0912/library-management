@@ -574,6 +574,7 @@ onBeforeUnmount(() => clearTimeout(searchTimer));
 .home-search-input::placeholder { color: #91aaba; }
 .home-search-input:focus { background: transparent; color: #f3fbff; box-shadow: none; }
 .home-search-input::-webkit-search-cancel-button { filter: invert(1); }
+.home-search-form:has(.home-suggestions) { position: relative; z-index: 20; }
 .home-search-input-wrap:has(.home-suggestions) { z-index: 12; }
 .home-search-input-wrap:has(.home-suggestions) .home-search-input { border-radius: .65rem .65rem 0 0; }
 .home-search-button { min-width: 8.5rem; border: 0; border-radius: .65rem; background: linear-gradient(105deg, #21cabb, #29c3e9); color: #03253a; font-weight: 800; }
