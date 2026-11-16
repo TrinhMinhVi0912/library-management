@@ -378,14 +378,43 @@ onMounted(() => {
 
 <style scoped>
 .author-detail-view {
-  background-color: #ffffff;
+  background: radial-gradient(ellipse at 50% 0%, rgb(13 61 83 / 24%), transparent 42%), #041321;
   min-height: 80vh;
+  color: #d5e8f1;
 }
 
 .author-profile-card {
-  background: #f8f9fa;
+  border: 1px solid rgb(119 177 202 / 18%) !important;
+  background: linear-gradient(145deg, #0a2338, #081d31);
   border-radius: 12px;
+  box-shadow: 0 .75rem 2rem rgb(0 8 20 / 22%) !important;
 }
+
+.author-detail-view :deep(.breadcrumb-item),
+.author-detail-view :deep(.breadcrumb-item.active) { color: #aac1ce; }
+.author-detail-view :deep(.breadcrumb-item a) { color: #61dce8; text-decoration: none; }
+.author-detail-view :deep(.breadcrumb-item + .breadcrumb-item::before) { color: #648194; }
+.author-detail-view :deep(.text-dark) { color: #edf7fb !important; }
+.author-detail-view :deep(.text-secondary),
+.author-detail-view :deep(.text-muted) { color: #9eb4c3 !important; }
+.author-detail-view :deep(.bg-light) { border-color: rgb(119 177 202 / 22%) !important; background: #10334a !important; color: #b9cfdb !important; }
+.author-detail-view :deep(.bg-primary-subtle) { border-color: rgb(91 223 234 / 22%) !important; background: #103a50 !important; color: #72e5ed !important; }
+.author-detail-view :deep(.btn-link) { color: #61dce8 !important; }
+.author-detail-view :deep(.btn-link:hover) { color: #a5f3fc !important; }
+.author-detail-view :deep(.author-works-section > .border-bottom) { border-color: rgb(119 177 202 / 22%) !important; }
+.author-detail-view :deep(.book-card) { border-color: rgb(119 177 202 / 18%); background: #081d31; }
+.author-detail-view :deep(.book-card-title) { color: #e8f4fa; }
+.author-detail-view :deep(.book-card-title:hover) { color: #61dce8; }
+.author-detail-view :deep(.book-card-author),
+.author-detail-view :deep(.rating-stars-count) { color: #9eb4c3; }
+.author-detail-view :deep(.rating-stars-value) { color: #e8f4fa; }
+.author-detail-view :deep(.placeholder) { background-color: #14344e; }
+.author-detail-view :deep(.empty-state h2) { color: #edf7fb; }
+.author-detail-view :deep(.empty-state-icon) { color: #61dce8; }
+.author-detail-view :deep(.page-link) { border-color: rgb(119 177 202 / 20%); background: #081d31; color: #b9cfdb; }
+.author-detail-view :deep(.page-item.active .page-link) { border-color: #20bfd0; background: #0d8299; color: #fff; }
+.author-detail-view :deep(.page-item.disabled .page-link) { background: #06172a; color: #60798a; }
+.author-detail-view :deep(.alert-danger) { border-color: rgb(248 113 113 / 25%); background: #351d2a; color: #ffd1d1; }
 
 .author-photo,
 .author-photo-fallback {
