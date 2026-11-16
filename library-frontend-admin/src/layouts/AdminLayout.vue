@@ -92,6 +92,7 @@ async function handleLogout() {
 .admin-main {
   min-width: 0;
   flex: 1;
+  background: #eff6ff;
 }
 
 .admin-content {

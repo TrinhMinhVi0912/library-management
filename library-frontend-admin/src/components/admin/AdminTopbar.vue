@@ -114,8 +114,8 @@ const initial = computed(() => displayName.value.trim().charAt(0).toLocaleUpperC
   justify-content: space-between;
   gap: 1rem;
   padding: 0 1.5rem;
-  border-bottom: 1px solid #e5e7eb;
-  background: #ffffff;
+  border-bottom: 1px solid #dbeafe;
+  background: #eff6ff;
 }
 
 .topbar-leading,
