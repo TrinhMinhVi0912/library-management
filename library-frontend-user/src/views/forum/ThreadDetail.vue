@@ -876,8 +876,55 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.thread-detail-page {
+  background: radial-gradient(ellipse at 50% 0%, rgb(13 61 83 / 24%), transparent 42%), #041321 !important;
+  color: #d5e8f1;
+}
+
+.thread-detail-page :deep(.breadcrumb-item),
+.thread-detail-page :deep(.breadcrumb-item.active) { color: #aac1ce !important; }
+.thread-detail-page :deep(.breadcrumb-item a) { color: #61dce8 !important; }
+.thread-detail-page :deep(.breadcrumb-item + .breadcrumb-item::before) { color: #648194; }
+.thread-detail-page :deep(.card) {
+  border-color: rgb(119 177 202 / 18%) !important;
+  background: #081d31 !important;
+  color: #d5e8f1;
+  box-shadow: 0 0.5rem 1.5rem rgb(0 8 20 / 18%) !important;
+}
+.thread-detail-page :deep(.text-dark) { color: #edf7fb !important; }
+.thread-detail-page :deep(.text-secondary),
+.thread-detail-page :deep(.text-muted) { color: #9eb4c3 !important; }
+.thread-detail-page :deep(.thread-body) { color: #d5e8f1 !important; }
+.thread-detail-page :deep(.thread-body blockquote) { border-left: 3px solid #35cddd; color: #a9bfce; padding-left: 1rem; }
+.thread-detail-page :deep(.thread-body code) { border-radius: .25rem; background: #10334a; color: #8cecf1; padding: .1rem .3rem; }
+.thread-detail-page :deep(.thread-body pre) { border: 1px solid rgb(119 177 202 / 18%); border-radius: .6rem; background: #06172a; color: #d5e8f1; padding: 1rem; overflow-x: auto; }
+.thread-detail-page :deep(.bg-light-subtle),
+.thread-detail-page :deep(.bg-light) { border-color: rgb(119 177 202 / 18%) !important; background: #10334a !important; color: #c7dbe7 !important; }
+.thread-detail-page :deep(.bg-primary-subtle) { background: #103a50 !important; color: #72e5ed !important; }
+.thread-detail-page :deep(.thread-stats) { color: #a9bfce !important; }
+.thread-detail-page :deep(.thread-tags .badge) { border-color: rgb(119 177 202 / 22%) !important; background: #10334a !important; color: #c7dbe7 !important; }
+.thread-detail-page :deep(.post-item) { border-color: rgb(119 177 202 / 18%) !important; color: #d5e8f1; }
+.thread-detail-page :deep(.post-item .text-dark) { color: #edf7fb !important; }
+.thread-detail-page :deep(.post-item .text-muted),
+.thread-detail-page :deep(.post-item .text-secondary) { color: #9eb4c3 !important; }
+.thread-detail-page :deep(.post-item .post-content) { color: #d5e8f1 !important; }
+.thread-detail-page :deep(.post-editor) { border-color: rgb(119 177 202 / 18%) !important; background: #081d31 !important; color: #d5e8f1; }
+.thread-detail-page :deep(.post-editor .bg-light),
+.thread-detail-page :deep(.post-editor .bg-white),
+.thread-detail-page :deep(.post-editor .markdown-preview) { border-color: rgb(119 177 202 / 18%) !important; background: #10334a !important; color: #d5e8f1 !important; }
+.thread-detail-page :deep(.post-editor .form-control) { border-color: rgb(119 177 202 / 22%); background: #06172a; color: #e6f4fb; }
+.thread-detail-page :deep(.post-editor .btn-light),
+.thread-detail-page :deep(.post-editor .btn-white) { background: #10334a !important; color: #c7dbe7 !important; }
+.thread-detail-page :deep(.post-editor .btn-outline-secondary),
+.thread-detail-page :deep(.thread-report-button) { border-color: rgb(119 177 202 / 32%); color: #b9cfdb; }
+.thread-detail-page :deep(.post-editor .btn-outline-secondary:hover),
+.thread-detail-page :deep(.thread-report-button:hover) { border-color: #35cddd; background: #103a50; color: #8cecf1; }
+.thread-detail-page :deep(.placeholder) { background-color: #14344e; }
+.thread-detail-page :deep(.alert-warning) { border-color: rgb(251 191 36 / 28%) !important; background: #302d20; color: #f5d98c; }
+.thread-detail-page :deep(.alert-danger) { border-color: rgb(248 113 113 / 25%); background: #351d2a; color: #ffd1d1; }
+
 .hover-primary:hover {
-  color: #2563eb !important;
+  color: #61dce8 !important;
 }
 
 .fs-7 {
@@ -951,6 +998,10 @@ onMounted(() => {
 
 .thread-body :deep(blockquote) {
   font-style: italic;
-  color: #4b5563;
+  color: #a9bfce;
+}
+
+@media (max-width: 575.98px) {
+  .thread-detail-page :deep(.card-body) { padding: 1.1rem !important; }
 }
 </style>

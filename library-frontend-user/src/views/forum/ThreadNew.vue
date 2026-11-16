@@ -864,6 +864,51 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+.thread-new-page {
+  background: radial-gradient(ellipse at 50% 0%, rgb(13 61 83 / 24%), transparent 42%), #041321 !important;
+  color: #d5e8f1;
+}
+
+.thread-new-page :deep(.breadcrumb-item),
+.thread-new-page :deep(.breadcrumb-item.active) { color: #aac1ce !important; }
+.thread-new-page :deep(.breadcrumb-item a) { color: #61dce8 !important; }
+.thread-new-page :deep(.breadcrumb-item + .breadcrumb-item::before) { color: #648194; }
+.thread-new-page :deep(.card) {
+  border-color: rgb(119 177 202 / 18%) !important;
+  background: #081d31 !important;
+  color: #d5e8f1;
+  box-shadow: 0 0.75rem 2rem rgb(0 8 20 / 22%) !important;
+}
+.thread-new-page :deep(.card-header) { border-color: rgb(119 177 202 / 18%) !important; background: #0a2338 !important; }
+.thread-new-page :deep(.text-dark),
+.thread-new-page :deep(.form-label) { color: #edf7fb !important; }
+.thread-new-page :deep(.text-secondary),
+.thread-new-page :deep(.text-muted) { color: #9eb4c3 !important; }
+.thread-new-page :deep(.form-control),
+.thread-new-page :deep(.form-select) { border-color: rgb(119 177 202 / 24%); background-color: #06172a; color: #e6f4fb; }
+.thread-new-page :deep(.form-control::placeholder) { color: #91aaba; }
+.thread-new-page :deep(.form-control:focus),
+.thread-new-page :deep(.form-select:focus) { border-color: #35cddd; box-shadow: 0 0 0 .2rem rgb(40 201 216 / 15%); }
+.thread-new-page :deep(.input-group-text) { border-color: rgb(119 177 202 / 24%); background: #06172a !important; color: #60dce8 !important; }
+.thread-new-page :deep(.bg-white),
+.thread-new-page :deep(.bg-light),
+.thread-new-page :deep(.bg-light-subtle) { border-color: rgb(119 177 202 / 18%) !important; background: #10334a !important; color: #d5e8f1 !important; }
+.thread-new-page :deep(.bg-primary-subtle) { border-color: rgb(91 223 234 / 22%) !important; background: #103a50 !important; color: #72e5ed !important; }
+.thread-new-page :deep(.dropdown-menu),
+.thread-new-page :deep(.position-absolute.bg-white) { border-color: rgb(119 177 202 / 22%) !important; background: #081d31 !important; color: #d5e8f1; }
+.thread-new-page :deep(.hover-bg-light:hover) { background: #10334a !important; }
+.thread-new-page :deep(.btn-white),
+.thread-new-page :deep(.btn-light) { border-color: rgb(119 177 202 / 20%); background: #10334a !important; color: #c7dbe7 !important; }
+.thread-new-page :deep(.btn-outline-secondary) { border-color: rgb(119 177 202 / 32%); color: #b9cfdb; }
+.thread-new-page :deep(.btn-outline-secondary:hover) { border-color: #35cddd; background: #103a50; color: #8cecf1; }
+.thread-new-page :deep(.btn-primary) { border-color: #0b91a4; background: #0b91a4; color: #fff; }
+.thread-new-page :deep(.btn-primary:hover) { border-color: #16adbf; background: #16adbf; }
+.thread-new-page :deep(.btn-outline-danger) { border-color: #e87979; color: #ffaaaa; }
+.thread-new-page :deep(.btn-close) { filter: invert(1); }
+.thread-new-page :deep(.markdown-body) { color: #d5e8f1 !important; }
+.thread-new-page :deep(.alert-danger) { border-color: rgb(248 113 113 / 25%); background: #351d2a; color: #ffd1d1; }
+.thread-new-page :deep(.is-invalid) { border-color: #f87171 !important; }
+
 .min-w-120 {
   min-width: 120px;
 }
@@ -881,14 +926,20 @@ onBeforeUnmount(() => {
 }
 
 .hover-bg-light:hover {
-  background-color: #f3f4f6;
+  background-color: #10334a;
 }
 
 .btn-white {
-  background-color: #ffffff;
+  background-color: #10334a;
 }
 
 .btn-white:hover {
-  background-color: #e5e7eb;
+  background-color: #17455c;
+}
+
+@media (max-width: 575.98px) {
+  .thread-new-page .container { padding-right: 1rem; padding-left: 1rem; }
+  .thread-new-page :deep(.card-body),
+  .thread-new-page :deep(.card-header) { padding: 1.1rem !important; }
 }
 </style>
