@@ -145,16 +145,48 @@ const defaultPolicy = {
 </template>
 
 <style scoped>
+.about-page {
+  position: relative;
+  isolation: isolate;
+  min-height: 100vh;
+  color: #d5e8f1;
+}
+
+.about-page::before {
+  position: absolute;
+  z-index: -1;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 100vw;
+  background: radial-gradient(ellipse at 50% 0%, rgb(13 61 83 / 24%), transparent 42%), #041321;
+  content: '';
+  transform: translateX(-50%);
+}
+
+.about-page :deep(.breadcrumb-item),
+.about-page :deep(.breadcrumb-item.active) { color: #aac1ce; }
+.about-page :deep(.breadcrumb-item a) { color: #61dce8; text-decoration: none; }
+.about-page :deep(.breadcrumb-item + .breadcrumb-item::before) { color: #648194; }
+.about-page :deep(.text-secondary) { color: #9eb4c3 !important; }
+.about-page h1,
+.about-page h2 { color: #edf7fb; }
+
 .about-heading {
   max-width: 48rem;
 }
 
 .about-card,
 .about-contact {
-  border: 1px solid #e5e7eb;
-  border-radius: 0.5rem;
-  background: #ffffff;
+  border: 1px solid rgb(119 177 202 / 18%);
+  border-radius: 0.85rem;
+  background: linear-gradient(145deg, #0a2338, #081d31);
   padding: 1.25rem;
+  box-shadow: 0 .5rem 1.5rem rgb(0 8 20 / 18%);
+}
+
+.about-card h2 .bi {
+  color: #61dce8 !important;
 }
 
 .about-policy-list {
@@ -164,9 +196,25 @@ const defaultPolicy = {
 }
 
 .about-policy-note {
-  border-left: 3px solid #2563eb;
-  background: #f8f9fa;
+  border-left: 3px solid #35cddd;
+  border-radius: 0 .5rem .5rem 0;
+  background: #10334a;
   padding: 0.75rem 1rem;
-  color: #374151;
+  color: #c7dbe7;
+}
+
+.about-page :deep(.btn-primary) {
+  border-color: #0b91a4;
+  background: #0b91a4;
+  color: #fff;
+}
+
+.about-page :deep(.btn-primary:hover) {
+  border-color: #16adbf;
+  background: #16adbf;
+}
+
+@media (max-width: 575.98px) {
+  .about-page { padding-right: 1rem; padding-left: 1rem; }
 }
 </style>

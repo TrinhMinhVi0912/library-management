@@ -889,6 +889,7 @@ async function handleChangePassword() {
 .profile-page :deep(.card) { border-color: rgb(119 177 202 / 18%) !important; background: #081d31; color: #d5e8f1; box-shadow: 0 .5rem 1.5rem rgb(0 8 20 / 18%) !important; }
 .profile-page :deep(.card-header),
 .profile-page :deep(.list-group-item) { border-color: rgb(119 177 202 / 18%) !important; background: #0a2338; color: #d5e8f1; }
+.profile-page :deep(.card-header.bg-white) { background: #0a2338 !important; }
 .profile-page :deep(.text-dark) { color: #edf7fb !important; }
 .profile-page :deep(.text-muted),
 .profile-page :deep(.text-secondary),
@@ -906,9 +907,9 @@ async function handleChangePassword() {
 .profile-page :deep(.btn-outline-secondary) { border-color: rgb(119 177 202 / 30%); color: #b9cfdb; }
 .profile-page :deep(.btn-outline-secondary:hover) { background: #10334a; color: #edf7fb; }
 .profile-page :deep(.nav-tabs) { border-color: rgb(119 177 202 / 18%); }
-.profile-page .card-header-tabs .nav-link { color: #b9cfdb; }
+.profile-page .card-header-tabs .nav-link { color: #d5e8f1; }
 .profile-page .card-header-tabs .nav-link:hover { color: #72e5ed; border-color: transparent; }
-.profile-page .card-header-tabs .nav-link.active { border-color: rgb(119 177 202 / 18%) rgb(119 177 202 / 18%) #081d31; background: #081d31; color: #72e5ed; }
+.profile-page .card-header-tabs .nav-link.active { border-color: rgb(119 177 202 / 18%) rgb(119 177 202 / 18%) #081d31; background: #081d31 !important; color: #72e5ed; }
 .profile-page :deep(.alert-success) { border-color: rgb(74 222 128 / 24%); background: #123a33; color: #a7f3c4; }
 .profile-page :deep(.alert-danger) { border-color: rgb(248 113 113 / 25%); background: #351d2a; color: #ffd1d1; }
 .profile-page :deep(.progress) { background: #14344e; }
