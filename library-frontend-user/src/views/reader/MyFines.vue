@@ -68,9 +68,18 @@ async function fetchFines() {
 
 async function loadSummary() {
   try {
-    // Tải tổng quan tất cả khoản phạt để tính thống kê và tab badges
-    const res = await fineService.getMyFines({ limit: 1000 });
-    const items = res.items || [];
+    // API giới hạn tối đa 100 bản ghi mỗi trang, nên tải tuần tự đủ các trang.
+    const pageSize = 100;
+    const items = [];
+    let page = 1;
+    let totalPages = 1;
+
+    do {
+      const response = await fineService.getMyFines({ page, limit: pageSize });
+      items.push(...(response.items || []));
+      totalPages = Number(response.meta?.totalPages) || 1;
+      page += 1;
+    } while (page <= totalPages);
 
     let unpaidSum = 0;
     let unpaidC = 0;

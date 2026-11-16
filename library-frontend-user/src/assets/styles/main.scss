@@ -144,3 +144,92 @@ textarea {
   border-radius: inherit;
   transition: width 160ms ease;
 }
+
+@keyframes page-content-enter {
+  from {
+    opacity: 0;
+    translate: 0 10px;
+  }
+
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+
+.public-main :is(
+  .card:not(.placeholder-glow):not(.skeleton-card),
+  .book-card,
+  .home-category-card,
+  .thread-item,
+  .loan-card,
+  .reservation-card,
+  .notification-item,
+  .post-item,
+  .about-card,
+  .stat-card,
+  .fine-card,
+  .cart-item,
+  .review-item,
+  .not-found-card,
+  .forbidden-card,
+  .placeholder-card
+) {
+  animation: page-content-enter 380ms cubic-bezier(.2, .7, .2, 1) both;
+}
+
+.public-main :is(.page-title, #home-search-title, .home-content-heading, .book-title, .forum-hero h1) {
+  animation: page-content-enter 420ms cubic-bezier(.2, .7, .2, 1) both;
+}
+
+.public-main :is(.card, .book-card, .home-category-card, .thread-item, .loan-card, .reservation-card, .notification-item, .post-item, .about-card, .stat-card, .fine-card, .cart-item, .review-item):nth-child(1) {
+  animation-delay: 20ms;
+}
+
+.public-main :is(.card, .book-card, .home-category-card, .thread-item, .loan-card, .reservation-card, .notification-item, .post-item, .about-card, .stat-card, .fine-card, .cart-item, .review-item):nth-child(2) {
+  animation-delay: 60ms;
+}
+
+.public-main :is(.card, .book-card, .home-category-card, .thread-item, .loan-card, .reservation-card, .notification-item, .post-item, .about-card, .stat-card, .fine-card, .cart-item, .review-item):nth-child(3) {
+  animation-delay: 100ms;
+}
+
+.public-main :is(.card, .book-card, .home-category-card, .thread-item, .loan-card, .reservation-card, .notification-item, .post-item, .about-card, .stat-card, .fine-card, .cart-item, .review-item):nth-child(4) {
+  animation-delay: 140ms;
+}
+
+.public-main :is(.card, .book-card, .home-category-card, .thread-item, .loan-card, .reservation-card, .notification-item, .post-item, .about-card, .stat-card, .fine-card, .cart-item, .review-item):nth-child(5) {
+  animation-delay: 180ms;
+}
+
+.public-main :is(.card, .book-card, .home-category-card, .thread-item, .loan-card, .reservation-card, .notification-item, .post-item, .about-card, .stat-card, .fine-card, .cart-item, .review-item):nth-child(n + 6) {
+  animation-delay: 220ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .public-main :is(
+    .card:not(.placeholder-glow):not(.skeleton-card),
+    .book-card,
+    .home-category-card,
+    .thread-item,
+    .loan-card,
+    .reservation-card,
+    .notification-item,
+    .post-item,
+    .about-card,
+    .stat-card,
+    .fine-card,
+    .cart-item,
+    .review-item,
+    .not-found-card,
+    .forbidden-card,
+    .placeholder-card,
+    .page-title,
+    #home-search-title,
+    .home-content-heading,
+    .book-title,
+    .forum-hero h1
+  ) {
+    animation: none;
+  }
+}

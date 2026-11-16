@@ -194,7 +194,7 @@ onBeforeUnmount(() => {
   gap: 0.375rem;
   padding: 0.5rem 0.75rem;
   border-radius: 0.375rem;
-  color: #334155;
+  color: #d6eaf3;
   font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
@@ -202,12 +202,18 @@ onBeforeUnmount(() => {
 
   &:hover,
   &.is-active {
-    color: #2563eb;
-    background-color: #f1f5f9;
+    color: #79edf4;
+    background-color: rgb(28 164 184 / 16%);
   }
 
   i {
     font-size: 1.125rem;
+    color: #8ddce8;
+  }
+
+  &:hover i,
+  &.is-active i {
+    color: #79edf4;
   }
 }
 

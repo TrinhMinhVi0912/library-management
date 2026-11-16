@@ -549,6 +549,27 @@ async function submit(values) {
 
 .auth-register { color: #a9bfce; font-size: 0.88rem; }
 
+@media (min-width: 768px) and (max-height: 900px) {
+  .auth-page--ocean { min-height: calc(100vh - 14rem); padding-block: .75rem; }
+  .auth-story { padding-block: .5rem; }
+  .auth-story__eyebrow { margin-bottom: .75rem; }
+  .auth-story h1 { margin-bottom: .8rem; font-size: clamp(2rem, 6vh, 3.5rem); }
+  .auth-story > p { line-height: 1.55; }
+  .auth-story__hint { margin-top: 1rem; padding: .55rem .8rem; }
+
+  .auth-card--ocean { padding: 1.15rem; }
+  .auth-brand-mark--ocean { display: none; }
+  .auth-card--ocean h2 { font-size: 1.65rem; }
+  .auth-card--ocean :deep(.form-label) { margin-bottom: .25rem; }
+  .auth-card--ocean :deep(.form-control) { min-height: 2.5rem; }
+  .auth-card--ocean :deep(.mb-3) { margin-bottom: .5rem !important; }
+  .auth-description.mb-4 { margin-bottom: .6rem !important; }
+  .auth-remember.mb-4 { margin-bottom: .5rem !important; }
+  .auth-submit { min-height: 2.6rem; }
+  .auth-google-separator { margin-block: .6rem; }
+  .auth-register.mt-4 { margin-top: .5rem !important; }
+}
+
 @media (max-width: 767.98px) {
   .auth-page--ocean { min-height: auto; padding: 2.25rem 1rem; }
   .auth-page--ocean::before { background-position: 36% center; }

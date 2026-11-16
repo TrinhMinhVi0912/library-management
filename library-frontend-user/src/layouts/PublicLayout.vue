@@ -72,7 +72,7 @@ watch(
   display: flex;
   min-height: 100vh;
   flex-direction: column;
-  background: #ffffff;
+  background: #041321;
 }
 
 .public-layout--auth,
@@ -82,6 +82,7 @@ watch(
 
 .public-main {
   flex: 1;
+  background-color: #041321;
 }
 
 .page-fade-enter-active,
