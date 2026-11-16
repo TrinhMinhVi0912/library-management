@@ -70,6 +70,8 @@ module.exports = {
     },
     '/api/v1/admin/dashboard/summary': { get: operation('Tổng quan dashboard', 'Admin', { secured: true }) },
     '/api/v1/admin/dashboard/charts': { get: operation('Dữ liệu biểu đồ', 'Admin', { secured: true, parameters: [{ name: 'range', in: 'query', schema: { type: 'string', enum: ['7d', '30d', '12m'], default: '30d' } }] }) },
+    '/api/v1/admin/statistics/{section}': { get: operation('Thống kê trạng thái các khu vực quản trị', 'Admin', { secured: true, parameters: [{ name: 'section', in: 'path', required: true, schema: { type: 'string', enum: ['loans', 'renewals', 'fines', 'users', 'staff', 'forum', 'notifications', 'catalog'] } }] }) },
+    '/api/v1/admin/books/statistics': { get: operation('Thống kê kho sách', 'Admin Books', { secured: true, parameters: [{ name: 'lowStockThreshold', in: 'query', schema: { type: 'integer', minimum: 2, maximum: 5, default: 2 } }, { name: 'lowStockPage', in: 'query', schema: { type: 'integer', minimum: 1, default: 1 } }] }) },
     '/api/v1/admin/loans/{id}/approve': { post: operation('Duyệt yêu cầu mượn', 'Admin', { secured: true, parameters: [idParameter()] }) },
     '/api/v1/admin/loans/{id}/handover': { post: operation('Xác nhận giao sách', 'Admin', { secured: true, parameters: [idParameter()] }) },
     '/api/v1/admin/loans/{id}/return': { post: operation('Xác nhận trả sách và ghi phạt', 'Admin', { secured: true, parameters: [idParameter()], requestBody: body({ type: 'object', required: ['items'], properties: { items: { type: 'array', items: { type: 'object', required: ['bookId', 'condition'], properties: { bookId: { type: 'string' }, condition: { type: 'string', enum: ['good', 'damaged', 'lost'] }, fineAmount: { type: 'number' }, note: { type: 'string' } } } } } }) }) },

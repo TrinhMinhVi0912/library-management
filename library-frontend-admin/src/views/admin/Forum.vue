@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { useToast } from 'vue-toastification';
 import Swal from 'sweetalert2';
 import DataTable from '@/components/admin/DataTable.vue';
+import AdminStatistics from '@/components/admin/AdminStatistics.vue';
 import {
   createAdminForumCategory,
   deleteAdminForumCategory,
@@ -26,6 +27,7 @@ const activeReports = ref([]);
 const reportTotal = ref(0);
 const reportPages = ref(1);
 const reportLoading = ref(false);
+const statisticsRefreshKey = ref(0);
 const reportError = ref(false);
 const threads = ref([]);
 const threadTotal = ref(0);
@@ -111,6 +113,7 @@ async function loadReports() {
     reportError.value = true;
   } finally {
     reportLoading.value = false;
+    statisticsRefreshKey.value += 1;
   }
 }
 
@@ -126,6 +129,7 @@ async function loadThreads() {
     threadError.value = true;
   } finally {
     threadLoading.value = false;
+    statisticsRefreshKey.value += 1;
   }
 }
 
@@ -327,6 +331,11 @@ async function removeCategory(category) {
         </p>
       </div>
     </div>
+
+    <AdminStatistics
+      section="forum"
+      :refresh-key="statisticsRefreshKey"
+    />
 
     <div
       class="forum-tabs"

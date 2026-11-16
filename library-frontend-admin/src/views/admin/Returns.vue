@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { useToast } from 'vue-toastification';
 import Swal from 'sweetalert2';
 import DataTable from '@/components/admin/DataTable.vue';
+import AdminStatistics from '@/components/admin/AdminStatistics.vue';
 import ReturnItemRow from '@/components/loan/ReturnItemRow.vue';
 import {
   getAdminBook,
@@ -18,6 +19,7 @@ const router = useRouter();
 const toast = useToast();
 const searchInput = ref(String(route.query.q || ''));
 const searchLoading = ref(false);
+const statisticsRefreshKey = ref(0);
 const searchError = ref('');
 const matches = ref([]);
 const selectedLoan = ref(null);
@@ -190,6 +192,7 @@ async function confirmReturn() {
     await reloadLoan();
   } finally {
     returnLoading.value = false;
+    statisticsRefreshKey.value += 1;
   }
 }
 
@@ -254,6 +257,11 @@ function conditionLabel(condition) {
         Quét hoặc nhập mã phiếu rồi nhấn Enter để tra cứu.
       </p>
     </div>
+
+    <AdminStatistics
+      section="loans"
+      :refresh-key="statisticsRefreshKey"
+    />
 
     <form
       class="surface-card lookup-card"

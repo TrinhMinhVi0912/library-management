@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { useToast } from 'vue-toastification';
 import Swal from 'sweetalert2';
 import DataTable from '@/components/admin/DataTable.vue';
+import AdminStatistics from '@/components/admin/AdminStatistics.vue';
 import {
   createAdminNotification,
   deleteAdminNotification,
@@ -20,6 +21,7 @@ const notifications = ref([]);
 const total = ref(0);
 const totalPages = ref(1);
 const loading = ref(false);
+const statisticsRefreshKey = ref(0);
 const loadError = ref(false);
 const saving = ref(false);
 const actionId = ref('');
@@ -86,6 +88,7 @@ async function loadNotifications() {
     loadError.value = true;
   } finally {
     loading.value = false;
+    statisticsRefreshKey.value += 1;
   }
 }
 
@@ -264,6 +267,11 @@ async function removeNotification(notification) {
         />Soạn thông báo
       </button>
     </div>
+
+    <AdminStatistics
+      section="notifications"
+      :refresh-key="statisticsRefreshKey"
+    />
 
     <DataTable
       :columns="columns"

@@ -208,6 +208,81 @@ async function getAdminBooks(query = {}) {
 }
 
 /**
+ * Tổng hợp thống kê kho sách; đếm đầu sách theo thể loại/tác giả và sách có bản khả dụng dưới ngưỡng.
+ * @param {{lowStockThreshold?:number,lowStockPage?:number}} [query] Ngưỡng exclusive 2–5 và trang sách tồn thấp.
+ * @returns {Promise<object>}
+ * @see docs/09-tai-lieu-api-frontend.md – API thống kê sách quản trị
+ */
+async function getAdminBookStatistics(query = {}) {
+  const threshold = Number(query.lowStockThreshold) || 2;
+  const page = Math.max(Number(query.lowStockPage) || 1, 1);
+  const limit = 10;
+  const [categoryCounts, uncategorizedResult, topAuthors, lowStockCount, lowStockBooks] = await Promise.all([
+    Book.aggregate([
+      { $unwind: '$categories' },
+      { $group: { _id: '$categories', count: { $sum: 1 } } },
+      {
+        $lookup: {
+          from: Category.collection.name,
+          localField: '_id',
+          foreignField: '_id',
+          as: 'category',
+        },
+      },
+      { $unwind: '$category' },
+      { $project: { _id: 0, categoryId: '$_id', name: '$category.name', count: 1 } },
+      { $sort: { count: -1, name: 1 } },
+    ]),
+    Book.aggregate([
+      { $match: { $or: [{ categories: { $exists: false } }, { categories: { $size: 0 } }] } },
+      { $count: 'count' },
+    ]),
+    Book.aggregate([
+      { $unwind: '$authors' },
+      { $group: { _id: '$authors', bookCount: { $sum: 1 } } },
+      {
+        $lookup: {
+          from: Author.collection.name,
+          localField: '_id',
+          foreignField: '_id',
+          as: 'author',
+        },
+      },
+      { $unwind: '$author' },
+      { $project: { _id: '$author._id', name: '$author.name', bookCount: 1 } },
+      { $sort: { bookCount: -1, name: 1 } },
+      { $limit: 5 },
+    ]),
+    Book.countDocuments({ availableCopies: { $lt: threshold } }),
+    Book.find({ availableCopies: { $lt: threshold } })
+      .select('code title availableCopies totalCopies status')
+      .sort({ availableCopies: 1, title: 1 })
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .lean(),
+  ]);
+
+  const categories = [...categoryCounts];
+  const uncategorizedCount = uncategorizedResult[0]?.count || 0;
+  if (uncategorizedCount > 0) {
+    categories.push({ categoryId: null, name: 'Chưa phân loại', count: uncategorizedCount });
+  }
+
+  return {
+    lowStockThreshold: threshold,
+    categories,
+    topAuthors,
+    lowStockCount,
+    lowStockBooks,
+    lowStockMeta: {
+      page,
+      limit,
+      totalPages: Math.max(1, Math.ceil(lowStockCount / limit)),
+    },
+  };
+}
+
+/**
  * Lấy chi tiết sách theo ID dành cho quản trị
  * @param {string} id
  */
@@ -655,6 +730,7 @@ module.exports = {
   generateUniqueSlug,
   createBook,
   getAdminBooks,
+  getAdminBookStatistics,
   getBookById,
   updateBook,
   updateBookStatus,

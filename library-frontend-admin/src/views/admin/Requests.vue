@@ -6,6 +6,7 @@ import Swal from 'sweetalert2';
 import dayjs from 'dayjs';
 import 'dayjs/locale/vi';
 import DataTable from '@/components/admin/DataTable.vue';
+import AdminStatistics from '@/components/admin/AdminStatistics.vue';
 import {
   approveLoan,
   getAdminLoan,
@@ -25,6 +26,7 @@ const rows = ref([]);
 const total = ref(0);
 const totalPages = ref(1);
 const loading = ref(false);
+const statisticsRefreshKey = ref(0);
 const loadError = ref(false);
 const selectedIds = ref(new Set());
 const actingId = ref('');
@@ -71,6 +73,7 @@ async function loadRequests() {
     loadError.value = true;
   } finally {
     loading.value = false;
+    statisticsRefreshKey.value += 1;
   }
 }
 
@@ -278,6 +281,11 @@ function formatMoney(value) {
         Duyệt đã chọn ({{ selectedIds.size }})
       </button>
     </div>
+
+    <AdminStatistics
+      section="loans"
+      :refresh-key="statisticsRefreshKey"
+    />
 
     <DataTable
       :columns="columns"

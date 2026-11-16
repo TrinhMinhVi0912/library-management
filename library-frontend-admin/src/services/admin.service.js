@@ -20,6 +20,11 @@ export async function getDashboardCharts(range = '30d') {
   return response.data?.data || {};
 }
 
+export async function getAdminStatistics(section) {
+  const response = await api.get(`/admin/statistics/${section}`);
+  return response.data?.data || null;
+}
+
 export async function getAdminLoans(params = {}) {
   const response = await api.get('/admin/loans', { params });
   return response.data || {};
@@ -111,6 +116,11 @@ export async function searchAdminReaders(q) {
 export async function getAdminBooks(params = {}) {
   const response = await api.get('/admin/books', { params });
   return response.data || {};
+}
+
+export async function getAdminBookStatistics(params = {}) {
+  const response = await api.get('/admin/books/statistics', { params });
+  return response.data?.data || null;
 }
 
 export async function createAdminBook(data) {

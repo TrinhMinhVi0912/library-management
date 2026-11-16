@@ -186,6 +186,16 @@ const queryAdminBookSchema = Joi.object({
   sort: Joi.string().trim().allow(''),
 });
 
+const adminBookStatisticsQuerySchema = Joi.object({
+  lowStockThreshold: Joi.number().integer().min(2).max(5).default(2).messages({
+    'number.base': 'Ngưỡng tồn kho phải là số nguyên',
+    'number.integer': 'Ngưỡng tồn kho phải là số nguyên',
+    'number.min': 'Ngưỡng tồn kho thấp nhất là 2',
+    'number.max': 'Ngưỡng tồn kho cao nhất là 5',
+  }),
+  lowStockPage: Joi.number().integer().min(1).default(1),
+});
+
 const queryPublicBookSchema = Joi.object({
   q: Joi.string().trim().allow(''),
   category: Joi.string().pattern(objectIdRegex).allow(''),
@@ -219,6 +229,7 @@ module.exports = {
   updateBookSchema,
   updateStatusSchema,
   queryAdminBookSchema,
+  adminBookStatisticsQuerySchema,
   queryPublicBookSchema,
   suggestQuerySchema,
   idOrSlugParamSchema,

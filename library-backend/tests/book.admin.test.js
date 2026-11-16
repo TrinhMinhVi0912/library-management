@@ -3,6 +3,7 @@ const bookController = require('../app/controllers/book.controller');
 const {
   Book,
   Author,
+  Category,
   Loan,
   Cart,
   Shelf,
@@ -15,6 +16,7 @@ const {
   updateBookSchema,
   updateStatusSchema,
   queryAdminBookSchema,
+  adminBookStatisticsQuerySchema,
 } = require('../app/validators/book.validator');
 const cloudinaryUtil = require('../app/utils/cloudinary.util');
 const codeUtil = require('../app/utils/code.util');
@@ -483,6 +485,56 @@ describe('BE-13: Sách - CRUD Quản trị (Admin Books)', () => {
       expect(res.jsonData.success).toBe(true);
       expect(res.jsonData.data.id).toBe('123');
     });
+  });
+});
+
+describe('BE-13: Thống kê kho sách quản trị', () => {
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  it('validate ngưỡng tồn kho 2–5 và trang danh sách', () => {
+    const { error, value } = adminBookStatisticsQuerySchema.validate({
+      lowStockThreshold: '5',
+      lowStockPage: '2',
+    });
+
+    expect(error).toBeUndefined();
+    expect(value).toEqual({ lowStockThreshold: 5, lowStockPage: 2 });
+    expect(adminBookStatisticsQuerySchema.validate({ lowStockThreshold: '6' }).error).toBeDefined();
+  });
+
+  it('tổng hợp thể loại, top tác giả và trang sách dưới ngưỡng khả dụng', async () => {
+    const aggregateSpy = jest.spyOn(Book, 'aggregate')
+      .mockResolvedValueOnce([{ categoryId: 'category-id', name: 'Công nghệ', count: 4 }])
+      .mockResolvedValueOnce([{ count: 1 }])
+      .mockResolvedValueOnce([{ _id: 'author-id', name: 'Tác giả A', bookCount: 5 }]);
+    jest.spyOn(Book, 'countDocuments').mockResolvedValue(11);
+
+    const lowStockRows = [{ _id: 'book-id', title: 'Sách tồn thấp', availableCopies: 1, totalCopies: 4 }];
+    const lean = jest.fn().mockResolvedValue(lowStockRows);
+    const limit = jest.fn().mockReturnValue({ lean });
+    const skip = jest.fn().mockReturnValue({ limit });
+    const sort = jest.fn().mockReturnValue({ skip });
+    const select = jest.fn().mockReturnValue({ sort });
+    jest.spyOn(Book, 'find').mockReturnValue({ select });
+
+    const result = await bookService.getAdminBookStatistics({ lowStockThreshold: 3, lowStockPage: 2 });
+
+    expect(aggregateSpy).toHaveBeenCalledTimes(3);
+    expect(result.lowStockThreshold).toBe(3);
+    expect(result.categories).toEqual([
+      { categoryId: 'category-id', name: 'Công nghệ', count: 4 },
+      { categoryId: null, name: 'Chưa phân loại', count: 1 },
+    ]);
+    expect(result.topAuthors).toEqual([{ _id: 'author-id', name: 'Tác giả A', bookCount: 5 }]);
+    expect(result.lowStockCount).toBe(11);
+    expect(result.lowStockBooks).toEqual(lowStockRows);
+    expect(result.lowStockMeta).toEqual({ page: 2, limit: 10, totalPages: 2 });
+    expect(Book.find).toHaveBeenCalledWith({ availableCopies: { $lt: 3 } });
+    expect(skip).toHaveBeenCalledWith(10);
+    expect(Category.collection.name).toBeDefined();
+    expect(Author.collection.name).toBeDefined();
   });
 });
 

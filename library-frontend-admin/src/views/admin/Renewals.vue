@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { useToast } from 'vue-toastification';
 import Swal from 'sweetalert2';
 import DataTable from '@/components/admin/DataTable.vue';
+import AdminStatistics from '@/components/admin/AdminStatistics.vue';
 import RenewalRequestRow from '@/components/loan/RenewalRequestRow.vue';
 import {
   approveRenewal,
@@ -22,6 +23,7 @@ const rows = ref([]);
 const total = ref(0);
 const totalPages = ref(1);
 const loading = ref(false);
+const statisticsRefreshKey = ref(0);
 const loadError = ref(false);
 const selectedIds = ref(new Set());
 const actingId = ref('');
@@ -73,6 +75,7 @@ async function loadRenewals() {
     loadError.value = true;
   } finally {
     loading.value = false;
+    statisticsRefreshKey.value += 1;
   }
 }
 
@@ -224,6 +227,11 @@ async function handleBulkApprove() {
         Duyệt đã chọn ({{ selectedIds.size }})
       </button>
     </div>
+
+    <AdminStatistics
+      section="renewals"
+      :refresh-key="statisticsRefreshKey"
+    />
 
     <DataTable
       :columns="columns"

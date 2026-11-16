@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { useToast } from 'vue-toastification';
 import Swal from 'sweetalert2';
 import DataTable from '@/components/admin/DataTable.vue';
+import AdminStatistics from '@/components/admin/AdminStatistics.vue';
 import {
   createAdminCatalogItem,
   deleteAdminCatalogItem,
@@ -18,6 +19,7 @@ const items = ref([]);
 const total = ref(0);
 const totalPages = ref(1);
 const loading = ref(false);
+const statisticsRefreshKey = ref(0);
 const loadError = ref(false);
 const saving = ref(false);
 const deletingId = ref('');
@@ -71,6 +73,7 @@ async function loadItems() {
     loadError.value = true;
   } finally {
     loading.value = false;
+    statisticsRefreshKey.value += 1;
   }
 }
 
@@ -189,6 +192,11 @@ function formatDate(value) {
         />Thêm {{ typeConfig.label.toLowerCase() }}
       </button>
     </div>
+
+    <AdminStatistics
+      section="catalog"
+      :refresh-key="statisticsRefreshKey"
+    />
 
     <div
       class="catalog-tabs"

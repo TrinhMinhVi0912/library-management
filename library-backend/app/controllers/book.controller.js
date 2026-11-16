@@ -11,6 +11,15 @@ const getAdminBooks = asyncHandler(async (req, res) => {
 });
 
 /**
+ * Lấy thống kê thể loại, tồn kho thấp và số đầu sách theo tác giả.
+ * GET /api/v1/admin/books/statistics
+ */
+const getAdminBookStatistics = asyncHandler(async (req, res) => {
+  const statistics = await bookService.getAdminBookStatistics(req.query);
+  return ok(res, statistics);
+});
+
+/**
  * Lấy chi tiết sách theo ID dành cho quản trị viên
  * GET /api/v1/admin/books/:id
  */
@@ -114,6 +123,7 @@ const getRelatedBooks = asyncHandler(async (req, res) => {
 
 module.exports = {
   getAdminBooks,
+  getAdminBookStatistics,
   getAdminBookById,
   createBook,
   updateBook,

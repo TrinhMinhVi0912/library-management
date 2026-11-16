@@ -3,6 +3,7 @@ import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useToast } from 'vue-toastification';
 import DataTable from '@/components/admin/DataTable.vue';
+import AdminStatistics from '@/components/admin/AdminStatistics.vue';
 import { getAdminLoan, getAdminLoans } from '@/services/admin.service';
 
 const route = useRoute();
@@ -12,6 +13,7 @@ const rows = ref([]);
 const total = ref(0);
 const totalPages = ref(1);
 const loading = ref(false);
+const statisticsRefreshKey = ref(0);
 const loadError = ref(false);
 const selectedLoan = ref(null);
 const detailLoading = ref(false);
@@ -60,6 +62,7 @@ async function loadLoans() {
     loadError.value = true;
   } finally {
     loading.value = false;
+    statisticsRefreshKey.value += 1;
   }
 }
 
@@ -133,6 +136,12 @@ function fullName(person) {
       </div>
       <strong class="result-count">{{ total }} phiếu</strong>
     </div>
+
+    <AdminStatistics
+      ref="statisticsRef"
+      section="loans"
+      :refresh-key="statisticsRefreshKey"
+    />
 
     <DataTable
       :columns="columns"

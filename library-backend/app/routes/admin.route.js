@@ -11,12 +11,15 @@ const reportController = require('../controllers/report.controller');
 const settingController = require('../controllers/setting.controller');
 const auditLogController = require('../controllers/audit-log.controller');
 const userController = require('../controllers/user.controller');
+const adminStatisticsController = require('../controllers/admin-statistics.controller');
+const { adminStatisticsSectionSchema } = require('../validators/admin-statistics.validator');
 const {
   idParamSchema,
   createBookSchema,
   updateBookSchema,
   updateStatusSchema,
   queryAdminBookSchema,
+  adminBookStatisticsQuerySchema,
 } = require('../validators/book.validator');
 const {
   loanIdParamSchema,
@@ -71,6 +74,7 @@ router.use(requireRole('staff', 'admin'));
 
 router.get('/dashboard/summary', dashboardController.getSummary);
 router.get('/dashboard/charts', validate(dashboardChartsQuerySchema, 'query'), dashboardController.getCharts);
+router.get('/statistics/:section', validate(adminStatisticsSectionSchema, 'params'), adminStatisticsController.getAdminStatistics);
 router.get('/loan-return-policy', settingController.getLoanReturnPolicy);
 router.get('/reports/loans.xlsx', validate(reportDateRangeSchema, 'query'), reportController.exportLoans);
 router.get('/reports/fines.xlsx', validate(reportDateRangeSchema, 'query'), reportController.exportFines);
@@ -127,6 +131,12 @@ router
   .route('/books')
   .get(validate(queryAdminBookSchema, 'query'), bookController.getAdminBooks)
   .post(validate(createBookSchema, 'body'), bookController.createBook);
+
+router.get(
+  '/books/statistics',
+  validate(adminBookStatisticsQuerySchema, 'query'),
+  bookController.getAdminBookStatistics
+);
 
 router
   .route('/books/:id')
