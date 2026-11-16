@@ -703,11 +703,46 @@ onMounted(() => {
 
 <style scoped lang="scss">
 .my-fines-view {
+  position: relative;
+  isolation: isolate;
   min-height: 70vh;
+  color: #d5e8f1;
+  background: radial-gradient(ellipse at 50% 0%, rgb(13 61 83 / 24%), transparent 42%), #041321;
 }
+.my-fines-view::before { position: absolute; z-index: -1; inset: 0 -100vw; background: inherit; content: ''; }
+.my-fines-view :deep(.breadcrumb-item),
+.my-fines-view :deep(.breadcrumb-item.active) { color: #aac1ce; }
+.my-fines-view :deep(.breadcrumb-item a) { color: #61dce8; }
+.my-fines-view :deep(.breadcrumb-item + .breadcrumb-item::before) { color: #648194; }
+.my-fines-view :deep(.text-dark),
+.my-fines-view .page-title { color: #edf7fb !important; }
+.my-fines-view :deep(.text-secondary),
+.my-fines-view :deep(.text-muted) { color: #9eb4c3 !important; }
+.my-fines-view :deep(.card),
+.my-fines-view :deep(.stat-card),
+.my-fines-view :deep(.fine-card) { border-color: rgb(119 177 202 / 18%) !important; background: #081d31 !important; color: #d5e8f1; box-shadow: 0 .5rem 1.5rem rgb(0 8 20 / 18%) !important; }
+.my-fines-view :deep(.card-header),
+.my-fines-view :deep(.card-footer) { border-color: rgb(119 177 202 / 18%) !important; background: #0a2338 !important; color: #d5e8f1; }
+.my-fines-view :deep(.table) { --bs-table-color: #d5e8f1; --bs-table-bg: #081d31; --bs-table-border-color: rgb(119 177 202 / 18%); --bs-table-hover-bg: #10334a; --bs-table-hover-color: #edf7fb; }
+.my-fines-view :deep(.table thead th) { background: #0a2338; color: #b9cfdb; }
+.my-fines-view :deep(.table-danger-subtle) { --bs-table-bg: #342630; --bs-table-color: #ffe0df; }
+.my-fines-view :deep(.bg-light) { border-color: rgb(119 177 202 / 18%) !important; background: #10334a !important; color: #c7dbe7 !important; }
+.my-fines-view :deep(.bg-info-subtle) { background: #10364b !important; color: #b9eaff !important; }
+.my-fines-view :deep(.bg-danger-subtle-hover) { background: #241f2b !important; }
+.my-fines-view :deep(.alert-info) { border-color: rgb(56 189 248 / 25%); background: #10364b; color: #b9eaff; }
+.my-fines-view :deep(.alert-info .text-dark) { color: #d9f2ff !important; }
+.my-fines-view :deep(.alert-danger) { border-color: rgb(248 113 113 / 25%); background: #351d2a; color: #ffd1d1; }
+.my-fines-view :deep(.placeholder) { background-color: #14344e; }
+.my-fines-view :deep(.btn-outline-secondary) { border-color: rgb(119 177 202 / 32%); color: #b9cfdb; }
+.my-fines-view :deep(.btn-outline-secondary:hover) { background: #10334a; color: #edf7fb; }
+.my-fines-view :deep(.page-link) { border-color: rgb(119 177 202 / 20%); background: #081d31; color: #b9cfdb; }
+.my-fines-view :deep(.page-item.active .page-link) { border-color: #20bfd0; background: #0d8299; color: #fff; }
+.my-fines-view :deep(.page-item.disabled .page-link) { background: #06172a; color: #60798a; }
+.my-fines-view :deep(.empty-state h2) { color: #edf7fb; }
+.my-fines-view :deep(.empty-state-icon) { color: #61dce8; }
 
 .page-title {
-  color: #1f2937;
+  color: #edf7fb;
   font-weight: 700;
 }
 
@@ -715,11 +750,11 @@ onMounted(() => {
   font-size: 0.85rem;
 
   .breadcrumb-item a {
-    color: #4b5563;
+    color: #61dce8;
     text-decoration: none;
 
     &:hover {
-      color: #1d4ed8;
+      color: #a5f3fc;
       text-decoration: underline;
     }
   }
@@ -741,7 +776,7 @@ onMounted(() => {
 }
 
 .table-danger-subtle {
-  background-color: #fffbfb;
+  background-color: #342630;
 }
 
 .line-clamp-1 {
@@ -772,7 +807,7 @@ onMounted(() => {
 }
 
 .card-header-tabs .nav-link {
-  color: #4b5563;
+  color: #b9cfdb;
   font-weight: 500;
   border-top: none;
   border-left: none;
@@ -781,14 +816,14 @@ onMounted(() => {
   padding: 0.75rem 1rem;
 
   &:hover {
-    color: #1d4ed8;
-    border-bottom-color: #cbd5e1;
+      color: #72e5ed;
+      border-bottom-color: #35cddd;
   }
 
   &.active {
-    color: #1d4ed8;
+    color: #72e5ed;
     font-weight: 600;
-    border-bottom-color: #1d4ed8;
+    border-bottom-color: #35cddd;
     background: transparent;
   }
 }
