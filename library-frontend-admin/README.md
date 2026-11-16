@@ -34,7 +34,7 @@ cd library-backend
 npm run dev
 ```
 
-Backend cần phản hồi tại `http://localhost:5000/health`. Cấu hình phát triển trong `library-backend/.env` cần cho phép đúng origin của admin trong `CLIENT_URL` (mặc định `http://localhost:5173`).
+Backend cần phản hồi tại `http://localhost:5000/health`. Cấu hình phát triển trong `library-backend/.env` cần cho phép cả hai origin frontend: `http://localhost:5173,http://localhost:5174` (đặt user trước admin).
 
 Mở terminal thứ hai tại thư mục gốc dự án rồi chạy admin app:
 
@@ -45,7 +45,7 @@ Copy-Item .env.example .env
 npm run dev
 ```
 
-Nếu Vite tự chọn cổng khác vì `5173` đang được app khác sử dụng, thêm origin mới (ví dụ `http://localhost:5174`) vào `CLIENT_URL` của backend rồi khởi động lại backend.
+App quản trị chạy cố định tại `http://localhost:5174`. Nếu cổng này đang được ứng dụng khác sử dụng, dừng ứng dụng chiếm cổng rồi chạy lại; Vite sẽ báo lỗi thay vì tự chuyển sang cổng khác.
 
 Điền URL vào `.env`:
 
