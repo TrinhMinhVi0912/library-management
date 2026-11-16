@@ -858,16 +858,62 @@ async function handleChangePassword() {
 
 <style scoped lang="scss">
 .profile-page {
+  position: relative;
+  isolation: isolate;
   min-height: calc(100vh - 12rem);
+  color: #d5e8f1;
+}
+
+.profile-page::before {
+  position: absolute;
+  z-index: -1;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 100vw;
+  background: radial-gradient(ellipse at 50% 0%, rgb(13 61 83 / 24%), transparent 42%), #041321;
+  content: '';
+  transform: translateX(-50%);
 }
 
 .page-title {
-  color: #111827;
+  color: #edf7fb;
 }
 
 .profile-sidebar-card {
+  border-color: rgb(119 177 202 / 18%) !important;
+  background: #081d31;
   border-radius: 0.75rem;
 }
+
+.profile-page :deep(.card) { border-color: rgb(119 177 202 / 18%) !important; background: #081d31; color: #d5e8f1; box-shadow: 0 .5rem 1.5rem rgb(0 8 20 / 18%) !important; }
+.profile-page :deep(.card-header),
+.profile-page :deep(.list-group-item) { border-color: rgb(119 177 202 / 18%) !important; background: #0a2338; color: #d5e8f1; }
+.profile-page :deep(.text-dark) { color: #edf7fb !important; }
+.profile-page :deep(.text-muted),
+.profile-page :deep(.text-secondary),
+.profile-page :deep(.form-text) { color: #9eb4c3 !important; }
+.profile-page :deep(.bg-primary-subtle) { border-color: rgb(91 223 234 / 22%) !important; background: #103a50 !important; color: #72e5ed !important; }
+.profile-page :deep(.bg-success-subtle) { border-color: rgb(74 222 128 / 22%) !important; background: #123a33 !important; color: #8ce8b0 !important; }
+.profile-page :deep(.bg-light) { border-color: rgb(119 177 202 / 20%) !important; background: #10334a !important; color: #c7dbe7 !important; }
+.profile-page :deep(.form-control),
+.profile-page :deep(.form-select) { border-color: rgb(119 177 202 / 24%); background: #06172a; color: #e6f4fb; }
+.profile-page :deep(.form-control::placeholder) { color: #91aaba; }
+.profile-page :deep(.form-control:focus),
+.profile-page :deep(.form-select:focus) { border-color: #35cddd; box-shadow: 0 0 0 .2rem rgb(40 201 216 / 15%); }
+.profile-page :deep(.btn-primary) { border-color: #0b91a4; background: #0b91a4; color: #fff; }
+.profile-page :deep(.btn-primary:hover) { border-color: #16adbf; background: #16adbf; }
+.profile-page :deep(.btn-outline-secondary) { border-color: rgb(119 177 202 / 30%); color: #b9cfdb; }
+.profile-page :deep(.btn-outline-secondary:hover) { background: #10334a; color: #edf7fb; }
+.profile-page :deep(.nav-tabs) { border-color: rgb(119 177 202 / 18%); }
+.profile-page .card-header-tabs .nav-link { color: #b9cfdb; }
+.profile-page .card-header-tabs .nav-link:hover { color: #72e5ed; border-color: transparent; }
+.profile-page .card-header-tabs .nav-link.active { border-color: rgb(119 177 202 / 18%) rgb(119 177 202 / 18%) #081d31; background: #081d31; color: #72e5ed; }
+.profile-page :deep(.alert-success) { border-color: rgb(74 222 128 / 24%); background: #123a33; color: #a7f3c4; }
+.profile-page :deep(.alert-danger) { border-color: rgb(248 113 113 / 25%); background: #351d2a; color: #ffd1d1; }
+.profile-page :deep(.progress) { background: #14344e; }
+.profile-page :deep(.invalid-feedback),
+.profile-page :deep(.text-danger) { color: #ff9b9b !important; }
 
 .card-header-tabs .nav-link {
   font-weight: 500;

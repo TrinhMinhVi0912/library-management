@@ -830,9 +830,49 @@ onMounted(() => {
 
 <style scoped>
 .my-shelves-page {
-  min-height: 80vh;
-  background-color: #f9fafb;
+  position: relative;
+  isolation: isolate;
+  min-height: 100vh;
+  color: #d5e8f1;
+  background: radial-gradient(ellipse at 50% 0%, rgb(13 61 83 / 24%), transparent 42%), #041321;
 }
+.my-shelves-page::before { position: absolute; z-index: -1; top: 0; bottom: 0; left: 50%; width: 100vw; background: inherit; content: ''; transform: translateX(-50%); }
+.my-shelves-page :deep(.text-dark) { color: #edf7fb !important; }
+.my-shelves-page :deep(.text-secondary),
+.my-shelves-page :deep(.text-muted) { color: #9eb4c3 !important; }
+.my-shelves-page :deep(.card),
+.my-shelves-page :deep(.bg-white) { border-color: rgb(119 177 202 / 18%) !important; background: #081d31 !important; color: #d5e8f1; box-shadow: 0 .5rem 1.5rem rgb(0 8 20 / 18%) !important; }
+.my-shelves-page :deep(.card-header) { border-color: rgb(119 177 202 / 18%) !important; background: #0a2338 !important; color: #d5e8f1; }
+.my-shelves-page :deep(.list-group-item) { border-color: rgb(119 177 202 / 16%); background: #081d31; color: #c7dbe7; }
+.my-shelves-page :deep(.list-group-item:hover) { background: #0c2940; }
+.my-shelves-page :deep(.list-group-item.active-shelf) { border-left-color: #35cddd !important; background: #0a2940; }
+.my-shelves-page :deep(.active-shelf .shelf-title) { color: #72e5ed !important; }
+.my-shelves-page :deep(.bg-light),
+.my-shelves-page :deep(.bg-secondary-subtle) { border-color: rgb(119 177 202 / 20%) !important; background: #10334a !important; color: #c7dbe7 !important; }
+.my-shelves-page :deep(.bg-primary-subtle) { background: #103a50 !important; color: #72e5ed !important; }
+.my-shelves-page :deep(.bg-info-subtle) { background: #10364b !important; color: #b9eaff !important; }
+.my-shelves-page :deep(.form-control),
+.my-shelves-page :deep(.form-select),
+.my-shelves-page :deep(.input-group-text) { border-color: rgb(119 177 202 / 24%); background: #06172a !important; color: #e6f4fb; }
+.my-shelves-page :deep(.form-control::placeholder) { color: #91aaba; }
+.my-shelves-page :deep(.form-control:focus),
+.my-shelves-page :deep(.form-select:focus) { border-color: #35cddd; box-shadow: 0 0 0 .2rem rgb(40 201 216 / 15%); }
+.my-shelves-page :deep(.input-group-text) { color: #60dce8 !important; }
+.my-shelves-page :deep(.btn-primary) { border-color: #0b91a4; background: #0b91a4; color: #fff; }
+.my-shelves-page :deep(.btn-primary:hover) { border-color: #16adbf; background: #16adbf; }
+.my-shelves-page :deep(.btn-outline-primary) { border-color: #35cddd; color: #72e5ed; }
+.my-shelves-page :deep(.btn-outline-primary:hover) { background: #103a50; color: #a5f3fc; }
+.my-shelves-page :deep(.btn-outline-secondary),
+.my-shelves-page :deep(.btn-light) { border-color: rgb(119 177 202 / 28%); background: #10334a; color: #b9cfdb; }
+.my-shelves-page :deep(.btn-outline-secondary:hover),
+.my-shelves-page :deep(.btn-light:hover) { background: #17455c; color: #edf7fb; }
+.my-shelves-page :deep(.btn-outline-danger) { border-color: #e87979; color: #ffaaaa; }
+.my-shelves-page :deep(.placeholder) { background-color: #14344e; }
+.my-shelves-page :deep(.page-link) { border-color: rgb(119 177 202 / 20%); background: #081d31; color: #b9cfdb; }
+.my-shelves-page :deep(.page-item.active .page-link) { border-color: #20bfd0; background: #0d8299; color: #fff; }
+.my-shelves-page :deep(.page-item.disabled .page-link) { background: #06172a; color: #60798a; }
+.my-shelves-page :deep(.empty-state h2) { color: #edf7fb; }
+.my-shelves-page :deep(.empty-state-icon) { color: #61dce8; }
 
 .fs-xs {
   font-size: 0.75rem;
@@ -870,7 +910,7 @@ onMounted(() => {
   width: 2.5rem;
   height: 2.5rem;
   border-radius: 50%;
-  background: #f8fafc;
+  background: #10334a;
 }
 
 .shelf-nav-copy,
@@ -901,7 +941,7 @@ onMounted(() => {
   width: 3rem;
   height: 3rem;
   border-radius: 0.75rem;
-  background: #f1f5f9;
+  background: #10334a;
 }
 
 .active-shelf-title {
@@ -919,23 +959,23 @@ onMounted(() => {
 .shelf-nav-list .list-group-item {
   border-top: none;
   border-right: none;
-  border-bottom: 1px solid #f3f4f6;
+  border-bottom: 1px solid rgb(119 177 202 / 16%);
   cursor: pointer;
-  background-color: #ffffff;
+  background-color: #081d31;
   transition: all 140ms ease;
 }
 
 .shelf-nav-list .list-group-item:hover {
-  background-color: #f8fafc;
+  background-color: #0c2940;
 }
 
 .shelf-nav-list .list-group-item.active-shelf {
-  background-color: #eff6ff;
+  background-color: #0a2940;
   border-left-width: 4px;
 }
 
 .shelf-nav-list .list-group-item.active-shelf .shelf-title {
-  color: #1d4ed8;
+  color: #72e5ed;
   font-weight: 700;
 }
 
@@ -944,7 +984,7 @@ onMounted(() => {
 }
 
 .border-start-primary {
-  border-left-color: #2563eb !important;
+  border-left-color: #35cddd !important;
 }
 
 .border-start-transparent {
@@ -953,7 +993,7 @@ onMounted(() => {
 
 .book-shelf-card {
   transition: transform 160ms ease, box-shadow 160ms ease;
-  background: #ffffff;
+  background: #081d31;
 }
 
 .book-shelf-card:hover {
@@ -967,7 +1007,7 @@ onMounted(() => {
 }
 
 .book-shelf-fallback {
-  background-color: #f3f4f6;
+  background-color: #10334a;
   aspect-ratio: 3 / 4;
 }
 
@@ -979,7 +1019,7 @@ onMounted(() => {
 }
 
 .hover-primary:hover {
-  color: #2563eb !important;
+  color: #61dce8 !important;
 }
 </style>
 
