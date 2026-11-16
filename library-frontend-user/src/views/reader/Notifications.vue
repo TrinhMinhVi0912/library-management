@@ -282,14 +282,58 @@ onMounted(() => {
 
 <style scoped lang="scss">
 .notifications-page {
+  position: relative;
+  isolation: isolate;
+  min-height: 100vh;
   max-width: 900px;
+  color: #d5e8f1;
+}
+
+.notifications-page::before {
+  position: absolute;
+  z-index: -1;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 100vw;
+  background: radial-gradient(ellipse at 50% 0%, rgb(13 61 83 / 24%), transparent 42%), #041321;
+  content: '';
+  transform: translateX(-50%);
 }
 
 .page-title {
   font-size: 1.625rem;
   font-weight: 700;
-  color: #0f172a;
+  color: #edf7fb;
 }
+
+.notifications-page :deep(.text-secondary),
+.notifications-page :deep(.text-muted) { color: #9eb4c3 !important; }
+.notifications-page :deep(.card) { border-color: rgb(119 177 202 / 18%) !important; background: #081d31 !important; color: #d5e8f1; box-shadow: 0 .5rem 1.5rem rgb(0 8 20 / 18%) !important; }
+.notifications-page :deep(.card-body),
+.notifications-page :deep(.border-bottom) { border-color: rgb(119 177 202 / 18%) !important; }
+.notifications-page :deep(.form-select) { border-color: rgb(119 177 202 / 24%); background-color: #06172a; color: #e6f4fb; }
+.notifications-page :deep(.form-select:focus) { border-color: #35cddd; box-shadow: 0 0 0 .2rem rgb(40 201 216 / 15%); }
+.notifications-page :deep(.btn-primary) { border-color: #0b91a4; background: #0b91a4; color: #fff; }
+.notifications-page :deep(.btn-primary:hover) { border-color: #16adbf; background: #16adbf; }
+.notifications-page :deep(.btn-outline-primary) { border-color: #35cddd; color: #72e5ed; }
+.notifications-page :deep(.btn-outline-primary:hover) { background: #103a50; color: #a5f3fc; }
+.notifications-page :deep(.btn-outline-secondary) { border-color: rgb(119 177 202 / 30%); color: #b9cfdb; }
+.notifications-page :deep(.btn-outline-secondary:hover) { background: #10334a; color: #edf7fb; }
+.notifications-page :deep(.notification-item) { border-color: rgb(119 177 202 / 16%); background: #081d31; color: #d5e8f1; }
+.notifications-page :deep(.notification-item:hover) { background: #0c2940; }
+.notifications-page :deep(.notification-item.is-unread) { border-left-color: #35cddd; background: #0a2940; }
+.notifications-page :deep(.notification-item .item-title) { color: #edf7fb; }
+.notifications-page :deep(.notification-item .item-content),
+.notifications-page :deep(.notification-item .item-time) { color: #9eb4c3; }
+.notifications-page :deep(.notification-item .btn-mark-read) { border-color: rgb(119 177 202 / 28%); background: #10334a; color: #72e5ed; }
+.notifications-page :deep(.notification-item .btn-mark-read:hover) { background: #0d8299; color: #fff; }
+.notifications-page :deep(.placeholder) { background-color: #14344e; }
+.notifications-page :deep(.page-link) { border-color: rgb(119 177 202 / 20%); background: #081d31; color: #b9cfdb; }
+.notifications-page :deep(.page-item.active .page-link) { border-color: #20bfd0; background: #0d8299; color: #fff; }
+.notifications-page :deep(.page-item.disabled .page-link) { background: #06172a; color: #60798a; }
+.notifications-page :deep(.empty-state h2) { color: #edf7fb; }
+.notifications-page :deep(.empty-state-icon) { color: #61dce8; }
 
 .filters-card {
   border-radius: 0.75rem;
@@ -316,14 +360,14 @@ onMounted(() => {
     width: 2.375rem;
     height: 2.375rem;
     border-radius: 50%;
-    background-color: #f1f5f9;
+    background-color: #14344e;
     animation: skeleton-pulse 1.5s infinite;
   }
 
   .skeleton-bar {
     height: 0.875rem;
     border-radius: 0.25rem;
-    background-color: #f1f5f9;
+    background-color: #14344e;
     animation: skeleton-pulse 1.5s infinite;
   }
 }

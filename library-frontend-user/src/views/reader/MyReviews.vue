@@ -372,17 +372,61 @@ onMounted(() => {
 
 <style scoped lang="scss">
 .my-reviews-page {
+  position: relative;
+  isolation: isolate;
+  min-height: 100vh;
   max-width: 900px;
+  color: #d5e8f1;
+}
+
+.my-reviews-page::before {
+  position: absolute;
+  z-index: -1;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 100vw;
+  background: radial-gradient(ellipse at 50% 0%, rgb(13 61 83 / 24%), transparent 42%), #041321;
+  content: '';
+  transform: translateX(-50%);
 }
 
 .page-title {
   font-size: 1.625rem;
   font-weight: 700;
-  color: #0f172a;
+  color: #edf7fb;
 }
 
+.my-reviews-page :deep(.text-dark) { color: #edf7fb !important; }
+.my-reviews-page :deep(.text-secondary),
+.my-reviews-page :deep(.text-muted) { color: #9eb4c3 !important; }
+.my-reviews-page :deep(.card) { border-color: rgb(119 177 202 / 18%) !important; background: #081d31 !important; color: #d5e8f1; box-shadow: 0 .5rem 1.5rem rgb(0 8 20 / 18%) !important; }
+.my-reviews-page :deep(.border-bottom) { border-color: rgb(119 177 202 / 18%) !important; }
+.my-reviews-page :deep(.bg-light) { border-color: rgb(119 177 202 / 20%) !important; background: #10334a !important; color: #c7dbe7 !important; }
+.my-reviews-page :deep(.form-control) { border-color: rgb(119 177 202 / 24%); background: #06172a; color: #e6f4fb; }
+.my-reviews-page :deep(.form-control::placeholder) { color: #91aaba; }
+.my-reviews-page :deep(.form-control:focus) { border-color: #35cddd; box-shadow: 0 0 0 .2rem rgb(40 201 216 / 15%); }
+.my-reviews-page :deep(.btn-primary) { border-color: #0b91a4; background: #0b91a4; color: #fff; }
+.my-reviews-page :deep(.btn-primary:hover) { border-color: #16adbf; background: #16adbf; }
+.my-reviews-page :deep(.btn-outline-secondary) { border-color: rgb(119 177 202 / 30%); color: #b9cfdb; }
+.my-reviews-page :deep(.btn-outline-secondary:hover) { background: #10334a; color: #edf7fb; }
+.my-reviews-page :deep(.btn-outline-danger) { border-color: #e87979; color: #ffaaaa; }
+.my-reviews-page :deep(.btn-outline-danger:hover) { background: #51252e; color: #ffe4e4; }
+.my-reviews-page :deep(.review-item) { border-color: rgb(119 177 202 / 18%) !important; background: #081d31 !important; color: #d5e8f1; }
+.my-reviews-page :deep(.review-book-header) { border-color: rgb(119 177 202 / 18%) !important; }
+.my-reviews-page :deep(.review-book-header .book-title) { color: #edf7fb !important; }
+.my-reviews-page :deep(.review-item .text-secondary),
+.my-reviews-page :deep(.review-item .text-muted) { color: #9eb4c3 !important; }
+.my-reviews-page :deep(.review-item .bg-light) { border-color: rgb(119 177 202 / 20%) !important; background: #10334a !important; color: #c7dbe7 !important; }
+.my-reviews-page :deep(.placeholder) { background-color: #14344e; }
+.my-reviews-page :deep(.page-link) { border-color: rgb(119 177 202 / 20%); background: #081d31; color: #b9cfdb; }
+.my-reviews-page :deep(.page-item.active .page-link) { border-color: #20bfd0; background: #0d8299; color: #fff; }
+.my-reviews-page :deep(.page-item.disabled .page-link) { background: #06172a; color: #60798a; }
+.my-reviews-page :deep(.empty-state h2) { color: #edf7fb; }
+.my-reviews-page :deep(.empty-state-icon) { color: #61dce8; }
+
 .inline-edit-card {
-  background-color: #ffffff;
+  background-color: #081d31;
 }
 
 .star-picker {
@@ -407,19 +451,19 @@ onMounted(() => {
 }
 
 .skeleton-card {
-  background-color: #ffffff;
+  background-color: #081d31;
 
   .skeleton-thumb {
     width: 48px;
     height: 64px;
-    background-color: #f1f5f9;
+    background-color: #14344e;
     border-radius: 0.375rem;
     animation: skeleton-pulse 1.5s infinite;
   }
 
   .skeleton-line {
     height: 0.875rem;
-    background-color: #f1f5f9;
+    background-color: #14344e;
     border-radius: 0.25rem;
     animation: skeleton-pulse 1.5s infinite;
   }
