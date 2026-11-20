@@ -43,6 +43,7 @@ const mainGroups = [
     links: [
       { to: '/admin/users', label: 'Người dùng', icon: 'bi-people' },
       { to: '/admin/forum', label: 'Kiểm duyệt diễn đàn', icon: 'bi-chat-square-text' },
+      { to: '/admin/forum/moderation', label: 'Duyệt bài mới', icon: 'bi-shield-check' },
     ],
   },
   {

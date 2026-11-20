@@ -82,9 +82,17 @@ const forumThreadSchema = new mongoose.Schema(
     ],
     status: {
       type: String,
-      enum: ['active', 'hidden'],
+      enum: ['pending', 'active', 'hidden'],
       default: 'active',
       index: true,
+    },
+    moderation: {
+      state: { type: String, enum: ['pending', 'approved', 'rejected', 'bypassed'], default: 'bypassed', index: true },
+      score: { type: Number, min: 0, max: 1, default: null },
+      model: { type: String, default: '' },
+      reason: { type: String, default: '' },
+      reviewedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+      reviewedAt: { type: Date, default: null },
     },
   },
   {

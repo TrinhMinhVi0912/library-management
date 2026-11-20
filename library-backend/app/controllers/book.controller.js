@@ -103,6 +103,12 @@ const getHomeBooks = asyncHandler(async (_req, res) => {
   return ok(res, homeData);
 });
 
+/** Gợi ý cá nhân cho độc giả đã đăng nhập. */
+const getPersonalRecommendations = asyncHandler(async (req, res) => {
+  const result = await bookService.getPersonalRecommendations(req.user._id, req.query.limit);
+  return ok(res, result.books, { reason: result.reason, excludedCount: result.excludedCount });
+});
+
 /**
  * Lấy chi tiết sách theo ID hoặc Slug
  * GET /api/v1/books/:idOrSlug
@@ -132,6 +138,7 @@ module.exports = {
   getPublicBooks,
   suggestBooks,
   getHomeBooks,
+  getPersonalRecommendations,
   getBookByIdOrSlug,
   getRelatedBooks,
 };

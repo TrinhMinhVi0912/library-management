@@ -23,3 +23,10 @@ Thumbs.db
 .idea/
 
 *.md
+!tasks/backend/BE-41.md
+!tasks/backend/BE-42.md
+!tasks/backend/BE-43.md
+!tasks/frontend/FE-42.md
+!tasks/backend/BE-45.md
+!tasks/frontend/FE-44.md
+!library-backend/vectorization/README.md

@@ -1,5 +1,5 @@
 const express = require('express');
-const { validate } = require('../middlewares');
+const { validate, auth, requireRole } = require('../middlewares');
 const {
   queryPublicBookSchema,
   suggestQuerySchema,
@@ -13,7 +13,7 @@ const router = express.Router();
 
 /**
  * @route   GET /api/v1/books
- * @desc    Danh sách sách công khai (tìm kiếm q, lọc thể loại, tác giả, NXB, năm, còn hàng, sắp xếp)
+ * @desc    Danh sách sách công khai (tìm kiếm từ khóa/ngữ nghĩa, lọc thể loại, tác giả, NXB, năm, còn hàng, sắp xếp)
  * @access  Public
  */
 router.get('/', validate(queryPublicBookSchema, 'query'), bookController.getPublicBooks);
@@ -31,6 +31,9 @@ router.get('/suggest', validate(suggestQuerySchema, 'query'), bookController.sug
  * @access  Public
  */
 router.get('/home', bookController.getHomeBooks);
+
+/** Gợi ý cá nhân dựa trên lịch sử mượn và đánh giá tốt; chỉ độc giả đã đăng nhập. */
+router.get('/recommendations', auth, requireRole('reader'), bookController.getPersonalRecommendations);
 
 /**
  * @route   GET /api/v1/books/:id/related

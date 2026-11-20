@@ -186,9 +186,9 @@ onMounted(loadThreads);
               <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
                 <span
                   class="badge rounded-pill"
-                  :class="thread.status === 'active' ? 'text-bg-success' : 'text-bg-secondary'"
+                  :class="thread.status === 'active' ? 'text-bg-success' : (thread.status === 'pending' ? 'text-bg-warning' : 'text-bg-secondary')"
                 >
-                  {{ thread.status === 'active' ? 'Đang hiển thị' : 'Đã ẩn' }}
+                  {{ thread.status === 'active' ? 'Đang hiển thị' : (thread.status === 'pending' ? 'Chờ kiểm duyệt' : (thread.moderation?.state === 'rejected' ? 'Chưa được duyệt' : 'Đã ẩn')) }}
                 </span>
                 <span
                   v-if="thread.category?.name"
@@ -207,6 +207,9 @@ onMounted(loadThreads);
               </h2>
               <p class="text-secondary mb-3 thread-preview">
                 {{ (thread.content || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim() }}
+              </p>
+              <p v-if="thread.moderation?.state === 'rejected' && thread.moderation.reason" class="small text-danger mb-3">
+                Lý do: {{ thread.moderation.reason }}
               </p>
               <div class="small text-secondary d-flex flex-wrap gap-3">
                 <span><i
@@ -229,7 +232,7 @@ onMounted(loadThreads);
             </div>
             <div class="d-flex align-items-start gap-2 flex-shrink-0">
               <button
-                v-if="thread.status === 'active'"
+                v-if="thread.status !== 'hidden' || thread.moderation?.state === 'rejected'"
                 type="button"
                 class="btn btn-outline-primary btn-sm"
                 @click="editThread(thread)"

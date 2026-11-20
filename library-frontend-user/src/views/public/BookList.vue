@@ -34,6 +34,7 @@ const error = ref(null);
 
 // Trạng thái tìm kiếm & sắp xếp
 const searchInput = ref('');
+const searchMode = ref('lexical');
 let searchTimer = null;
 
 const sort = ref('relevance');
@@ -162,6 +163,7 @@ function syncStateFromQuery() {
   const q = route.query;
 
   searchInput.value = typeof q.q === 'string' ? q.q : '';
+  searchMode.value = ['semantic', 'hybrid'].includes(q.mode) ? 'hybrid' : 'lexical';
   sort.value = typeof q.sort === 'string' && ['relevance', 'new', 'popular', 'az'].includes(q.sort)
     ? q.sort
     : (q.q ? 'relevance' : 'new');
@@ -183,6 +185,7 @@ function pushQueryToRoute() {
   const query = {};
 
   if (searchInput.value.trim()) query.q = searchInput.value.trim();
+  if (searchInput.value.trim() && searchMode.value === 'hybrid') query.mode = 'hybrid';
   if (filters.value.category) query.category = filters.value.category;
   if (filters.value.author) query.author = filters.value.author;
   if (filters.value.publisher) query.publisher = filters.value.publisher;
@@ -208,6 +211,7 @@ async function fetchBooks() {
     };
 
     if (searchInput.value.trim()) params.q = searchInput.value.trim();
+    if (searchInput.value.trim() && searchMode.value === 'hybrid') params.mode = 'hybrid';
     if (filters.value.category) params.category = filters.value.category;
     if (filters.value.author) params.author = filters.value.author;
     if (filters.value.publisher) params.publisher = filters.value.publisher;
@@ -229,8 +233,13 @@ async function fetchBooks() {
 // Xử lý thay đổi tìm kiếm debounce
 function handleSearchInput(event) {
   clearTimeout(searchTimer);
+  const nextValue = event.target.value;
+  if (!nextValue.trim()) {
+    setSearch('');
+    return;
+  }
   searchTimer = setTimeout(() => {
-    searchInput.value = event.target.value;
+    searchInput.value = nextValue;
     page.value = 1;
     pushQueryToRoute();
     fetchBooks();
@@ -239,6 +248,13 @@ function handleSearchInput(event) {
 
 function setSearch(val) {
   searchInput.value = val;
+  page.value = 1;
+  pushQueryToRoute();
+  fetchBooks();
+}
+
+function setSearchMode(mode) {
+  searchMode.value = mode === 'hybrid' ? 'hybrid' : 'lexical';
   page.value = 1;
   pushQueryToRoute();
   fetchBooks();
@@ -382,6 +398,15 @@ onMounted(async () => {
             <p class="text-secondary small mb-0">
               <span v-if="loading">Đang cập nhật số liệu...</span>
               <span v-else>Tìm thấy <strong>{{ total.toLocaleString('vi-VN') }}</strong> đầu sách</span>
+              <span
+                v-if="searchMode === 'hybrid' && searchInput.trim()"
+                class="semantic-result-note"
+              >
+                <i
+                  class="bi bi-stars"
+                  aria-hidden="true"
+                /> Xếp theo độ tương đồng ngữ nghĩa
+              </span>
             </p>
           </div>
 
@@ -419,6 +444,39 @@ onMounted(async () => {
                 </div>
               </div>
 
+              <div class="w-100 d-flex justify-content-md-end">
+                <div
+                  class="btn-group btn-group-sm"
+                  role="group"
+                  aria-label="Chế độ tìm kiếm"
+                >
+                  <button
+                    type="button"
+                    class="btn btn-outline-secondary"
+                    :class="{ active: searchMode === 'lexical' }"
+                    @click="setSearchMode('lexical')"
+                  >
+                    <i
+                      class="bi bi-search me-1"
+                      aria-hidden="true"
+                    />Từ khóa
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-outline-secondary"
+                  :class="{ active: searchMode === 'hybrid' }"
+                    :disabled="!searchInput.trim()"
+                    title="Tìm theo ý nghĩa và ngữ cảnh của câu"
+                    @click="setSearchMode('hybrid')"
+                  >
+                    <i
+                      class="bi bi-stars me-1"
+                      aria-hidden="true"
+                    />Kết hợp thông minh
+                  </button>
+                </div>
+              </div>
+
               <!-- Nút bật bộ lọc trên Mobile -->
               <button
                 type="button"
@@ -446,6 +504,8 @@ onMounted(async () => {
                   id="sort-select"
                   class="form-select"
                   :value="sort"
+                  :disabled="searchMode === 'semantic'"
+                  :title="searchMode === 'semantic' ? 'Kết quả đang được xếp theo độ tương đồng ngữ nghĩa' : undefined"
                   @change="handleSortChange($event.target.value)"
                 >
                   <option
@@ -718,6 +778,7 @@ onMounted(async () => {
 .book-list-header { padding: 1.25rem; border: 1px solid rgb(105 164 190 / 17%); border-radius: 1rem; background: linear-gradient(145deg, #081d31, #06182a); box-shadow: 0 .75rem 2rem rgb(0 8 20 / 18%); }
 .book-list-header h1 { color: #f2f9fc; }
 .book-list-header p { color: #9eb4c3 !important; }
+.semantic-result-note { display: inline-flex; align-items: center; gap: .3rem; margin-left: .5rem; color: #69e1ec; }
 .book-list-header .input-group-text,
 .book-list-header .form-control,
 .book-list-header .form-select { border-color: rgb(119 177 202 / 24%); background-color: #06172a; color: #e6f4fb; }

@@ -1,4 +1,5 @@
 const express = require('express');
+const Joi = require('joi');
 const { auth, requireRole, validate } = require('../middlewares');
 const bookController = require('../controllers/book.controller');
 const counterController = require('../controllers/counter.controller');
@@ -64,6 +65,8 @@ const {
   pinStateSchema,
   lockStateSchema,
   hideStateSchema,
+  forumModerationQuerySchema,
+  forumModerationDecisionSchema,
 } = require('../validators/forum.validator');
 
 const router = express.Router();
@@ -103,6 +106,8 @@ router.route('/forum/categories')
 router.patch('/forum/categories/:id', validate({ params: forumIdParamSchema, body: updateCategorySchema }), forumController.updateCategory);
 router.delete('/forum/categories/:id', validate(forumIdParamSchema, 'params'), forumController.deleteCategory);
 router.get('/forum/reports', validate(adminReportsQuerySchema, 'query'), forumController.getAdminReports);
+router.get('/forum/moderation', validate(forumModerationQuerySchema, 'query'), forumController.getPendingModeration);
+router.patch('/forum/moderation/:targetType/:id', validate({ params: Joi.object({ targetType: Joi.string().valid('thread', 'post').required(), id: forumIdParamSchema.extract('id') }), body: forumModerationDecisionSchema }), forumController.reviewPendingModeration);
 router.patch('/forum/reports/:id', validate({ params: forumIdParamSchema, body: reportStatusSchema }), forumController.updateReportStatus);
 router.patch('/forum/threads/:id/pin', validate({ params: forumIdParamSchema, body: pinStateSchema }), forumController.pinThread);
 router.patch('/forum/threads/:id/lock', validate({ params: forumIdParamSchema, body: lockStateSchema }), forumController.lockThread);

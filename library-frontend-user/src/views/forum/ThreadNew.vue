@@ -841,8 +841,13 @@ async function handleSubmit() {
     const thread = isEditing.value
       ? await forumService.updateThread(route.query.edit, payload)
       : await forumService.createThread(payload);
-    toast.success(isEditing.value ? 'Đã cập nhật chủ đề' : 'Đã tạo chủ đề thành công');
-    router.push({ path: `/forum/t/${thread.slug || thread._id}` });
+    if (thread.status === 'pending') {
+      toast.info('Bài đăng đã gửi và đang chờ nhân viên kiểm duyệt.');
+      router.push('/forum/my');
+    } else {
+      toast.success(isEditing.value ? 'Đã cập nhật chủ đề' : 'Đã tạo chủ đề thành công');
+      router.push({ path: `/forum/t/${thread.slug || thread._id}` });
+    }
   } catch (err) {
     serverError.value = err?.response?.data?.message || err?.message || 'Không thể đăng chủ đề. Vui lòng kiểm tra lại.';
     toast.error('Lỗi đăng bài: ' + serverError.value);

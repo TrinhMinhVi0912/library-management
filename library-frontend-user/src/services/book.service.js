@@ -20,6 +20,14 @@ const bookService = {
     return getData(response) || { newest: [], popular: [], topRated: [] };
   },
 
+  async getPersonalRecommendations(params = {}, options = {}) {
+    const response = await api.get('/books/recommendations', { params, ...options });
+    return {
+      books: getData(response) || [],
+      meta: response.data?.meta || null,
+    };
+  },
+
   async getBookByIdOrSlug(idOrSlug) {
     const response = await api.get(`/books/${encodeURIComponent(idOrSlug)}`);
     return getData(response);

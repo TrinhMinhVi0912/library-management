@@ -8,20 +8,26 @@ import BookCarousel from '@/components/book/BookCarousel.vue';
 import EmptyState from '@/components/common/EmptyState.vue';
 import SkeletonCard from '@/components/common/SkeletonCard.vue';
 import bookService from '@/services/book.service';
+import recommendationCacheService from '@/services/recommendation-cache.service';
 import catalogService from '@/services/catalog.service';
 import forumService from '@/services/forum.service';
 import ThreadItem from '@/components/forum/ThreadItem.vue';
+import BookCard from '@/components/book/BookCard.vue';
 
 const router = useRouter();
 const toast = useToast();
 const authStore = useAuthStore();
 const cartStore = useCartStore();
-const homeBooks = ref({ newest: [], popular: [], topRated: [] });
+const homeBooks = ref({ newest: [], popular: [], topRated: [], recommended: [] });
+const recommendationPanelOpen = ref(false);
+const recommendationsLoading = ref(false);
+const recommendationsError = ref('');
 const categories = ref([]);
 const featuredThreads = ref([]);
 const loading = ref(true);
 const error = ref('');
 const searchQuery = ref('');
+const semanticSearchEnabled = ref(false);
 const suggestions = ref([]);
 const suggestionsOpen = ref(false);
 const suggestionsLoading = ref(false);
@@ -50,6 +56,7 @@ async function loadHome() {
       newest: booksResult.newest || [],
       popular: booksResult.popular || [],
       topRated: booksResult.topRated || [],
+      recommended: [],
     };
     categories.value = categoriesResult.categories || [];
     featuredThreads.value = forumResult?.threads || [];
@@ -58,6 +65,41 @@ async function loadHome() {
   } finally {
     loading.value = false;
   }
+}
+
+async function openRecommendations() {
+  recommendationPanelOpen.value = true;
+  if (!authStore.isAuthenticated || authStore.role !== 'reader') {
+    router.push({ name: 'login', query: { redirect: '/' } });
+    return;
+  }
+  if (recommendationsLoading.value) return;
+  const userId = authStore.user?._id;
+  const cachedRecommendations = recommendationCacheService.get(userId);
+  if (cachedRecommendations) {
+    homeBooks.value.recommended = cachedRecommendations;
+    return;
+  }
+  recommendationsLoading.value = true;
+  recommendationsError.value = '';
+  try {
+    homeBooks.value.recommended = await recommendationCacheService.load(
+      userId,
+      async () => bookService.getPersonalRecommendations(),
+    );
+  } catch (requestError) {
+    recommendationsError.value = requestError.response?.data?.message || 'Chưa tải được sách gợi ý. Vui lòng thử lại.';
+  } finally {
+    recommendationsLoading.value = false;
+  }
+}
+
+function closeRecommendations() {
+  recommendationPanelOpen.value = false;
+}
+
+function handleRecommendationKeydown(event) {
+  if (event.key === 'Escape') closeRecommendations();
 }
 
 async function loadSuggestions(query) {
@@ -100,14 +142,17 @@ function handleSearchInput() {
   }
   suggestionsOpen.value = true;
   suggestionsLoading.value = true;
-  searchTimer = setTimeout(() => loadSuggestions(searchQuery.value), 300);
+  searchTimer = setTimeout(() => loadSuggestions(searchQuery.value), 650);
 }
 
 function submitSearch() {
   const query = searchQuery.value.trim();
   suggestionsOpen.value = false;
   if (!query) return;
-  router.push({ name: 'books', query: { q: query } });
+  router.push({
+    name: 'books',
+    query: { q: query, ...(semanticSearchEnabled.value ? { mode: 'hybrid' } : {}) },
+  });
 }
 
 function chooseSuggestion(book) {
@@ -302,6 +347,17 @@ onBeforeUnmount(() => clearTimeout(searchTimer));
             />Tìm sách
           </button>
         </form>
+        <label class="home-semantic-toggle">
+          <input
+            v-model="semanticSearchEnabled"
+            type="checkbox"
+          >
+          <i
+            class="bi bi-stars"
+            aria-hidden="true"
+          />
+          <span>Tìm kết hợp ngữ nghĩa và thông tin sách</span>
+        </label>
         <div
           v-if="quickCategories.length"
           class="home-quick-categories"
@@ -321,6 +377,20 @@ onBeforeUnmount(() => clearTimeout(searchTimer));
           </button>
         </div>
       </div>
+      <button
+        v-if="authStore.isAuthenticated && authStore.role === 'reader'"
+        type="button"
+        class="home-recommendation-trigger"
+        aria-haspopup="dialog"
+        :aria-expanded="recommendationPanelOpen"
+        @click="openRecommendations"
+      >
+        <i
+          class="bi bi-stars"
+          aria-hidden="true"
+        />
+        <span>Gợi ý cho tôi</span>
+      </button>
     </section>
 
     <div class="container py-5">
@@ -476,7 +546,6 @@ onBeforeUnmount(() => clearTimeout(searchTimer));
           @add-to-cart="handleAddToCart"
           @add-to-shelf="handleQuickAction('shelf')"
         />
-
         <div class="row g-3">
           <div class="col-md-6">
             <section
@@ -551,6 +620,104 @@ onBeforeUnmount(() => clearTimeout(searchTimer));
       </template>
     </div>
   </main>
+  <Teleport to="body">
+    <Transition name="recommendation-drawer">
+      <div
+        v-if="recommendationPanelOpen"
+        class="recommendation-backdrop"
+        @click.self="closeRecommendations"
+        @keydown="handleRecommendationKeydown"
+      >
+        <aside
+          class="recommendation-drawer"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="recommendation-title"
+        >
+          <header class="recommendation-drawer-header">
+            <div>
+              <span class="recommendation-kicker"><i
+                class="bi bi-water"
+                aria-hidden="true"
+              /> Gợi ý cá nhân</span>
+              <h2 id="recommendation-title">
+                Sách dành cho bạn
+              </h2>
+              <p>Tính khi đăng nhập, giữ nguyên trong phiên; thay đổi kệ và đánh giá có hiệu lực ở lần đăng nhập sau.</p>
+            </div>
+            <button
+              type="button"
+              class="recommendation-close"
+              aria-label="Đóng gợi ý"
+              @click="closeRecommendations"
+            >
+              <i
+                class="bi bi-x-lg"
+                aria-hidden="true"
+              />
+            </button>
+          </header>
+          <div class="recommendation-drawer-body">
+            <div
+              v-if="recommendationsLoading"
+              class="recommendation-state"
+              role="status"
+            >
+              <span
+                class="spinner-border spinner-border-sm text-info"
+                aria-hidden="true"
+              /> Đang chọn sách phù hợp...
+            </div>
+            <div
+              v-else-if="recommendationsError"
+              class="recommendation-state recommendation-error"
+              role="alert"
+            >
+              <i
+                class="bi bi-exclamation-circle"
+                aria-hidden="true"
+              />
+              <span>{{ recommendationsError }}</span>
+              <button
+                type="button"
+                class="btn btn-sm btn-outline-info"
+                @click="openRecommendations"
+              >
+                Thử lại
+              </button>
+            </div>
+            <div
+              v-else-if="homeBooks.recommended.length"
+              class="recommendation-book-list"
+            >
+              <article
+                v-for="book in homeBooks.recommended"
+                :key="book._id"
+                class="recommendation-book-card"
+              >
+                <BookCard
+                  :book="book"
+                  @add-to-cart="handleAddToCart"
+                  @add-to-shelf="handleQuickAction('shelf')"
+                />
+              </article>
+            </div>
+            <div
+              v-else
+              class="recommendation-state recommendation-empty"
+            >
+              <i
+                class="bi bi-book-half"
+                aria-hidden="true"
+              />
+              <strong>Chưa có sách phù hợp để gợi ý</strong>
+              <span>Hãy khám phá sách, mượn và đánh giá để nhận gợi ý cá nhân hơn.</span>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </Transition>
+  </Teleport>
 </template>
 
 <style scoped>
@@ -579,6 +746,12 @@ onBeforeUnmount(() => clearTimeout(searchTimer));
 .home-search-input-wrap:has(.home-suggestions) .home-search-input { border-radius: .65rem .65rem 0 0; }
 .home-search-button { min-width: 8.5rem; border: 0; border-radius: .65rem; background: linear-gradient(105deg, #21cabb, #29c3e9); color: #03253a; font-weight: 800; }
 .home-search-button:hover { background: linear-gradient(105deg, #45e0cc, #5ed7f2); color: #03253a; }
+.home-recommendation-trigger { position: absolute; z-index: 2; right: max(1.5rem, calc((100vw - 1200px) / 2)); bottom: 1.25rem; display: inline-flex; align-items: center; justify-content: center; gap: .5rem; margin: 0; padding: .55rem 1rem; border: 1px solid rgb(90 220 234 / 48%); border-radius: 999px; background: rgb(5 35 55 / 88%); color: #a8f3f6; font-weight: 700; box-shadow: 0 .4rem 1.2rem rgb(0 8 20 / 20%); transition: background .2s ease, transform .2s ease, border-color .2s ease; }
+.home-recommendation-trigger:hover { border-color: #6de7ef; background: rgb(12 66 83 / 92%); transform: translateY(-1px); }
+.home-recommendation-trigger i { color: #62e3ec; }
+.home-semantic-toggle { display: inline-flex; align-items: center; gap: .45rem; margin: .65rem auto 0; color: #b7d4e0; font-size: .88rem; cursor: pointer; }
+.home-semantic-toggle input { accent-color: #30cad5; }
+.home-semantic-toggle i { color: #69e1ec; }
 .home-quick-categories { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: .5rem; margin-top: 1rem; }
 .home-quick-label,
 .home-quick-categories button { display: inline-flex; align-items: center; gap: .35rem; min-height: 2rem; padding: .3rem .7rem; border: 1px solid rgb(119 177 202 / 20%); border-radius: 999px; background: rgb(4 25 43 / 72%); color: #c7dbe7; font-size: .78rem; backdrop-filter: blur(8px); }
@@ -620,6 +793,34 @@ onBeforeUnmount(() => clearTimeout(searchTimer));
 .home-carousel-theme :deep(.rating-stars-value) { color: #e8f4fa; }
 .home-carousel-theme :deep(.book-card-action) { border-color: rgb(119 177 202 / 22%); background: #09253b; color: #67dfe9; }
 .home-carousel-theme :deep(.book-card-action:hover) { background: #16aabd; color: #03172a; }
+.recommendation-backdrop { position: fixed; z-index: 1200; inset: 0; display: flex; justify-content: flex-end; background: rgb(0 8 18 / 62%); backdrop-filter: blur(3px); }
+.recommendation-drawer { display: flex; width: min(34rem, 100%); height: 100%; flex-direction: column; border-left: 1px solid rgb(91 212 230 / 22%); background: linear-gradient(165deg, #09243a, #041426 75%); color: #e6f4fb; box-shadow: -1rem 0 3rem rgb(0 6 15 / 42%); }
+.recommendation-drawer-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; padding: 1.5rem; border-bottom: 1px solid rgb(119 177 202 / 18%); }
+.recommendation-kicker { display: inline-flex; align-items: center; gap: .4rem; color: #62dce8; font-size: .72rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+.recommendation-drawer-header h2 { margin: .5rem 0 .35rem; color: #f3fbff; font-size: 1.45rem; font-weight: 800; }
+.recommendation-drawer-header p { margin: 0; color: #a8bfce; font-size: .88rem; line-height: 1.5; }
+.recommendation-close { display: grid; width: 2.4rem; height: 2.4rem; flex: 0 0 2.4rem; place-items: center; border: 1px solid rgb(119 177 202 / 26%); border-radius: 50%; background: #0b2b42; color: #c9e1eb; }
+.recommendation-close:hover { border-color: #52d6e4; color: #fff; }
+.recommendation-drawer-body { flex: 1; overflow-y: auto; padding: 1rem 1.25rem 1.5rem; }
+.recommendation-book-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+.recommendation-book-card :deep(.book-card) { height: 100%; border-color: rgb(119 177 202 / 20%); background: #081d31; }
+.recommendation-book-card :deep(.book-card-title) { color: #e8f4fa; }
+.recommendation-book-card :deep(.book-card-title:hover) { color: #61dce8; }
+.recommendation-book-card :deep(.book-card-author),
+.recommendation-book-card :deep(.rating-stars-count) { color: #a9bfce; }
+.recommendation-book-card :deep(.rating-stars-value) { color: #e8f4fa; }
+.recommendation-book-card :deep(.book-card-cover-wrap),
+.recommendation-book-card :deep(.book-card-cover-fallback) { background: #0c263d; }
+.recommendation-book-card :deep(.book-card-cover-fallback) { color: #b9cfdb; }
+.recommendation-book-card :deep(.book-card-cover-link) { text-decoration: none; }
+.recommendation-state { display: flex; min-height: 12rem; flex-direction: column; align-items: center; justify-content: center; gap: .75rem; color: #b8cfdb; text-align: center; }
+.recommendation-empty > i { color: #59dce9; font-size: 2rem; }
+.recommendation-empty strong { color: #edf8fc; }
+.recommendation-error { color: #ffc4c4; }
+.recommendation-drawer-enter-active, .recommendation-drawer-leave-active { transition: opacity .22s ease; }
+.recommendation-drawer-enter-active .recommendation-drawer, .recommendation-drawer-leave-active .recommendation-drawer { transition: transform .25s ease; }
+.recommendation-drawer-enter-from, .recommendation-drawer-leave-to { opacity: 0; }
+.recommendation-drawer-enter-from .recommendation-drawer, .recommendation-drawer-leave-to .recommendation-drawer { transform: translateX(100%); }
 .home-surface { border: 1px solid rgb(105 164 190 / 17%); background: linear-gradient(145deg, #081d31, #06182a); box-shadow: 0 .75rem 2rem rgb(0 8 20 / 18%); }
 .home-forum-section h2 { color: #edf7fb; }
 .home-forum-section :deep(.thread-item) { border-color: rgb(119 177 202 / 18%) !important; background: #091f33 !important; color: #d5e8f1; }
@@ -645,12 +846,16 @@ onBeforeUnmount(() => clearTimeout(searchTimer));
 @media (max-width: 991.98px) { .home-category-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 575.98px) {
   .home-search-section { min-height: 30rem; padding: 3.5rem 0 3rem; }
+  .home-recommendation-trigger { right: 1rem; bottom: .85rem; padding: .5rem .8rem; font-size: .9rem; }
   .home-search-section::before { background-position: 54% center; }
   .home-search-content h1 { font-size: clamp(2rem, 9vw, 3rem); }
   .home-search-description { max-width: 30rem; margin-bottom: 1.25rem; font-size: .95rem; }
   .home-search-form { flex-direction: column; gap: .4rem; padding: .45rem; }
   .home-search-input { min-height: 3rem; }
   .home-search-button { min-height: 3rem; width: 100%; }
+  .recommendation-book-list { grid-template-columns: 1fr; }
+  .recommendation-drawer-header { padding: 1.2rem 1rem; }
+  .recommendation-drawer-body { padding: .85rem; }
   .home-quick-categories { gap: .4rem; }
   .home-quick-label,
   .home-quick-categories button { font-size: .72rem; }

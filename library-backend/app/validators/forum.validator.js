@@ -57,6 +57,8 @@ const reportStatusSchema = Joi.object({ status: Joi.string().valid('resolved', '
 const pinStateSchema = Joi.object({ pinned: Joi.boolean().strict().required() });
 const lockStateSchema = Joi.object({ locked: Joi.boolean().strict().required() });
 const hideStateSchema = Joi.object({ hidden: Joi.boolean().strict().valid(true).required() });
+const forumModerationQuerySchema = Joi.object({ page: Joi.number().integer().min(1).default(1), limit: Joi.number().integer().min(1).max(100).default(10) });
+const forumModerationDecisionSchema = Joi.object({ decision: Joi.string().valid('approve', 'reject').required(), reason: Joi.string().trim().max(1000).allow('').default('') });
 
 module.exports = {
   idParamSchema,
@@ -74,4 +76,6 @@ module.exports = {
   pinStateSchema,
   lockStateSchema,
   hideStateSchema,
+  forumModerationQuerySchema,
+  forumModerationDecisionSchema,
 };

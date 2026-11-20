@@ -68,6 +68,17 @@ const config = {
     apiKey: process.env.CLOUDINARY_API_KEY || '',
     apiSecret: process.env.CLOUDINARY_API_SECRET || '',
   },
+  semanticSearch: {
+    serviceUrl: process.env.EMBEDDING_SERVICE_URL || '',
+    apiKey: process.env.EMBEDDING_SERVICE_API_KEY || '',
+    scoreThreshold: Number(process.env.EMBEDDING_SCORE_THRESHOLD) || 0.2,
+  },
+  forumModeration: {
+    serviceUrl: process.env.FORUM_MODERATION_URL || '',
+    apiKey: process.env.FORUM_MODERATION_API_KEY || '',
+    threshold: Number(process.env.FORUM_MODERATION_THRESHOLD) || 0.7,
+    timeoutMs: Number(process.env.FORUM_MODERATION_TIMEOUT_MS) || 5000,
+  },
   jobs: {
     secret: process.env.JOBS_SECRET || '',
     disableInternalCron: process.env.DISABLE_INTERNAL_CRON === 'true',

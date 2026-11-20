@@ -1,4 +1,12 @@
 services:
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: library-qdrant-local
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:6333:6333"
+    volumes:
+      - library_qdrant_data:/qdrant/storage
   mongo:
     image: mongo:7
     container_name: library-mongo-local
@@ -17,6 +25,26 @@ services:
       timeout: 10s
       retries: 12
       start_period: 5s
+  forum-moderation:
+    build:
+      context: ./library-backend/moderation
+    container_name: library-forum-moderation
+    restart: unless-stopped
+    environment:
+      FORUM_MODERATION_MODEL: ${FORUM_MODERATION_MODEL:-dangvansam/vietnamese-toxicity}
+      FORUM_MODERATION_API_KEY: ${FORUM_MODERATION_API_KEY:-}
+      HF_HOME: /root/.cache/huggingface
+    ports:
+      - "127.0.0.1:8001:8001"
+    volumes:
+      - forum_moderation_cache:/root/.cache/huggingface
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8001/health')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
 
 volumes:
   library_mongo_data:
+  library_qdrant_data:
+  forum_moderation_cache:

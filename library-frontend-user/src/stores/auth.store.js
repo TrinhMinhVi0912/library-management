@@ -2,9 +2,19 @@ import { defineStore } from 'pinia';
 import api from '@/services/api.service';
 import authService from '@/services/auth.service';
 import socketService from '@/services/socket.service';
+import recommendationCacheService from '@/services/recommendation-cache.service';
+import bookService from '@/services/book.service';
 
 const getData = (response) => response.data?.data;
 let restorePromise = null;
+
+function preloadRecommendations(user) {
+  if (user?.role !== 'reader' || !user?._id) return;
+  recommendationCacheService.load(
+    user._id,
+    async () => bookService.getPersonalRecommendations({}, { silent: true }),
+  ).catch(() => {});
+}
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
@@ -29,6 +39,7 @@ export const useAuthStore = defineStore('auth', {
       this.user = null;
       this.accessToken = null;
       this.initialized = true;
+      recommendationCacheService.clear();
       socketService.disconnect();
     },
     updateUser(userData) {
@@ -37,17 +48,23 @@ export const useAuthStore = defineStore('auth', {
     },
     async login(credentials) {
       const result = await authService.login(credentials);
+      recommendationCacheService.clear();
       this.setSession(result?.user, result?.accessToken);
+      preloadRecommendations(result?.user);
       return result?.user || null;
     },
     async loginWithGoogle(idToken) {
       const result = await authService.loginWithGoogle(idToken);
+      recommendationCacheService.clear();
       this.setSession(result?.user, result?.accessToken);
+      preloadRecommendations(result?.user);
       return result?.user || null;
     },
     async register(payload) {
       const result = await authService.register(payload);
+      recommendationCacheService.clear();
       this.setSession(result?.user, result?.accessToken);
+      preloadRecommendations(result?.user);
       return result?.user || null;
     },
     async fetchMe() {
@@ -96,6 +113,7 @@ export const useAuthStore = defineStore('auth', {
           silent: true,
         });
       } finally {
+        recommendationCacheService.clear();
         this.clearSession();
       }
     },

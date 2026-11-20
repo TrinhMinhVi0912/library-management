@@ -506,6 +506,10 @@ async function deleteBook(id, context = {}) {
  */
 async function getPublicBooks(query = {}) {
   const { page, limit, skip } = parsePagination(query, { defaultLimit: 12, maxLimit: 100 });
+  if (['semantic', 'hybrid'].includes(query.mode) && query.q?.trim()) {
+    return getRankedPublicBooks(query, { page, limit, skip });
+  }
+
   const filter = { status: 'active' };
 
   if (query.category) {
@@ -575,6 +579,130 @@ async function getPublicBooks(query = {}) {
   return {
     books,
     meta: buildPaginationMeta(totalItems, page, limit),
+  };
+}
+
+/**
+ * Tìm sách theo độ gần nghĩa từ Qdrant, sau đó lấy dữ liệu gốc và áp dụng bộ lọc động từ MongoDB.
+ * @param {object} query
+ * @param {{page:number,limit:number,skip:number}} pagination
+ */
+async function getRankedPublicBooks(query, { page, limit, skip }) {
+  const config = require('../config');
+  const ApiError = require('../api-error');
+  const serviceUrl = config.semanticSearch.serviceUrl.replace(/\/$/, '');
+  if (!serviceUrl) {
+    throw new ApiError(503, 'Tìm kiếm ngữ nghĩa chưa được cấu hình trên máy chủ.');
+  }
+
+  let response;
+  try {
+    response = await fetch(`${serviceUrl}/search`, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        ...(config.semanticSearch.apiKey
+          ? { 'x-service-key': config.semanticSearch.apiKey }
+          : {}),
+      },
+      body: JSON.stringify({
+        query: query.q.trim(),
+        category_id: query.category || null,
+        author_id: query.author || null,
+        publisher_id: query.publisher || null,
+        year: query.year ? Number(query.year) : null,
+        limit: 100,
+      }),
+      signal: AbortSignal.timeout(30000),
+    });
+  } catch (error) {
+    console.error('[Semantic Search] Không kết nối được dịch vụ embedding:', error.message);
+    throw new ApiError(503, 'Dịch vụ tìm kiếm ngữ nghĩa hiện chưa sẵn sàng. Vui lòng thử lại sau.');
+  }
+  if (!response.ok) {
+    console.error(`[Semantic Search] Dịch vụ embedding trả về HTTP ${response.status}`);
+    throw new ApiError(503, 'Không thể thực hiện tìm kiếm ngữ nghĩa lúc này.');
+  }
+
+  const result = await response.json();
+  const vectorResults = Array.isArray(result.results) ? result.results : [];
+  const vectorIds = vectorResults.map((item) => item.book_id).filter((id) => mongoose.isValidObjectId(id));
+  const keyword = query.q.trim();
+  const escaped = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const exactOrPhrase = new RegExp(escaped, 'i');
+  const queryTerms = keyword
+    .toLocaleLowerCase('vi')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .split(/[^a-z0-9]+/)
+    .filter((term) => term.length >= 2 && !['nhung', 'cuon', 'quyen', 'sach', 'cua', 'toi', 'tim', 'muon', 'doc', 've', 'cho'].includes(term));
+  const termRegexes = queryTerms.map((term) => new RegExp(term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i'));
+  const matchedAuthors = termRegexes.length
+    ? await Author.find({ $and: termRegexes.map((regex) => ({ name: regex })) }).select('_id name').limit(30).lean()
+    : [];
+  const authorIds = matchedAuthors.map((author) => author._id);
+  const metadataConditions = [
+    { code: exactOrPhrase },
+    { isbn: exactOrPhrase },
+    { title: exactOrPhrase },
+    { authorText: exactOrPhrase },
+  ];
+  if (termRegexes.length) {
+    metadataConditions.push({ $and: termRegexes.map((regex) => ({ authorText: regex })) });
+  }
+  if (authorIds.length) metadataConditions.push({ authors: { $in: authorIds } });
+  const identifierCandidates = await Book.find({
+    status: 'active',
+    $or: metadataConditions,
+  }).select('_id').limit(100).lean();
+  const candidateIds = [...new Set([...vectorIds, ...identifierCandidates.map((book) => String(book._id))])];
+  if (candidateIds.length === 0) {
+    return { books: [], meta: { ...buildPaginationMeta(0, page, limit), searchMode: query.mode } };
+  }
+
+  const filter = { _id: { $in: candidateIds }, status: 'active' };
+  if (query.available === true || query.available === 'true' || query.available === '1' || query.available === 1) {
+    filter.availableCopies = { $gt: 0 };
+  }
+  if (query.minRating) filter.ratingAvg = { $gte: Number(query.minRating) };
+
+  const booksById = await Book.find(filter)
+    .populate('authors', 'name')
+    .populate('publisher', 'name')
+    .populate('categories', 'name slug')
+    .lean();
+  const semanticById = new Map(vectorResults.map((item) => [String(item.book_id), Number(item.score) || 0]));
+  const rankedBooks = booksById.map((book) => {
+    const titleMatch = exactOrPhrase.test(book.title || '');
+    const normalizedAuthorText = (book.authorText || book.authors?.map((author) => author.name).join(' ') || '')
+      .toLocaleLowerCase('vi')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '');
+    const matchedTermCount = queryTerms.filter((term) => normalizedAuthorText.includes(term)).length;
+    const authorMatch = exactOrPhrase.test(book.authorText || '')
+      || (queryTerms.length > 0 && matchedTermCount === queryTerms.length)
+      || book.authors?.some((author) => authorIds.some((id) => String(id) === String(author._id)));
+    const isbnMatch = Boolean(book.isbn && book.isbn.replace(/[-\s]/g, '').includes(keyword.replace(/[-\s]/g, '')));
+    const codeMatch = Boolean(book.code && book.code.toLowerCase() === keyword.toLowerCase());
+    const semanticScore = semanticById.get(String(book._id)) || 0;
+    const metadataScore = codeMatch ? 1 : isbnMatch ? 0.98 : titleMatch ? 0.9 : authorMatch ? 0.94 : 0;
+    return {
+      ...book,
+      semanticScore,
+      searchScore: query.mode === 'hybrid'
+        ? Math.max(metadataScore, semanticScore * 0.78 + metadataScore * 0.22)
+        : semanticScore,
+    };
+  }).sort((a, b) => b.searchScore - a.searchScore || b.borrowCount - a.borrowCount);
+
+  return {
+    books: rankedBooks.slice(skip, skip + limit),
+    meta: {
+      ...buildPaginationMeta(rankedBooks.length, page, limit),
+      searchMode: query.mode,
+      vectorCandidates: vectorIds.length,
+      metadataCandidates: identifierCandidates.length,
+    },
   };
 }
 
@@ -653,6 +781,101 @@ async function getHomeBooks() {
     newest,
     popular,
     topRated,
+  };
+}
+
+/** Tạo gợi ý cá nhân từ sách trong kệ, lịch sử mượn và đánh giá tốt; loại trừ sách từng mượn và mọi kệ. */
+async function getPersonalRecommendations(userId, limit = 12) {
+  const safeLimit = Math.max(1, Math.min(Number(limit) || 12, 30));
+  const [loans, shelves, positiveReviews] = await Promise.all([
+    Loan.find({
+      reader: userId,
+      status: { $in: ['approved', 'borrowing', 'overdue', 'returned'] },
+    }).select('items.book items.status').lean(),
+    Shelf.find({ user: userId }).select('items.book items.addedAt').lean(),
+    Review.find({ reader: userId, rating: { $gte: 4 } }).select('book').lean(),
+  ]);
+
+  const borrowedIds = loans.flatMap((loan) => loan.items
+    .filter((item) => loan.status === 'approved' || ['borrowing', 'returned', 'lost'].includes(item.status))
+    .map((item) => item.book));
+  const shelfIds = shelves.flatMap((shelf) => shelf.items.map((item) => item.book));
+  const reviewedIds = positiveReviews.map((review) => review.book);
+  const excludedIds = [...new Set([...borrowedIds, ...shelfIds, ...reviewedIds].map(String))];
+  const excludedSet = new Set(excludedIds);
+  const profileIds = [...new Set([...shelfIds, ...borrowedIds, ...reviewedIds].map(String))].slice(0, 100);
+
+  if (profileIds.length === 0) {
+    const fallback = await Book.find({ status: 'active', _id: { $nin: excludedIds } })
+      .sort({ borrowCount: -1, createdAt: -1 })
+      .limit(safeLimit)
+      .populate('authors', 'name')
+      .populate('publisher', 'name')
+      .populate('categories', 'name slug')
+      .lean();
+    return { books: fallback, reason: 'popular-and-new', excludedCount: excludedSet.size };
+  }
+
+  const profileBooks = await Book.find({ _id: { $in: profileIds }, status: 'active' })
+    .populate('authors', 'name')
+    .populate('categories', 'name')
+    .lean();
+  const profileTexts = profileBooks.map((book) => [
+    `Tên sách: ${book.title || ''}`,
+    `Tác giả: ${book.authorText || book.authors?.map((author) => author.name).join(', ') || ''}`,
+    `Thể loại: ${book.categories?.map((category) => category.name).join(', ') || ''}`,
+    `Nội dung: ${book.description || ''}`,
+  ].filter(Boolean).join(' '));
+  if (profileTexts.length === 0) {
+    return { books: [], reason: 'no-profile-books', excludedCount: excludedSet.size };
+  }
+
+  const config = require('../config');
+  const ApiError = require('../api-error');
+  const serviceUrl = config.semanticSearch.serviceUrl.replace(/\/$/, '');
+  if (!serviceUrl) throw new ApiError(503, 'Dịch vụ gợi ý sách chưa được cấu hình.');
+  let response;
+  try {
+    response = await fetch(`${serviceUrl}/recommend`, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        ...(config.semanticSearch.apiKey ? { 'x-service-key': config.semanticSearch.apiKey } : {}),
+      },
+      body: JSON.stringify({ profile_texts: profileTexts, exclude_book_ids: excludedIds, limit: safeLimit }),
+      signal: AbortSignal.timeout(30000),
+    });
+  } catch (error) {
+    console.error('[Recommendations] Không kết nối được dịch vụ embedding:', error.message);
+    throw new ApiError(503, 'Dịch vụ gợi ý sách hiện chưa sẵn sàng.');
+  }
+  const responseBody = await response.text();
+  if (!response.ok) {
+    console.error(`[Recommendations] Dịch vụ embedding trả HTTP ${response.status}: ${responseBody.slice(0, 1000)}`);
+    throw new ApiError(503, 'Dịch vụ gợi ý sách gặp lỗi. Xem log backend để biết chi tiết.');
+  }
+  let result;
+  try {
+    result = JSON.parse(responseBody);
+  } catch (error) {
+    console.error('[Recommendations] Dịch vụ embedding trả JSON không hợp lệ:', error.message);
+    throw new ApiError(503, 'Phản hồi từ dịch vụ gợi ý sách không hợp lệ.');
+  }
+  const ranked = Array.isArray(result.results) ? result.results : [];
+  const rankById = new Map(ranked.map((item, index) => [String(item.book_id), { index, score: item.score }]));
+  const books = await Book.find({
+    _id: { $in: ranked.map((item) => item.book_id), $nin: excludedIds },
+    status: 'active',
+  })
+    .populate('authors', 'name')
+    .populate('publisher', 'name')
+    .populate('categories', 'name slug')
+    .lean();
+  books.sort((a, b) => rankById.get(String(a._id)).index - rankById.get(String(b._id)).index);
+  return {
+    books: books.map((book) => ({ ...book, recommendationScore: rankById.get(String(book._id))?.score || 0 })),
+    reason: 'personalized',
+    excludedCount: excludedSet.size,
   };
 }
 
@@ -738,6 +961,7 @@ module.exports = {
   getPublicBooks,
   suggestBooks,
   getHomeBooks,
+  getPersonalRecommendations,
   getBookByIdOrSlug,
   getRelatedBooks,
 };

@@ -5,6 +5,7 @@ const { ForumCategory, ForumThread, ForumPost, ForumReport, Book } = require('..
 const { parsePagination, buildPaginationMeta } = require('../utils/pagination.util');
 const notifyService = require('./notify.service');
 const auditService = require('./audit.service');
+const forumModerationService = require('./forum-moderation.service');
 
 const htmlOptions = {
   allowedTags: ['p', 'br', 'strong', 'b', 'em', 'i', 'u', 'ul', 'ol', 'li', 'blockquote', 'code', 'pre', 'a'],
@@ -234,14 +235,18 @@ async function createThread(user, data) {
   const category = await ForumCategory.exists({ _id: data.category });
   if (!category) throw ApiError.notFound('Chuyên mục không tồn tại');
   if (data.book && !(await Book.exists({ _id: data.book }))) throw ApiError.notFound('Sách không tồn tại');
+  const content = cleanContent(data.content);
+  const moderation = await forumModerationService.assess(user, `${data.title}\n${content.replace(/<[^>]*>/g, ' ')}`);
   const thread = await ForumThread.create({
     category: data.category,
     author: user._id,
     title: data.title,
     slug: await uniqueSlug(ForumThread, data.title),
-    content: cleanContent(data.content),
+    content,
     book: data.book || null,
     tags: data.tags || [],
+    status: moderation.state === 'pending' ? 'pending' : 'active',
+    moderation,
   });
   return thread;
 }
@@ -252,12 +257,18 @@ function canManage(record, user) {
 
 async function updateThread(threadId, user, data) {
   const thread = await ForumThread.findById(threadId);
-  if (!thread || thread.status !== 'active') throw ApiError.notFound('Chủ đề không tồn tại');
+  if (!thread || (thread.status === 'hidden' && thread.moderation?.state !== 'rejected')) throw ApiError.notFound('Chủ đề không tồn tại');
   if (!canManage(thread, user)) throw ApiError.forbidden('Chỉ chủ bài hoặc nhân viên mới được sửa chủ đề');
   if (data.category && !(await ForumCategory.exists({ _id: data.category }))) throw ApiError.notFound('Chuyên mục không tồn tại');
   if (data.book && !(await Book.exists({ _id: data.book }))) throw ApiError.notFound('Sách không tồn tại');
   for (const field of ['category', 'title', 'book', 'tags']) if (data[field] !== undefined) thread[field] = data[field] || null;
   if (data.content !== undefined) thread.content = cleanContent(data.content);
+  if (data.content !== undefined || data.title !== undefined) {
+    const content = thread.content;
+    const moderation = await forumModerationService.assess(user, `${thread.title}\n${content.replace(/<[^>]*>/g, ' ')}`);
+    thread.moderation = moderation;
+    thread.status = moderation.state === 'pending' ? 'pending' : 'active';
+  }
   if (data.title !== undefined) thread.slug = await uniqueSlug(ForumThread, data.title, thread._id);
   await thread.save();
   return thread;
@@ -265,7 +276,7 @@ async function updateThread(threadId, user, data) {
 
 async function deleteThread(threadId, user) {
   const thread = await ForumThread.findById(threadId);
-  if (!thread || thread.status !== 'active') throw ApiError.notFound('Chủ đề không tồn tại');
+  if (!thread || thread.status === 'hidden') throw ApiError.notFound('Chủ đề không tồn tại');
   if (!canManage(thread, user)) throw ApiError.forbidden('Chỉ chủ bài hoặc nhân viên mới được xóa chủ đề');
   thread.status = 'hidden';
   await thread.save();
@@ -299,12 +310,19 @@ async function createPost(threadId, user, data) {
     if (!parent) throw ApiError.notFound('Bài trả lời gốc không tồn tại trong chủ đề');
     if (parent.parent) throw ApiError.badRequest('Chỉ hỗ trợ trả lời lồng tối đa một cấp');
   }
-  const post = await ForumPost.create({ thread: threadId, author: user._id, parent: data.parent || null, content: cleanContent(data.content) });
-  await ForumThread.updateOne({ _id: threadId }, { $inc: { replyCount: 1 }, $set: { lastReplyAt: post.createdAt, lastReplyBy: user._id } });
-  if (String(thread.author) !== String(user._id)) {
+  const content = cleanContent(data.content);
+  const moderation = await forumModerationService.assess(user, content.replace(/<[^>]*>/g, ' '));
+  const post = await ForumPost.create({
+    thread: threadId, author: user._id, parent: data.parent || null, content,
+    status: moderation.state === 'pending' ? 'pending' : 'active', moderation,
+  });
+  if (post.status === 'active') {
+    await ForumThread.updateOne({ _id: threadId }, { $inc: { replyCount: 1 }, $set: { lastReplyAt: post.createdAt, lastReplyBy: user._id } });
+  }
+  if (post.status === 'active' && String(thread.author) !== String(user._id)) {
     await notifyService.notifyUser(thread.author, {
       type: 'forum', title: 'Chủ đề của bạn có trả lời mới',
-      content: `Có thành viên vừa trả lời chủ đề “${thread.title}”.`, link: `/forum/threads/${thread.slug}`,
+      content: `Có thành viên vừa trả lời chủ đề “${thread.title}”.`, link: `/forum/t/${thread.slug}`,
     });
   }
   return post;
@@ -312,29 +330,96 @@ async function createPost(threadId, user, data) {
 
 async function updatePost(postId, user, data) {
   const post = await ForumPost.findById(postId);
-  if (!post || post.status !== 'active') throw ApiError.notFound('Bài trả lời không tồn tại');
+  if (!post || (post.status === 'hidden' && post.moderation?.state !== 'rejected')) throw ApiError.notFound('Bài trả lời không tồn tại');
   if (!canManage(post, user)) throw ApiError.forbidden('Chỉ chủ bài hoặc nhân viên mới được sửa bài trả lời');
-  post.content = cleanContent(data.content);
+  const wasActive = post.status === 'active';
+  const content = cleanContent(data.content);
+  const moderation = await forumModerationService.assess(user, content.replace(/<[^>]*>/g, ' '));
+  post.content = content;
+  post.moderation = moderation;
+  post.status = moderation.state === 'pending' ? 'pending' : 'active';
   await post.save();
+  if (wasActive && post.status === 'pending') await decrementReplyCount(post);
+  if (!wasActive && post.status === 'active') {
+    const thread = await incrementReplyCount(post);
+    if (thread && String(thread.author) !== String(user._id)) {
+      await notifyService.notifyUser(thread.author, {
+        type: 'forum', title: 'Chủ đề của bạn có trả lời mới',
+        content: `Một phản hồi đã được duyệt trong chủ đề “${thread.title}”.`, link: `/forum/t/${thread.slug}`,
+      });
+    }
+  }
   return post;
+}
+
+async function decrementReplyCount(post) {
+  const latestReply = await ForumPost.findOne({ thread: post.thread, status: 'active', _id: { $ne: post._id } }).sort({ createdAt: -1 }).select('createdAt author').lean();
+  await ForumThread.updateOne({ _id: post.thread, replyCount: { $gt: 0 } }, { $inc: { replyCount: -1 }, $set: { lastReplyAt: latestReply?.createdAt || null, lastReplyBy: latestReply?.author || null } });
+}
+
+async function incrementReplyCount(post) {
+  const [latestReply, thread] = await Promise.all([
+    ForumPost.findOne({ thread: post.thread, status: 'active' }).sort({ createdAt: -1 }).select('createdAt author').lean(),
+    ForumThread.findOne({ _id: post.thread, status: 'active' }).select('title slug author').lean(),
+  ]);
+  if (!thread) return null;
+  await ForumThread.updateOne({ _id: thread._id }, {
+    $inc: { replyCount: 1 },
+    $set: { lastReplyAt: latestReply?.createdAt || null, lastReplyBy: latestReply?.author || null },
+  });
+  return thread;
+}
+
+async function listPendingModeration(query = {}) {
+  const { page, limit, skip } = parsePagination(query, { defaultLimit: 10 });
+  const [threads, posts, threadCount, postCount] = await Promise.all([
+    ForumThread.find({ status: 'pending' }).populate('author', 'firstName lastName code role').populate('category', 'name').sort({ createdAt: 1 }).lean(),
+    ForumPost.find({ status: 'pending' }).populate('author', 'firstName lastName code role').populate('thread', 'title slug status').sort({ createdAt: 1 }).lean(),
+    ForumThread.countDocuments({ status: 'pending' }), ForumPost.countDocuments({ status: 'pending' }),
+  ]);
+  const items = [
+    ...threads.map((item) => ({ ...item, targetType: 'thread' })),
+    ...posts.filter((item) => item.thread?.status === 'active').map((item) => ({ ...item, targetType: 'post' })),
+  ].sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+  const visibleTotal = items.length;
+  return { items: items.slice(skip, skip + limit), meta: buildPaginationMeta(visibleTotal, page, limit), pendingTotal: threadCount + postCount };
+}
+
+async function reviewPendingContent(targetType, targetId, actor, decision, reason = '') {
+  const Model = targetType === 'thread' ? ForumThread : ForumPost;
+  const record = await Model.findOne({ _id: targetId, status: 'pending' });
+  if (!record) throw ApiError.notFound('Nội dung không còn trong hàng chờ duyệt');
+  const approved = decision === 'approve';
+  record.status = approved ? 'active' : 'hidden';
+  record.moderation = { ...(record.moderation?.toObject?.() || record.moderation || {}), state: approved ? 'approved' : 'rejected', reason: approved ? '' : reason, reviewedBy: actor._id, reviewedAt: new Date() };
+  await record.save();
+  if (approved && targetType === 'post') {
+    const thread = await incrementReplyCount(record);
+    if (!thread) throw ApiError.conflict('Chủ đề gốc không còn được công khai');
+  }
+  await auditService.log({ actor: actor._id, action: `forum.moderation.${decision}`, targetType: targetType === 'thread' ? 'ForumThread' : 'ForumPost', targetId: record._id, detail: { reason } });
+  const postThread = targetType === 'post' ? await ForumThread.findById(record.thread).select('slug').lean() : null;
+  await notifyService.notifyUser(record.author, {
+    type: 'forum', title: approved ? 'Bài đăng đã được duyệt' : 'Bài đăng chưa được duyệt',
+    content: approved ? 'Nội dung của bạn đã được hiển thị trên diễn đàn.' : (reason || 'Nội dung của bạn chưa đáp ứng quy định diễn đàn.'),
+    link: targetType === 'thread' ? (approved ? `/forum/t/${record.slug}` : '/forum/my') : (postThread?.slug ? `/forum/t/${postThread.slug}` : '/forum/my'),
+  });
+  return record;
 }
 
 async function markPostHidden(post, actor, action) {
   if (post.status === 'hidden') return post;
+  const wasActive = post.status === 'active';
   post.status = 'hidden';
   await post.save();
-  const latestReply = await ForumPost.findOne({ thread: post.thread, status: 'active' }).sort({ createdAt: -1 }).select('createdAt author').lean();
-  await ForumThread.updateOne(
-    { _id: post.thread, replyCount: { $gt: 0 } },
-    { $inc: { replyCount: -1 }, $set: { lastReplyAt: latestReply?.createdAt || null, lastReplyBy: latestReply?.author || null } }
-  );
+  if (wasActive) await decrementReplyCount(post);
   await auditService.log({ actor: actor._id, action, targetType: 'ForumPost', targetId: post._id, detail: { thread: post.thread } });
   return post;
 }
 
 async function deletePost(postId, user) {
   const post = await ForumPost.findById(postId);
-  if (!post || post.status !== 'active') throw ApiError.notFound('Bài trả lời không tồn tại');
+  if (!post || post.status === 'hidden') throw ApiError.notFound('Bài trả lời không tồn tại');
   if (!canManage(post, user)) throw ApiError.forbidden('Chỉ chủ bài hoặc nhân viên mới được xóa bài trả lời');
   await markPostHidden(post, user, 'forum.post.delete');
   return { deleted: true, postId: post._id };
@@ -357,7 +442,7 @@ async function deletePostAsStaff(postId, actor) {
 async function toggleLike(Model, id, userId, label) {
   for (let attempt = 0; attempt < 3; attempt += 1) {
     const target = await Model.findById(id).select('author status likes likeCount');
-    if (!target || target.status === 'hidden') throw ApiError.notFound(`${label} không tồn tại`);
+    if (!target || target.status !== 'active') throw ApiError.notFound(`${label} không tồn tại`);
     const liked = (target.likes || []).some((like) => String(like) === String(userId));
     const filter = { _id: id, likes: liked ? userId : { $ne: userId } };
     const update = liked
@@ -402,6 +487,8 @@ module.exports = {
   deletePost,
   hidePost,
   deletePostAsStaff,
+  listPendingModeration,
+  reviewPendingContent,
   toggleThreadLike,
   togglePostLike,
 };

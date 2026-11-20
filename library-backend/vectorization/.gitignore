@@ -2,3 +2,6 @@
 !/data/input/.gitkeep
 /data/output/*
 !/data/output/.gitkeep
+/.venv/
+__pycache__/
+*.py[cod]

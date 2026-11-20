@@ -10,6 +10,11 @@ const getAdminReports = asyncHandler(async (req, res) => {
   const result = await forumService.getAdminReports(req.query);
   return ok(res, result.items, result.meta);
 });
+const getPendingModeration = asyncHandler(async (req, res) => {
+  const result = await forumService.listPendingModeration(req.query);
+  return ok(res, result.items, { ...result.meta, pendingTotal: result.pendingTotal });
+});
+const reviewPendingModeration = asyncHandler(async (req, res) => ok(res, await forumService.reviewPendingContent(req.params.targetType, req.params.id, req.user, req.body.decision, req.body.reason)));
 const updateReportStatus = asyncHandler(async (req, res) => ok(res, await forumService.updateReportStatus(req.params.id, req.user, req.body.status)));
 const pinThread = asyncHandler(async (req, res) => ok(res, await forumService.setThreadPinned(req.params.id, req.user, req.body.pinned)));
 const lockThread = asyncHandler(async (req, res) => ok(res, await forumService.setThreadLocked(req.params.id, req.user, req.body.locked)));
@@ -41,7 +46,7 @@ const togglePostLike = asyncHandler(async (req, res) => ok(res, await forumServi
 
 module.exports = {
   listCategories, createCategory, updateCategory, deleteCategory,
-  createReport, getAdminReports, updateReportStatus, pinThread, lockThread, hideThread, hidePost, deletePostAsAdmin,
+  createReport, getAdminReports, getPendingModeration, reviewPendingModeration, updateReportStatus, pinThread, lockThread, hideThread, hidePost, deletePostAsAdmin,
   listThreads, listMyThreads, getMyThread, getThread, createThread, updateThread, deleteThread,
   listPosts, createPost, updatePost, deletePost, toggleThreadLike, togglePostLike,
 };

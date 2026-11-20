@@ -277,6 +277,16 @@ export async function getAdminForumReports(params = {}) {
   return response.data || {};
 }
 
+export async function getAdminForumModeration(params = {}) {
+  const response = await api.get('/admin/forum/moderation', { params });
+  return response.data || {};
+}
+
+export async function reviewAdminForumContent(targetType, id, decision, reason = '') {
+  const response = await api.patch(`/admin/forum/moderation/${targetType}/${id}`, { decision, reason });
+  return response.data?.data || null;
+}
+
 export async function updateAdminForumReportStatus(id, status) {
   const response = await api.patch(`/admin/forum/reports/${id}`, { status });
   return response.data?.data || null;

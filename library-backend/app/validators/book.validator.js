@@ -198,6 +198,7 @@ const adminBookStatisticsQuerySchema = Joi.object({
 
 const queryPublicBookSchema = Joi.object({
   q: Joi.string().trim().allow(''),
+  mode: Joi.string().valid('lexical', 'semantic', 'hybrid').default('lexical'),
   category: Joi.string().pattern(objectIdRegex).allow(''),
   author: Joi.string().pattern(objectIdRegex).allow(''),
   publisher: Joi.string().pattern(objectIdRegex).allow(''),

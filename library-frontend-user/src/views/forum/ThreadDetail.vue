@@ -772,10 +772,13 @@ async function handleSubmitPost({ content }) {
     newPost.likes = [];
     newPost.likeCount = 0;
 
-    posts.value.push(newPost);
-    thread.value.replyCount = (thread.value.replyCount || 0) + 1;
-
-    toast.success('Đã gửi phản hồi thành công');
+    if (newPost.status === 'active') {
+      posts.value.push(newPost);
+      thread.value.replyCount = (thread.value.replyCount || 0) + 1;
+      toast.success('Đã gửi phản hồi thành công');
+    } else {
+      toast.info('Phản hồi đã gửi và đang chờ nhân viên kiểm duyệt.');
+    }
     postEditorRef.value?.clear();
     replyingTo.value = null;
   } catch (err) {
